@@ -1,11 +1,12 @@
 # VibecodeKit Hybrid Ultra
 
-> **Current release:** v0.15.2 ([CHANGELOG](CHANGELOG.md))
+> **Current release:** v0.16.2 ([CHANGELOG](CHANGELOG.md))
 > A defensive, audit-driven runtime + skill bundle for AI-assisted
-> coding workflows.  Ships with VIBECODE-MASTER v5 methodology,
-> RRI-T / RRI-UI / RRI-UX question banks, a permission engine,
-> a scaffold engine, a Python-pure browser daemon, and an **87-probe
-> self-audit gate**.
+> coding workflows.  42 commands (25 `/vibe-*` + 1 `/vibe` + 16 `/vck-*`) ·
+> 7 sub-agent roles · 33 hook events · 6-layer permission pipeline ·
+> 3-tier persistent memory · MCP integration · VIBECODE-MASTER v5
+> methodology · RRI-T / RRI-UI / RRI-UX question banks · Python-pure
+> browser daemon · scaffold engine (10 presets × 3 stacks).
 
 > **License:** MIT — see [`LICENSE`](LICENSE) and the third-party
 > attribution manifest [`LICENSE-third-party.md`](LICENSE-third-party.md).
@@ -17,7 +18,7 @@ team-mode + eval_select wired into `/vck-ship`, security classifier +
 learnings inject auto-on, scaffold seeds for `.vibecode/`, the master
 `/vck-pipeline` router, and a new audit probe that fails CI if any
 module under `scripts/vibecodekit/` lacks a production call site —
-lifting the conformance audit to **87 / 87 @ 100 %** (was 85 / 85 in v0.15.0; +2 probes from v0.15.2).
+lifting the internal conformance self-test to 87 probes (was 85 in v0.15.0; see [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what this measures).
 v0.14.0 added eight `/vck-*` commands (plan reviews + polish), an
 optional `security_classifier` ensemble (`[ml]` extra), per-project
 learnings / team-mode coordination stores, GitHub Actions CI, and
@@ -150,11 +151,11 @@ python3 tools/validate_release_matrix.py \
 
 Expected gate output (concrete count grows with each release — the
 important invariant is that pytest exits 0 with no failures and the
-audit reports 100 % parity):
+internal conformance self-test reports all probes passing):
 
 ```
 pytest                            : 500 passed                # at v0.15.4
-audit (×any)                      : 87/87 met=True            # at v0.15.4
+audit (×any)                      : 87/87 met=True            # at v0.15.4 (internal self-test)
 validate_release_matrix (default) : PASS
 ```
 
@@ -207,14 +208,14 @@ commands).  See [`LICENSE`](LICENSE) for the canonical text and
 
 ---
 
-## Status
+## Quality assurance
 
-| Gate | Result |
-|---|---|
-| pytest (500 cases at v0.15.4) | PASS |
-| audit (87 probes at v0.15.4) | 87/87 met=True |
-| validate_release_matrix (default) | PASS |
-| All 170 Cf codepoints × `rm -rf /` bypass | blocked |
+| Gate | Result | What it measures |
+|---|---|---|
+| pytest (500 cases at v0.15.4) | PASS | Unit + integration correctness |
+| conformance self-test (87 probes at v0.15.4) | 87/87 met=True | Internal regression invariants ([details](BENCHMARKS-METHODOLOGY.md)) |
+| validate_release_matrix (default) | PASS | Layout integrity across 3 deploy modes |
+| All 170 Cf codepoints × `rm -rf /` bypass | blocked | Permission engine coverage |
 
 See `CHANGELOG.md` for full version history and the per-release
 `*-refine-report.md` artifacts (kept under `docs/historical/` for

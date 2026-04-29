@@ -67,7 +67,7 @@ jobs:
         run: |
           python -m pytest tests -q
 
-      - name: conformance_audit (87 / 87 @ 100 %)
+      - name: conformance_audit (internal self-test)
         env:
           VIBECODE_UPDATE_PACKAGE: ${{ github.workspace }}/update-package
           PYTHONPATH: ./scripts
