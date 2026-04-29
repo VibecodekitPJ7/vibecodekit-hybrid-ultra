@@ -187,7 +187,7 @@ Regression tests: `test_eval_select_empty_patterns_are_always_run`,
 
 | Gate | Pre-fix | Post-fix |
 |---|---|---|
-| `pytest tests` | 517 / 15 | **536 / 15** (+19 regression cases pinning the 5 fixes) |
+| `pytest tests` | 517 / 15 | **536 / 0** (+19 regression cases; -15 dead skips from deleted `test_version_sync.py`) |
 | `conformance_audit --threshold 1.0` | 77 / 77 | **77 / 77** |
 | `validate_release_matrix.py` | PASS | **PASS** |
 | GitHub Actions CI (3.9 / 3.11 / 3.12) | green | green (re-run on this PR) |

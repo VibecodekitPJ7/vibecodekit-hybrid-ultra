@@ -54,11 +54,21 @@ modules.  All five are fixed here with regression tests pinned in
 * **`tests/test_v014_audit_fixes.py`** — 19 regression cases pinning
   every fix above so future refactors cannot re-introduce the issues.
 
+### Removed
+
+* **`tests/test_version_sync.py`** — stale pre-v0.11.4 layout test that
+  always self-skipped (15 / 15 tests) because the legacy
+  ``skill/vibecodekit-hybrid-ultra/`` + ``claw-code-pack/`` directories
+  no longer exist.  The version-sync invariant is fully covered by
+  ``tests/test_docs_count_sync.py`` (which already gates on the current
+  ``update-package/`` layout — it caught the
+  ``update-package/.claw.json`` drift in this very release).
+
 ### Changed (none)
 
 No public-API breaks.  All 77 conformance probes remain green, full
-suite is **536 passed / 15 skipped** (was 517 / 15 + 19 new regression
-cases).
+suite is **536 passed / 0 skipped** (was 517 / 15 — added 19 regression
+cases, deleted 15 dead skips).
 
 ### Audit report
 
