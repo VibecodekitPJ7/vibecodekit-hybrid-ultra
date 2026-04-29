@@ -530,7 +530,7 @@ def _probe_rri_reverse_interview(tmp: Path) -> Tuple[bool, str]:
     # Canonical 5 personas must be named.
     personas = ("End User", "Business Analyst", "QA", "Developer", "Operator")
     misses = [p for p in personas if p not in body]
-    return (not misses, f"personas ok" if not misses else f"missing personas: {misses}")
+    return (not misses, "personas ok" if not misses else f"missing personas: {misses}")
 
 
 def _probe_rri_t_testing(tmp: Path) -> Tuple[bool, str]:

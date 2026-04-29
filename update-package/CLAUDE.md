@@ -1,6 +1,6 @@
-# Project overlay — VibecodeKit Hybrid Ultra v0.16.0
+# Project overlay — VibecodeKit Hybrid Ultra v0.16.1
 
-This project uses the VibecodeKit **v0.16.0** overlay (canonical version
+This project uses the VibecodeKit **v0.16.1** overlay (canonical version
 file: `VERSION`).  All tool calls pass through the 6-layer permission
 pipeline; see
 `ai-rules/vibecodekit/references/10-permission-classification.md`.
@@ -58,18 +58,21 @@ CLI-only commands (no slash form):
 7. **Verify** — run `/vibe-rri-t`, `/vibe-rri-ux`, `/vibe-vn-check` gates.
 8. **Release** — `/vibe-complete` + `/vibe-audit` → ship.
 
-## Sub-agent ACL (5 roles)
+## Sub-agent ACL (7 roles)
 
 | Role        | Read | Write | Run shell | Push | Notes |
 |-------------|:---:|:-----:|:---------:|:----:|-------|
-| coordinator | ✓   | ✗     | ✗         | ✗    | planning only |
+| coordinator | ✓   | ✗     | ✗         | ✗    | planning + task-control + approvals |
 | scout       | ✓   | ✗     | ✓ (read)  | ✗    | grep/glob/read |
-| builder     | ✓   | ✓     | ✓         | ✗    | implementation |
-| qa          | ✓   | ✗     | ✓         | ✗    | run tests |
-| security    | ✓   | ✗     | ✗         | ✗    | redact logs |
+| builder     | ✓   | ✓     | ✓         | ✗    | implementation; high-risk bubble-escalates |
+| qa          | ✓   | ✗     | ✓         | ✗    | run tests / verification only |
+| security    | ✓   | ✗     | ✓ (read)  | ✗    | OWASP / STRIDE audit; redacts logs |
+| reviewer    | ✓   | ✗     | ✓ (read)  | ✗    | adversarial 7-specialist review |
+| qa-lead     | ✓   | ✗     | ✓ (read)  | ✗    | real-browser checklist + fix-loop proposals |
 
-Enforced by `scripts/vibecodekit/subagent_runtime.py`; coordinator physically
-cannot write files.
+Enforced by `scripts/vibecodekit/subagent_runtime.py` (`PROFILES`);
+coordinator / scout / qa / security / reviewer / qa-lead physically
+cannot write files (`can_mutate=False`).
 
 ## Hook events (33 lifecycle points)
 
@@ -117,7 +120,7 @@ Bundled sample server: `python -m vibecodekit.mcp_servers.selfcheck`
 ## Release gate
 
 Before shipping:
-1. `pytest tests/ -q` → 500/500 pass at v0.15.4 (full suite, run từ repo
+1. `pytest tests/ -q` → 756/756 pass at v0.16.0 (full suite, run từ repo
    root; the canonical count is whatever `pytest --collect-only -q | tail`
    reports for the current commit).  Bundled `tests/` trong zip chỉ là
    subset đại diện; đủ để smoke-test sau khi unzip nhưng CI gate là trên

@@ -277,6 +277,12 @@ TIER_1: tuple[tuple[str, tuple[str, ...]], ...] = (
         "pipeline đầy đủ", "pipeline day du",
         "full check", "go through pipeline",
         "all gates", "end to end", "e2e check",
+        # v0.16.1 — close partial-fix gap from PR-2: the master
+        # /vck-pipeline frontmatter declares these high-level "do the
+        # whole thing" phrases as triggers, but the intent_router bank
+        # was missing them so prose-mode classification fell back to a
+        # low-confidence BUILD match.  Aligning the three routers.
+        "build the whole thing", "set everything up",
     )),
 )
 

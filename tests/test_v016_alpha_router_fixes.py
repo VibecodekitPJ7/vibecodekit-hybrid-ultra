@@ -65,6 +65,9 @@ def test_vck_pipeline_frontmatter_has_triggers_block() -> None:
     "all gates",
     "end to end",
     "e2e check",
+    # v0.16.1 audit recheck — high-level "do the whole thing" cues.
+    "build the whole thing",
+    "set everything up",
 ])
 def test_vck_pipeline_frontmatter_lists_phrase(phrase: str) -> None:
     fm = _frontmatter(VCK_PIPELINE_SKILL)
@@ -120,6 +123,10 @@ def test_intent_router_multi_token_boost(router, prose, expected_intent):
     "all gates",
     "end to end",
     "e2e check",
+    # v0.16.1 — close partial-fix gap; the master /vck-pipeline
+    # frontmatter declares these but intent_router was missing them.
+    "build the whole thing",
+    "set everything up",
 ])
 def test_intent_router_pipeline_phrases_route_to_vck_pipeline(router, prose):
     res = router.classify(prose)

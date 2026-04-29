@@ -35,11 +35,10 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .context_modifier_chain import apply_modifiers
-from .denial_store import DenialStore
 from .event_bus import EventBus
 from .hook_interceptor import run_hooks, is_blocked
-from .permission_engine import decide, classify_cmd
-from .tool_schema_registry import TOOLS, partition_tool_blocks
+from .permission_engine import decide
+from .tool_schema_registry import partition_tool_blocks
 
 
 MAX_READ_BYTES = 200_000        # hard cap for read_file

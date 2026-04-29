@@ -1,10 +1,10 @@
 # VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết
 
 Bộ kit đầy đủ để build dự án theo phương pháp **VIBECODE-MASTER** với **Full
-Agentic OS** runtime (87 conformance probes @ 100 % parity at v0.15.4, all actionable tests pass
+Agentic OS** runtime (87 conformance probes @ 100 % parity at v0.16.0, all actionable tests pass
 từ repo root; bundled `tests/` trong skill zip chứa một subset đại diện để
 user smoke-test sau khi extract — xem §15.10).  Bản này ứng với
-**v0.15.4** — doc-sync hotfix.  v0.11.4.1 was the original full
+**v0.16.0** — green cleanup of the v0.15.4 audit (P3 #8/#10/#12 closed).  v0.11.4.1 was the original full
 big-update that shipped all 6 taw-kit features
 integration: F1 scaffold engine (10 preset × 3 stacks), F2 deploy
 orchestrator (7 target), F3 auto-commit + sensitive-file guard, F4
@@ -150,7 +150,7 @@ Là "overlay" cho các CLI dùng `.claude/` hoặc `.claw/` convention:
 ```
 .claude/
 ├── commands/       # 42 slash commands (25 `/vibe-*` + 1 master `/vibe` + 16 `/vck-*`)
-├── agents/         # 5 agent cards (coordinator, scout, builder, qa, security)
+├── agents/         # 7 agent cards (coordinator, scout, builder, qa, security, reviewer, qa-lead)
 ├── hooks/          # 4 hook lifecycle scripts
 └── ...
 .claw.json          # runtime config
@@ -341,7 +341,7 @@ slash command trong `.claude/commands/` sẵn sàng.
 | `/vibe-rri-ui` | Bước 7 — pipeline 4-phase cho UI. |
 | `/vibe-verify` | Đóng báo cáo verify. |
 | `/vibe-complete` | Completion Report. |
-| `/vibe-audit` | Chạy 87 conformance probes (at v0.15.4). |
+| `/vibe-audit` | Chạy 87 conformance probes (at v0.16.0). |
 | `/vibe-doctor` | Chẩn đoán sức khỏe cài đặt. |
 | `/vibe-dashboard` | Dashboard runtime. |
 | `/vibe-permission <cmd>` | Hỏi permission engine có allow lệnh không. |
@@ -941,7 +941,7 @@ File HTML tự-chứa (không framework, không network), nhúng full JSON summa
 # Lifecycle
 vibe doctor                       # health check
 vibe dashboard                    # runtime dashboard
-vibe audit --threshold 0.85       # 87 probes at v0.15.4 (canonical count grows per release)
+vibe audit --threshold 0.85       # 87 probes at v0.16.0 (canonical count grows per release)
 vibe install <destination>        # cài overlay vào project
 vibe compact [--reactive]         # layer 4/5 compaction
 

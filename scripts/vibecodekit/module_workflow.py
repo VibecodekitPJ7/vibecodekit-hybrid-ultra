@@ -408,12 +408,12 @@ def generate_module_plan(
         )
 
     acceptance: List[str] = [
-        f"Module entrypoint is reachable from existing routing",
+        "Module entrypoint is reachable from existing routing",
         f"Reuse inventory ≥ {max(1, len(inventory))} items cited in PR description",
-        f"Zero duplicate dependencies introduced (diff `package.json` / "
-        f"`pyproject.toml` shows only additions, never replacements)",
-        f"All `requires_vision` boundary changes (new auth provider, ORM, "
-        f"top-level layout) routed through `/vibe-vision` first",
+        "Zero duplicate dependencies introduced (diff `package.json` / "
+        "`pyproject.toml` shows only additions, never replacements)",
+        "All `requires_vision` boundary changes (new auth provider, ORM, "
+        "top-level layout) routed through `/vibe-vision` first",
     ]
 
     return ModulePlan(
