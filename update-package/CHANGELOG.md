@@ -4,6 +4,12 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+> **Note on "87/87 @ 100 %" references in historical entries below:**
+> These numbers refer to the project's **internal conformance self-test**
+> (`conformance_audit`) — a regression guard that checks architectural
+> invariants.  They do **not** represent external quality benchmarks.
+> See [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for details.
+
 ## [0.16.2] — USAGE_GUIDE rewrite (full feature catalog)
 
 Doc-only release.  Rewrites `USAGE_GUIDE.md` (and the bundled

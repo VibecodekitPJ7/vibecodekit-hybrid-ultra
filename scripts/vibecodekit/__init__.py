@@ -30,7 +30,6 @@ resolved value.
 """
 from __future__ import annotations
 
-import warnings as _warnings
 from pathlib import Path as _Path
 
 

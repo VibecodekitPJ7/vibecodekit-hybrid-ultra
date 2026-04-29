@@ -49,8 +49,8 @@ with `PYTHONPATH` pointing at the scripts directory.
 v0.16.2 ships with:
 
 - **pytest**: all actionable tests pass (588 cases at v0.16.2)
-- **conformance audit**: 87 / 87 probes @ 100 % parity
-- **fresh-extract audit**: 87 / 87 @ 100 %
+- **conformance self-test**: 87 / 87 internal regression probes pass (self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`)
+- **fresh-extract self-test**: 87 / 87 probes pass
 - **integration tests**: 8 e2e + 3 UX + 6 version-sync
 
 v0.11.4.1 / v0.15.4 are preserved as historical milestones in `CHANGELOG.md`.

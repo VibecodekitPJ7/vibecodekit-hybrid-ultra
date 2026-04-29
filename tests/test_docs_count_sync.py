@@ -228,13 +228,23 @@ def test_changelog_top_section_is_current() -> None:
 # bundle like the v0.11.3 → v0.11.3.1 drift the reviewer caught.
 
 import json as _json
-import tomllib as _tomllib
+import sys
+
+if sys.version_info >= (3, 11):
+    import tomllib as _tomllib
+else:
+    _tomllib = None
 
 
 def _extract_pyproject_version(p: Path) -> str:
-    with open(p, "rb") as f:
-        data = _tomllib.load(f)
-    return data["project"]["version"]
+    if _tomllib is not None:
+        with open(p, "rb") as f:
+            data = _tomllib.load(f)
+        return data["project"]["version"]
+    # Fallback for Python 3.9/3.10: regex extraction.
+    text = p.read_text(encoding="utf-8")
+    m = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
+    return m.group(1) if m else "<missing>"
 
 
 def _extract_yaml_frontmatter_version(p: Path) -> str:
