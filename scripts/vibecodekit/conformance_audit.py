@@ -1712,6 +1712,137 @@ def _probe_vck_pipeline_command(tmp: Path) -> Tuple[bool, str]:
     return True, "vck-pipeline skill + manifest + 3-bucket dispatcher OK"
 
 
+def _probe_no_orphan_module(tmp: Path) -> Tuple[bool, str]:
+    """#85 — every ``scripts/vibecodekit/*.py`` module must have at
+    least one production call site OR be explicitly allowlisted in
+    ``scripts/vibecodekit/_audit_allowlist.json`` (v0.15.0 / T7).
+
+    A "production call site" is any import / reference in:
+
+    * other ``scripts/vibecodekit/*.py`` modules (sibling imports);
+    * ``update-package/.claw/hooks/*.py`` (runtime hooks);
+    * ``tests/**/*.py`` (test suite — implies the module is at least
+      contractually pinned even if it is consumed only by downstream
+      projects);
+    * ``update-package/.claude/commands/*.md`` (slash-command skills
+      that document a module by name).
+
+    The probe is the **invariant guard** that prevents the codebase
+    from accumulating dormant modules again — it is the structural
+    counterpart to the "One Pipeline, Zero Dead-Code" architecture.
+    """
+    pkg_root = Path(__file__).resolve().parent
+    # Resolve repo root candidates honouring VIBECODE_UPDATE_PACKAGE
+    # the same way probes #81 / #82 / #84 do, so the L3 release-matrix
+    # gate (which audits from inside an installed project) finds the
+    # source tree's tests/ + hooks/ + commands/ corpus.
+    repo_candidates: List[Path] = []
+    env_up = os.environ.get("VIBECODE_UPDATE_PACKAGE")
+    if env_up:
+        repo_candidates.append(Path(env_up).resolve().parent)
+    repo_candidates.append(Path(__file__).resolve().parents[2])
+
+    # Allowlist (intentional orphans).
+    allowlist: Dict[str, str] = {}
+    allow_path = pkg_root / "_audit_allowlist.json"
+    if allow_path.is_file():
+        try:
+            allowlist = json.loads(allow_path.read_text(encoding="utf-8")
+                                   ).get("no_orphan_module", {})
+        except json.JSONDecodeError:
+            return False, "_audit_allowlist.json invalid JSON"
+
+    # Modules to check (everything in scripts/vibecodekit/ that is a
+    # public-ish .py file).
+    skip = {"__init__", "__main__", "conformance_audit"}
+    modules: List[str] = []
+    for entry in sorted(pkg_root.iterdir()):
+        if not entry.is_file() or entry.suffix != ".py":
+            continue
+        stem = entry.stem
+        if stem in skip:
+            continue
+        # Internal helpers (leading underscore) are exempt — they're
+        # consumed by their parent module by convention.
+        if stem.startswith("_"):
+            continue
+        modules.append(stem)
+
+    # Search corpus.  Always include sibling .py modules; pick up
+    # tests/ + hooks/ + .claude/commands/ from the first repo_candidate
+    # that has them.
+    search_paths: List[Path] = []
+    for sub in (pkg_root,):
+        search_paths.extend(p for p in sub.glob("*.py")
+                            if p.stem != "conformance_audit")
+    hooks_found = tests_found = cmds_found = False
+    repo_root = repo_candidates[-1]  # for relative_to fallback
+    for cand in repo_candidates:
+        hooks_dir = cand / "update-package" / ".claw" / "hooks"
+        if hooks_dir.is_dir() and not hooks_found:
+            search_paths.extend(hooks_dir.glob("*.py"))
+            hooks_found = True
+            repo_root = cand
+        tests_dir = cand / "tests"
+        if tests_dir.is_dir() and not tests_found:
+            search_paths.extend(tests_dir.rglob("*.py"))
+            tests_found = True
+            repo_root = cand
+        cmd_dir = cand / "update-package" / ".claude" / "commands"
+        if cmd_dir.is_dir() and not cmds_found:
+            search_paths.extend(cmd_dir.glob("*.md"))
+            cmds_found = True
+            repo_root = cand
+
+    # When running from an installed-only environment (no tests, no
+    # hooks, no commands) the probe cannot validate the invariant — it
+    # is a source-tree CI invariant by design.  Soft-pass so the L3
+    # release-matrix gate doesn't treat install-time as authoritative.
+    if not (hooks_found or tests_found or cmds_found):
+        return True, ("soft-pass — orphan invariant only enforced from "
+                      "source tree (no tests/hooks/commands corpus here)")
+
+    # Slurp text once.
+    blobs: Dict[Path, str] = {}
+    for p in search_paths:
+        try:
+            blobs[p] = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+
+    orphans: List[Tuple[str, str]] = []
+    for mod in modules:
+        if mod in allowlist:
+            continue
+        # Match the module name as a whole word inside the search
+        # corpus.  The corpus is already pre-filtered to
+        # scripts/vibecodekit/, update-package/.claw/hooks/, tests/
+        # and update-package/.claude/commands/ — anywhere outside that
+        # list (e.g. references/*.md) does NOT count as a production
+        # call site, by design.
+        word_re = re.compile(rf"\b{re.escape(mod)}\b")
+        found_in: str | None = None
+        for src_path, blob in blobs.items():
+            # Skip the module itself.
+            if src_path == pkg_root / f"{mod}.py":
+                continue
+            if word_re.search(blob):
+                try:
+                    found_in = src_path.relative_to(repo_root).as_posix()
+                except ValueError:
+                    found_in = src_path.as_posix()
+                break
+        if found_in is None:
+            orphans.append((mod, "no production call site found"))
+
+    if orphans:
+        names = ", ".join(f"{m} ({why})" for m, why in orphans[:5])
+        more = "" if len(orphans) <= 5 else f" (+{len(orphans) - 5} more)"
+        return False, f"orphan modules: {names}{more}"
+    n = len(modules) - sum(1 for m in modules if m in allowlist)
+    return True, f"all {n} modules wired (+ {len(allowlist)} allowlisted)"
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -1810,6 +1941,8 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     # v0.15.0-alpha — scaffold seed + master pipeline dispatcher (T5 + T6)
     ("83_scaffold_seeds_vibecode_dir",  _probe_scaffold_seeds_vibecode_dir),
     ("84_vck_pipeline_command",         _probe_vck_pipeline_command),
+    # v0.15.0 — invariant guard against re-introducing orphan modules
+    ("85_no_orphan_module",             _probe_no_orphan_module),
 ]
 
 

@@ -1,0 +1,12 @@
+{
+  "_doc": [
+    "Allowlist for the no-orphan-module probe (#85, T7 in the v0.15.0",
+    "rollout).  Modules listed here are intentionally not imported by",
+    "any production call site and are kept around as utilities or",
+    "fixtures.  Adding to this list requires a justification line."
+  ],
+  "no_orphan_module": {
+    "vn_faker": "Faker-style generator for Vietnamese test data; consumed only by tests + downstream demos.",
+    "vn_error_translator": "VN-localised error message helper; consumed only by tests + downstream demos."
+  }
+}

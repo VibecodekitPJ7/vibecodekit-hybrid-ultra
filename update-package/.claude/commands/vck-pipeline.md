@@ -1,9 +1,11 @@
 ---
+name: vck-pipeline
 description: Master router — type free-form prose to dispatch to one of the 3 VCK-HU pipelines (A. PROJECT CREATION / B. FEATURE DEV / C. CODE & SECURITY)
-version: 0.15.0-alpha
+version: 0.15.0
 allowed-tools: [Bash, Read]
 agent: coordinator
 inspired-by: ../vibe.md
+license: MIT (adapted)
 ---
 
 # /vck-pipeline
@@ -83,3 +85,10 @@ commands.
 - `docs/INTEGRATION-PLAN-v0.15.md` §3 — master plan (T6)
 - `update-package/.claude/commands/vibe.md` — analog router (`/vibe`)
 - `scripts/vibecodekit/pipeline_router.py` — runtime backing this command
+
+---
+
+Adapted from VibecodeKit's `/vibe` master router (clean-room
+rewrite, no upstream code copied).  Scoped specifically to the three
+VCK-HU pipelines that ship in v0.15.0.  Xem
+`LICENSE-third-party.md`.
