@@ -2,7 +2,7 @@
 # Format: 1 dòng JSON / entry — schema:
 #   {"prose": str, "expected_intents": list[str], "locale": "en"|"vi"|"mixed",
 #    "tag": "clear"|"edge"|"ambiguous"}
-# Phân bổ: 40 EN clear + 40 VI clear + 20 edge / ambiguous (≥100 total).
+# Phân bổ: 40 EN clear + 44 VI clear + 20 edge / ambiguous = 104 total.
 # Set-inclusion gate (>= 0.75): expected_intents ⊆ actual_intents.  Clarification
 # expected khi expected_intents = []  (router phải KHÔNG match intent nào).
 {"prose": "scan this repo for security issues", "expected_intents": ["SCAN"], "locale": "en", "tag": "clear"}

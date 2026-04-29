@@ -88,6 +88,23 @@ def _classify(router: IntentRouter, prose: str) -> set[str]:
     return set(m.intents)
 
 
+def _entry_passes(expected: set[str], actual: set[str]) -> bool:
+    """Set-inclusion check, **closed under empty expected**.
+
+    Khi ``expected_intents == []`` (entry tag ``ambiguous``, kỳ vọng
+    router trả ``Clarification``), ``expected.issubset(actual)`` luôn
+    True (empty set là subset của mọi set) → vacuously pass.  Đây là
+    bug Devin Review báo trên PR3 (#28): 10 entry ambiguous trở thành
+    no-op, inflate accuracy mà không test gì.
+
+    Fix: khi ``expected`` rỗng, yêu cầu ``actual`` cũng phải rỗng
+    (router trả ``Clarification`` → set rỗng theo ``_classify``).
+    """
+    if not expected:
+        return len(actual) == 0
+    return expected.issubset(actual)
+
+
 def test_intent_router_set_inclusion_accuracy() -> None:
     router = IntentRouter()
     entries = _load_golden()
@@ -96,7 +113,7 @@ def test_intent_router_set_inclusion_accuracy() -> None:
     for entry in entries:
         expected = set(entry["expected_intents"])
         actual = _classify(router, entry["prose"])
-        if expected.issubset(actual):
+        if _entry_passes(expected, actual):
             matches += 1
         else:
             misses.append(
@@ -162,8 +179,9 @@ def test_intent_router_per_locale_accuracy(locale: str, min_acc: float) -> None:
     matches = sum(
         1
         for e in entries
-        if set(e["expected_intents"]).issubset(
-            _classify(router, e["prose"])
+        if _entry_passes(
+            set(e["expected_intents"]),
+            _classify(router, e["prose"]),
         )
     )
     accuracy = matches / len(entries)

@@ -54,14 +54,22 @@ System"), **not** parity with any external model or tool.
 
 `tests/test_intent_router_golden.py` chạy `IntentRouter().classify()`
 trên dataset có nhãn ở `tests/fixtures/intent_router_golden.jsonl`
-(40 EN clear + 40 VI clear + 24 edge / ambiguous, total **104**
+(40 EN clear + 44 VI clear + 20 edge / ambiguous, total **104**
 entries) và đo:
 
 | Metric | Định nghĩa | Giá trị hiện tại | Gate |
 |---|---|---|---|
-| `set_inclusion_accuracy` | `mean(expected_intents ⊆ actual_intents)` — router được phép trả thêm intent superset | **98.1 %** (102/104 ở v0.16.2) | **≥ 75 %** (hard, không hạ ngưỡng nếu tụt) |
+| `set_inclusion_accuracy` | `mean(_entry_passes(expected, actual))` — `expected ⊆ actual` khi `expected` non-empty; **`actual == ∅`** khi `expected == ∅` (clarification expected) | **97.1 %** (101/104 ở v0.16.2 sau fix vacuous-pass bug) | **≥ 75 %** (hard, không hạ ngưỡng nếu tụt) |
 | `exact_match_accuracy` | `mean(expected == actual)` — báo cáo only | **88.5 %** (92/104) | ≥ 50 % (cảnh báo super set quá rộng) |
 | Per-locale (EN, VI) | set-inclusion riêng từng locale | EN ≥ 75 %, VI ≥ 75 % | đảm bảo không lệch sang một locale |
+
+> **Lịch sử**: Baseline trước fix vacuous-pass (Devin Review báo trên
+> PR #28) là 98.1 % (102/104).  Bug: 10 entry tag `ambiguous` có
+> `expected_intents = []` luôn vacuously pass `expected.issubset(actual)`
+> (empty set là subset của mọi set) → router có thể trả intent thay vì
+> Clarification mà vẫn pass.  Sau fix, 1 entry mới hiện hình thành
+> miss (`không biết làm sao luôn á` → router trả `BUILD` thay vì
+> Clarification).  Buffer 97.1 % vs gate 75 % vẫn rất rộng.
 
 Không phải benchmark code-quality (như HumanEval) — đây thuần là
 classification accuracy của bộ phân loại keyword + multi-tier weighted

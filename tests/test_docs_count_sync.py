@@ -120,20 +120,37 @@ if _ver_file.is_file():
     _CURRENT_VERSION = _ver_file.read_text().strip()
 
 
-def _is_historical_heading(heading: str) -> bool:
+def _is_historical_heading(heading: str, level: int = 2) -> bool:
     """Heading text (without ``#``) is historical if:
+
     - it is explicitly tagged ``(historical)``; **or**
-    - it **contains anywhere** a version literal (``v0.11.2`` /
-      ``[0.11.2]`` / ``(v0.10.3 fix)`` / ``— gstack-port modules
-      (v0.12.0–v0.15.0)``) and that version is **not** the current
-      release.  Pre-PR2 chỉ match khi heading bắt đầu bằng version
-      literal; PR2 mở rộng để các subsection kiểu
-      ``### 12.3 Stdio (v0.10.2 fix)`` cũng được coi là historical.
+    - **(level >= 2 only)** it **contains anywhere** a version literal
+      (``v0.11.2`` / ``[0.11.2]`` / ``(v0.10.3 fix)`` /
+      ``— gstack-port modules (v0.12.0–v0.15.0)``) and that version is
+      **not** the current release.
+
+    Level-1 headings (``# Doc title (v0.X.Y)``) cố ý KHÔNG được coi là
+    historical dù có chứa version literal: chúng là doc title ("as-of"
+    stamp), không phải section history.  Trước fix này (PR2 ban đầu),
+    level-1 title như ``# VibecodeKit Hybrid Ultra — ... (v0.16.1)``
+    bị match → toàn bộ doc bị skip khỏi guard scan.  Xóa class lỗi này
+    bằng cách KHÔNG apply rule "contains anywhere" cho heading cấp 1.
+    Phát hiện qua Devin Review trên PR2 (#27); xem PR
+    devin/<ts>-pr-followup-devin-review-fixes.
     """
     stripped = heading.strip()
     if re.search(r"\(historical\)", stripped, re.IGNORECASE):
         return True
-    for m in re.finditer(r"\bv?(0\.\d+(?:\.\d+)?)\b", stripped):
+    if level <= 1:
+        # Doc title (h1) chỉ được coi historical nếu có tag
+        # ``(historical)`` tường minh — đã check ở trên.
+        return False
+    # Pattern khớp version literal ở mọi vị trí trong heading.  Cho phép
+    # alpha/beta/rc suffix (vd. ``v0.16.0a0``, ``v0.15.5rc1``) — trước
+    # đó pattern dừng ở patch number nên ``### v0.16.0a0`` không được
+    # coi là historical → bug Devin Review trên PR2.
+    pattern = r"\bv?(0\.\d+(?:\.\d+)?)(?:(?:a|b|rc)\d*)?\b"
+    for m in re.finditer(pattern, stripped):
         ver = m.group(1)
         if ver != _CURRENT_VERSION and not _CURRENT_VERSION.startswith(ver):
             return True
@@ -170,9 +187,17 @@ def _strip_historical(body: str) -> str:
     in_fence = False
 
     section_re = re.compile(r"^(#+)\s*(.*)$")
-    table_row_re = re.compile(r"^\|\s*v?0\.\d+\.\d+\s*\|")
+    # Match changelog-style table rows.  Trước đây chỉ chấp nhận row
+    # bắt đầu bằng ``| 0.x.y |`` hoặc ``| v0.x.y |``; mở rộng để bắt
+    # cả ``| #16 v0.16.1 | green | ... |`` (PR rollout matrix kiểu
+    # ``### 25.4 N-PR rollout`` trong USAGE_GUIDE.md).
+    table_row_re = re.compile(
+        r"^\|\s*(?:#\d+\s+)?v?0\.\d+\.\d+(?:(?:a|b|rc)\d*)?\s*\|"
+    )
     fence_re = re.compile(r"^\s*```")
-    cl_bullet_re = re.compile(r"^\s*[-*]\s+\*\*v?0\.\d+\.\d+")
+    cl_bullet_re = re.compile(
+        r"^\s*[-*]\s+\*\*v?0\.\d+\.\d+(?:(?:a|b|rc)\d*)?(?:\.\d+)?"
+    )
 
     for line in body.splitlines():
         if fence_re.match(line):
@@ -188,7 +213,7 @@ def _strip_historical(body: str) -> str:
             # Pop skip levels >= current (we've left those sections).
             while skip_stack and level <= skip_stack[-1]:
                 skip_stack.pop()
-            if _is_historical_heading(heading_body):
+            if _is_historical_heading(heading_body, level=level):
                 skip_stack.append(level)
                 continue
 
@@ -253,6 +278,54 @@ def test_no_stale_version_literals_in_forward_prose(doc: Path) -> None:
         f"    HOẶC chuyển dòng đó thành code block / table changelog row.\n"
         + "\n".join(f"    L{ln}: {txt[:120]}" for ln, txt in bad)
     )
+
+
+def test_level1_doc_title_is_not_treated_as_historical() -> None:
+    """Regression test cho bug Devin Review báo trên PR2 (#27).
+
+    Trước fix follow-up: heuristic ``_is_historical_heading`` apply
+    rule "contains anywhere" cho heading mọi level → level-1 doc
+    title như ``# VibecodeKit Hybrid Ultra — ... (v0.16.1)`` bị
+    classify historical → toàn bộ doc bị strip → guard scan blind.
+    Sau fix: level-1 không bao giờ bị classify historical chỉ vì
+    chứa version literal (vẫn historical nếu có tag tường minh
+    ``(historical)``).
+    """
+    title = "# VibecodeKit Hybrid Ultra — Hướng dẫn (v0.16.1)"
+    body = (
+        title
+        + "\n\nThis is forward-facing prose mentioning v0.10.3 inline.\n"
+        + "## 2. Section\n\nMore current prose.\n"
+    )
+    stripped = _strip_historical(body)
+    assert "forward-facing prose" in stripped, (
+        "Body bị strip toàn bộ — level-1 title đang bị classify "
+        "historical (regression của bug Devin Review trên PR2)."
+    )
+    assert "v0.10.3" in stripped, (
+        "Inline version literal trong prose phải còn lại để guard "
+        "scan-and-flag được."
+    )
+
+
+def test_alpha_suffix_subsection_is_treated_as_historical() -> None:
+    """Regression test: ``### v0.16.0a0`` (alpha suffix) phải được
+    classify historical.  Trước fix follow-up: pattern dừng ở patch
+    number nên ``v0.16.0a0`` chỉ match ``0.16`` (prefix khớp current
+    ``0.16.2``) → False → contents không được strip.
+    """
+    body = (
+        "## 16. Release history\n\n"
+        "### v0.16.0a0 — α release\n\n"
+        "- Close v0.15.4 audit P3 finding.\n"
+        "## Phụ lục\n\nForward state.\n"
+    )
+    stripped = _strip_historical(body)
+    assert "v0.15.4 audit" not in stripped, (
+        "Section ### v0.16.0a0 đang không được skip (alpha suffix "
+        "regression của bug Devin Review trên PR2)."
+    )
+    assert "Forward state" in stripped
 
 
 def test_changelog_top_section_is_current() -> None:
