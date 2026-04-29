@@ -628,6 +628,33 @@ def _cmd_module(args: argparse.Namespace) -> int:
     raise SystemExit(f"unknown module command: {args.module_cmd}")
 
 
+def _cmd_team(args: argparse.Namespace) -> int:
+    """v0.15.1 (Bug #6) — pass-through to ``vibecodekit.team_mode``.
+
+    Forwards every positional / option after ``vibe team`` to
+    :func:`team_mode._main` so existing callers using
+    ``python -m vibecodekit.team_mode <subcmd>`` keep working and
+    operators can use ``vibe team <subcmd>`` interchangeably.
+    """
+    from . import team_mode
+    forwarded = list(getattr(args, "team_argv", []) or [])
+    return team_mode._main(forwarded)
+
+
+def _cmd_learn(args: argparse.Namespace) -> int:
+    """v0.15.1 (Bug #6) — pass-through to ``vibecodekit.learnings``."""
+    from . import learnings
+    forwarded = list(getattr(args, "learn_argv", []) or [])
+    return learnings._main(forwarded)
+
+
+def _cmd_pipeline(args: argparse.Namespace) -> int:
+    """v0.15.1 (Bug #6) — pass-through to ``vibecodekit.pipeline_router``."""
+    from . import pipeline_router
+    forwarded = list(getattr(args, "pipeline_argv", []) or [])
+    return pipeline_router._main(forwarded)
+
+
 def _cmd_refine(args: argparse.Namespace) -> int:
     """Wire ``vibe refine classify`` to ``refine_boundary.classify_change``."""
     import os
@@ -655,7 +682,8 @@ def main(argv=None) -> int:
                      "task", "mcp", "ledger", "memory", "approval",
                      "rri-t", "rri-ux", "vn-check", "config", "intent",
                      "scaffold", "ship", "manifest", "refine", "verify",
-                     "anti-patterns", "module", "context", "activate"):
+                     "anti-patterns", "module", "context", "activate",
+                     "team", "learn", "pipeline"):
         sub = sp.add_parser(cmd_name)
         sub.add_argument("--root", default=".")
         if cmd_name == "run":
@@ -933,6 +961,21 @@ def main(argv=None) -> int:
             apc.add_argument("--file", default=None,
                              help="Path to a JSON file with the flags dict.")
             sub.set_defaults(fn=_cmd_anti_patterns)
+        elif cmd_name == "team":
+            sub.add_argument(
+                "team_argv", nargs=argparse.REMAINDER,
+                help="Forwarded verbatim to ``python -m vibecodekit.team_mode``.")
+            sub.set_defaults(fn=_cmd_team)
+        elif cmd_name == "learn":
+            sub.add_argument(
+                "learn_argv", nargs=argparse.REMAINDER,
+                help="Forwarded verbatim to ``python -m vibecodekit.learnings``.")
+            sub.set_defaults(fn=_cmd_learn)
+        elif cmd_name == "pipeline":
+            sub.add_argument(
+                "pipeline_argv", nargs=argparse.REMAINDER,
+                help="Forwarded verbatim to ``python -m vibecodekit.pipeline_router``.")
+            sub.set_defaults(fn=_cmd_pipeline)
         elif cmd_name == "module":
             sp2 = sub.add_subparsers(dest="module_cmd", required=True)
             mp = sp2.add_parser(

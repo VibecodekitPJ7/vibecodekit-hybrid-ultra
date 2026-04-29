@@ -7,6 +7,19 @@
 **Outcome:** 1 P0 + 4 P1 defects found and fixed in this PR.
             All P2 are accepted/documented limitations.
 
+> **Follow-up — v0.14.1 + v0.15.0 deep-dive (2026-04-29).**  A second
+> audit pass surfaced four *dormant-code* findings (D1–D4) that this
+> v0.14.0 cycle did not catch: `team_mode`, `eval_select`, `learnings`,
+> and `security_classifier` were all shipping but not wired to a
+> production call site (only via tests + docs).  All four were closed
+> in the v0.15.0 "One Pipeline, Zero Dead-Code" rollout — see
+> [`docs/INTEGRATION-PLAN-v0.15.md`](INTEGRATION-PLAN-v0.15.md) for the
+> integration plan and the
+> [v0.15.0 CHANGELOG entries](../CHANGELOG.md#0150--one-pipeline-zero-dead-code)
+> for the four PRs that landed the wiring.  The new audit probes
+> #78–#85 (T7 + T9) act as the invariant guard so this class of
+> dormant-code regression cannot be reintroduced silently.
+
 ---
 
 ## 1. Scope

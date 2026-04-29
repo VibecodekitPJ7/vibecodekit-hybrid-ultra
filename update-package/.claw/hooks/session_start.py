@@ -48,19 +48,29 @@ except Exception as exc:  # noqa: BLE001
 # the session-start payload so the host LLM can surface prior project
 # context.  Opt-out with ``VIBECODE_LEARNINGS_INJECT=0``.  Limit
 # overridable via ``VIBECODE_LEARNINGS_INJECT_LIMIT`` (default 10).
-# Failures are silent — never break session start.
+# Scope filter via ``VIBECODE_LEARNINGS_INJECT_SCOPES`` (comma-separated
+# subset of "user,project,team"; default = all scopes).  Failures are
+# silent — never break session start.
+#
+# v0.15.1 (Bug #4) — also emit a ready-to-paste ``addendum`` markdown
+# string so hosts that prefer prompt-injection (Claude Code, Cursor)
+# don't need to re-format the JSON ``items`` themselves.
 if os.environ.get("VIBECODE_LEARNINGS_INJECT", "1") != "0":
     try:
-        from vibecodekit.learnings import load_recent  # type: ignore
+        from vibecodekit.learnings import load_recent, recent_for_prompt  # type: ignore
         _limit_raw = os.environ.get("VIBECODE_LEARNINGS_INJECT_LIMIT", "10")
         try:
             _limit = max(0, int(_limit_raw))
         except ValueError:
             _limit = 10
-        _recent = load_recent(limit=_limit, root=repo)
+        _scopes_raw = os.environ.get("VIBECODE_LEARNINGS_INJECT_SCOPES", "")
+        _scopes = tuple(s.strip() for s in _scopes_raw.split(",") if s.strip()) or None
+        _recent = load_recent(limit=_limit, root=repo, scopes=_scopes)
+        _addendum = recent_for_prompt(limit=_limit, scopes=_scopes, root=repo)
         learnings_inject = {
             "injected": len(_recent),
             "reason": "ok",
+            "addendum": _addendum,
             "items": [
                 {
                     "text": l.text,
@@ -75,10 +85,12 @@ if os.environ.get("VIBECODE_LEARNINGS_INJECT", "1") != "0":
         learnings_inject = {
             "injected": 0,
             "reason": f"hook_error: {type(exc).__name__}",
+            "addendum": "",
             "items": [],
         }
 else:
-    learnings_inject = {"injected": 0, "reason": "opt_out", "items": []}
+    learnings_inject = {"injected": 0, "reason": "opt_out",
+                        "addendum": "", "items": []}
 
 sys.stdout.write(json.dumps({
     "decision": "allow",
