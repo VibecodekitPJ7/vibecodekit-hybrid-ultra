@@ -40,12 +40,39 @@ REQUIRED_RUNTIME_ASSETS: List[str] = [
 ]
 
 
+def _is_skill_repo(root: Path) -> bool:
+    """Detect the skill bundle's source layout (overlay lives under
+    ``update-package/`` instead of the project root).
+
+    A skill repo has ``update-package/CLAUDE.md`` + ``update-package/.claw.json``
+    + ``scripts/vibecodekit/`` at the root; advisory files like ``CLAUDE.md``
+    and ``.claude/commands`` are *expected* to be missing because they are
+    shipped under ``update-package/`` for installation into downstream
+    projects (audit v0.16.0 finding E).
+    """
+    return (
+        (root / "update-package" / "CLAUDE.md").is_file()
+        and (root / "update-package" / ".claw.json").is_file()
+        and (root / "scripts" / "vibecodekit").is_dir()
+    )
+
+
 def check(root: str | os.PathLike = ".", installed_only: bool = False) -> Dict:
     root = Path(root).resolve()
     ok: List[str] = []
     missing: List[str] = []
+    skill_repo = _is_skill_repo(root)
     for rel in ADVISORY_FILES:
-        (ok if (root / rel).exists() else missing).append(rel)
+        # When invoked from inside the skill repo, advisory files live
+        # under ``update-package/`` rather than the project root — count
+        # that as "present" so doctor doesn't yell at maintainers running
+        # from the source tree.
+        if (root / rel).exists():
+            ok.append(rel)
+        elif skill_repo and (root / "update-package" / rel).exists():
+            ok.append(rel)
+        else:
+            missing.append(rel)
     runtime = root / ".vibecode" / "runtime"
     runtime_exists = runtime.exists()
     # Try importing the package to catch path issues.
@@ -109,6 +136,7 @@ def check(root: str | os.PathLike = ".", installed_only: bool = False) -> Dict:
             exit_code = 1
     return {
         "root": str(root),
+        "skill_repo": skill_repo,
         "advisory_present": ok,
         "advisory_missing": missing,
         "runtime_exists": runtime_exists,

@@ -221,7 +221,6 @@ def classify_change(
         path = str(entry.get("path", ""))
         status = (entry.get("status") or "modified").lower()
         added = entry.get("added_lines") or []
-        removed = entry.get("removed_lines") or []
 
         if status == "added":
             signals["files_added"] += 1

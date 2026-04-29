@@ -4,6 +4,79 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+## [0.16.1] — Doc coherence + recheck cleanup
+
+Green-risk patch closing the five P3 findings discovered by the
+v0.16.0 auto-recheck (`/home/ubuntu/reports/v0.16.0-recheck.md`).
+All five findings are doc-coherence / lint-debt / cosmetic items —
+no behavioural change.  Gates remain at 87 / 87 audit @ 100 % parity
+and pytest 762 / 762 (6 new regression cases added).
+
+### Fixed
+
+- **Finding A — Sub-agent ACL doc says 5 roles, runtime has 7.**
+  Updated the `## Sub-agent ACL` table in `update-package/CLAUDE.md`
+  to list all 7 roles (`coordinator`, `scout`, `builder`, `qa`,
+  `security`, `reviewer`, `qa-lead`) matching `subagent_runtime.PROFILES`.
+  Synced the directory-listing line in `update-package/README.md`,
+  `update-package/USAGE_GUIDE.md`, and the repo-root `USAGE_GUIDE.md`
+  mirror.
+
+- **Finding B — Stale `v0.15.4` / `500 cases` anchors in live docs.**
+  Replaced version anchors across `update-package/README.md`,
+  `update-package/USAGE_GUIDE.md`, `update-package/QUICKSTART.md`,
+  `update-package/CLAUDE.md`, and the repo-root `QUICKSTART.md` /
+  `USAGE_GUIDE.md` mirrors — `v0.15.4 → v0.16.1` and `500 → 756`.
+  CHANGELOG entries for v0.15.x are unchanged (historical record).
+
+- **Finding C — Router phrase-bank drift (P2 #4 partial-fix gap).**
+  `vck-pipeline.md` frontmatter declared `"build the whole thing"`
+  and `"set everything up"` as triggers but
+  `intent_router.VCK_PIPELINE` was missing them, so prose-mode
+  classification fell back to a low-confidence `BUILD` match.
+  Added both phrases to the router bank and pinned them with two new
+  parametrize entries each in `tests/test_v016_alpha_router_fixes.py`
+  (frontmatter test + intent-classifier test).
+
+- **Finding D — Pyflakes lint debt (genuinely-dead lines only).**
+  Removed truly-unused symbols: `DenialStore` / `classify_cmd` /
+  `TOOLS` from `tool_executor.py`, the assigned-but-unused `removed`
+  local in `refine_boundary.py:224`, and four f-strings without
+  placeholders in `conformance_audit.py:533` /
+  `module_workflow.py:411,413,415`.  Left the typing-only imports
+  and the conformance-audit load-test imports alone.
+
+- **Finding E — `vibe doctor` mis-classifies the skill repo.**
+  When run from inside the skill bundle's source tree, doctor used
+  to report the overlay advisories (`CLAUDE.md`, `.claude/commands`,
+  …) as missing because they live under `update-package/` instead of
+  the project root.  Added `_is_skill_repo()` detection and an
+  `update-package/` fallback so doctor reports zero
+  `advisory_missing` from the source tree, plus a new `skill_repo`
+  flag in the JSON envelope.  Pinned with `tests/test_doctor_skill_repo.py`.
+
+### Changed
+
+- Version bump `0.16.0 → 0.16.1` across 8 surfaces (`VERSION`,
+  `update-package/VERSION`, `pyproject.toml`, `manifest.llm.json`,
+  `assets/plugin-manifest.json`, `update-package/.claw.json`,
+  `SKILL.md` frontmatter, `vck-pipeline.md` frontmatter) plus
+  `_FALLBACK_VERSION`, the `update-package/CLAUDE.md` heading, and
+  the `update-package/README.md` title.
+
+### Verification
+
+- `pytest tests` → **762 passed** (756 baseline + 6 new regression
+  cases for findings C and E).
+- `python -m vibecodekit.conformance_audit --threshold 1.0` →
+  **87 / 87 @ 100 %**.
+- `python tools/validate_release_matrix.py --skill . --update update-package`
+  → **PASS (L1 + L2 + L3)**.
+
+This closes the v0.16.0 auto-recheck (full report:
+`docs/audits/v0.15.4-recheck.md` plus the live recheck attached to
+the PR).
+
 ## [0.16.0] — Final: cleanup of v0.15.4 audit P3 findings
 
 Green-risk final release closing the three remaining P3 findings (#8,

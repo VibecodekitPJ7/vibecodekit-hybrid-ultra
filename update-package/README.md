@@ -1,15 +1,15 @@
-# claw-code-pack (VibecodeKit Hybrid Ultra v0.16.0)
+# claw-code-pack (VibecodeKit Hybrid Ultra v0.16.1)
 
 Drop-in overlay for projects that use `claw-code` / Claude Code / Codex.
 After extracting into your project root you'll have:
 
-- `.claude/commands/` — **42 slash commands** at v0.16.0: 25 `/vibe-*` + 1 master `/vibe`
+- `.claude/commands/` — **42 slash commands** at v0.16.1: 25 `/vibe-*` + 1 master `/vibe`
   (`/vibe`, `/vibe-scaffold`, `/vibe-ship`, `/vibe-run`, `/vibe-doctor`,
   `/vibe-subagent`, `/vibe-memory`, `/vibe-approval`, `/vibe-task`,
   `/vibe-scan`, `/vibe-vision`, `/vibe-rri`, `/vibe-rri-t`, `/vibe-rri-ux`,
   `/vibe-rri-ui`, …) plus 16 `/vck-*` (`/vck-pipeline`, `/vck-ship`,
   `/vck-review`, `/vck-cso`, `/vck-qa`, …)
-- `.claude/agents/` — 5 role cards (coordinator, scout, builder, qa, security)
+- `.claude/agents/` — 7 role cards (coordinator, scout, builder, qa, security, reviewer, qa-lead)
 - `.claw/hooks/` — 4 lifecycle hooks (pre/post tool use, pre compact, session start)
 - `ai-rules/vibecodekit/` — runtime package + references + templates
 - `QUICKSTART.md` — 5-minute onboarding (read this first)
@@ -46,14 +46,14 @@ with `PYTHONPATH` pointing at the scripts directory.
 
 ## Release gate
 
-v0.15.4 ships with:
+v0.16.0 ships with:
 
-- **pytest**: all actionable tests pass (500 cases at v0.15.4)
+- **pytest**: all actionable tests pass (756 cases at v0.16.0)
 - **conformance audit**: 87 / 87 probes @ 100 % parity
 - **fresh-extract audit**: 87 / 87 @ 100 %
 - **integration tests**: 8 e2e + 3 UX + 6 version-sync
 
-v0.11.4.1 is preserved as a historical milestone in `CHANGELOG.md`.
+v0.11.4.1 / v0.15.4 are preserved as historical milestones in `CHANGELOG.md`.
 
 See `ai-rules/vibecodekit/SKILL.md`, `ai-rules/vibecodekit/references/00-overview.md`
 and `CLAUDE.md` for the complete methodology reference.
