@@ -4,6 +4,70 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+## [0.15.0] — One Pipeline, Zero Dead-Code (PR-D — orphan-module probe + version cut)
+
+Final slice of the v0.15.0 "One Pipeline, Zero Dead-Code" rollout
+documented in `docs/INTEGRATION-PLAN-v0.15.md`.  Closes T7 + T9 + T10
+and bumps the kit from `0.14.1` to `0.15.0`.
+
+### Added
+
+* **Audit probe #85 — `no_orphan_module` (T7).**
+  New regression in `scripts/vibecodekit/conformance_audit.py` walks
+  every public module under `scripts/vibecodekit/` and verifies it has
+  at least one production call site (sibling import, runtime hook,
+  test, or skill markdown) **or** is listed in
+  `scripts/vibecodekit/_audit_allowlist.json` with a substantive
+  justification.  This makes the "zero dead-code" invariant a hard
+  conformance gate — adding a new module without wiring it up will
+  break CI on every push.
+* **`scripts/vibecodekit/_audit_allowlist.json`** — explicit, reviewed
+  allowlist for intentional orphans.  Per Q5(b) on the integration
+  plan, only `vn_faker` and `vn_error_translator` (Vietnamese
+  test-data utilities consumed by tests + downstream demos) are
+  allowlisted today.  Adding to this list requires a one-line
+  justification.
+* **8 smoke tests** in `tests/test_orphan_module_smoke.py` pinning
+  four previously-orphan modules (`auto_commit_hook`, `quality_gate`,
+  `tool_use_parser`, `worktree_executor`) to the test suite as their
+  production call site.  These modules are documented in
+  `references/` and `assets/templates/` but had no runtime entry
+  point until v0.15.0.
+* **6 regression tests** in `tests/test_audit_probe_85_no_orphan.py`
+  covering the green-path (all modules wired), allowlist semantics,
+  JSON validity of the allowlist, the Q5(b) constraint, the probe's
+  presence in `PROBES`, and a synthetic-orphan detection case.
+* **5 sanity tests** in `tests/test_vck_skills_v015.py` covering the
+  v0.15.0 `/vck-pipeline` skill on the same five axes that
+  `test_vck_skills.py` and `test_vck_skills_v014.py` enforce
+  (markdown frontmatter, manifest, SKILL.md triggers, intent router,
+  and `subagent_runtime.DEFAULT_COMMAND_AGENT`).
+
+### Changed
+
+* **`subagent_runtime.DEFAULT_COMMAND_AGENT`** — adds the missing
+  `vck-pipeline → coordinator` binding (Devin Review on PR #7,
+  finding #1).  Without this entry, callers of
+  `spawn_for_command(root, "vck-pipeline", objective)` that don't
+  pass `commands_dir` would have hit a `LookupError`.
+* **`update-package/.claude/commands/vck-pipeline.md` frontmatter**
+  now includes the canonical `name: vck-pipeline` and `license: MIT`
+  fields used by the v0.14 sanity-test convention.
+* **Version bump** — `0.14.1 → 0.15.0` across `VERSION`,
+  `update-package/VERSION`, `pyproject.toml`, `manifest.llm.json`,
+  `SKILL.md`, `assets/plugin-manifest.json`, `update-package/.claw.json`,
+  and `README.md`.
+
+### Verification
+
+| Gate | Before (PR-C merged) | This PR |
+|---|---|---|
+| `pytest tests` | 584 / 0 skipped | **TBD** |
+| `conformance_audit --threshold 1.0` | 84 / 84 | **85 / 85 @ 100 %** |
+| `validate_release_matrix.py` | PASS | **PASS** |
+
+CI gates: pytest + audit on Python 3.9 / 3.11 / 3.12.
+
 ## [Unreleased] — v0.15.0-alpha (PR-C — scaffold seeds + master /vck-pipeline T5 + T6)
 
 Third slice of the **"One Pipeline, Zero Dead-Code"** rollout

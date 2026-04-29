@@ -4,6 +4,658 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+## [0.15.0] — One Pipeline, Zero Dead-Code (PR-D — orphan-module probe + version cut)
+
+Final slice of the v0.15.0 "One Pipeline, Zero Dead-Code" rollout
+documented in `docs/INTEGRATION-PLAN-v0.15.md`.  Closes T7 + T9 + T10
+and bumps the kit from `0.14.1` to `0.15.0`.
+
+### Added
+
+* **Audit probe #85 — `no_orphan_module` (T7).**
+  New regression in `scripts/vibecodekit/conformance_audit.py` walks
+  every public module under `scripts/vibecodekit/` and verifies it has
+  at least one production call site (sibling import, runtime hook,
+  test, or skill markdown) **or** is listed in
+  `scripts/vibecodekit/_audit_allowlist.json` with a substantive
+  justification.  This makes the "zero dead-code" invariant a hard
+  conformance gate — adding a new module without wiring it up will
+  break CI on every push.
+* **`scripts/vibecodekit/_audit_allowlist.json`** — explicit, reviewed
+  allowlist for intentional orphans.  Per Q5(b) on the integration
+  plan, only `vn_faker` and `vn_error_translator` (Vietnamese
+  test-data utilities consumed by tests + downstream demos) are
+  allowlisted today.  Adding to this list requires a one-line
+  justification.
+* **8 smoke tests** in `tests/test_orphan_module_smoke.py` pinning
+  four previously-orphan modules (`auto_commit_hook`, `quality_gate`,
+  `tool_use_parser`, `worktree_executor`) to the test suite as their
+  production call site.  These modules are documented in
+  `references/` and `assets/templates/` but had no runtime entry
+  point until v0.15.0.
+* **6 regression tests** in `tests/test_audit_probe_85_no_orphan.py`
+  covering the green-path (all modules wired), allowlist semantics,
+  JSON validity of the allowlist, the Q5(b) constraint, the probe's
+  presence in `PROBES`, and a synthetic-orphan detection case.
+* **5 sanity tests** in `tests/test_vck_skills_v015.py` covering the
+  v0.15.0 `/vck-pipeline` skill on the same five axes that
+  `test_vck_skills.py` and `test_vck_skills_v014.py` enforce
+  (markdown frontmatter, manifest, SKILL.md triggers, intent router,
+  and `subagent_runtime.DEFAULT_COMMAND_AGENT`).
+
+### Changed
+
+* **`subagent_runtime.DEFAULT_COMMAND_AGENT`** — adds the missing
+  `vck-pipeline → coordinator` binding (Devin Review on PR #7,
+  finding #1).  Without this entry, callers of
+  `spawn_for_command(root, "vck-pipeline", objective)` that don't
+  pass `commands_dir` would have hit a `LookupError`.
+* **`update-package/.claude/commands/vck-pipeline.md` frontmatter**
+  now includes the canonical `name: vck-pipeline` and `license: MIT`
+  fields used by the v0.14 sanity-test convention.
+* **Version bump** — `0.14.1 → 0.15.0` across `VERSION`,
+  `update-package/VERSION`, `pyproject.toml`, `manifest.llm.json`,
+  `SKILL.md`, `assets/plugin-manifest.json`, `update-package/.claw.json`,
+  and `README.md`.
+
+### Verification
+
+| Gate | Before (PR-C merged) | This PR |
+|---|---|---|
+| `pytest tests` | 584 / 0 skipped | **TBD** |
+| `conformance_audit --threshold 1.0` | 84 / 84 | **85 / 85 @ 100 %** |
+| `validate_release_matrix.py` | PASS | **PASS** |
+
+CI gates: pytest + audit on Python 3.9 / 3.11 / 3.12.
+
+## [Unreleased] — v0.15.0-alpha (PR-C — scaffold seeds + master /vck-pipeline T5 + T6)
+
+Third slice of the **"One Pipeline, Zero Dead-Code"** rollout
+(`docs/INTEGRATION-PLAN-v0.15.md`).  No version bump yet; `VERSION`
+stays at `0.14.1` until PR-D closes the cycle (T10).
+
+### Added
+
+* **`ScaffoldEngine.apply()` now seeds `.vibecode/` runtime files (T5).**
+  Every preset scaffolded with `/vibe-scaffold` (or
+  `vibe scaffold apply`) gets a four-file runtime context dropped at the
+  target's project root:
+    * `.vibecode/learnings.jsonl` — empty store, ready for `/vck-learn`
+      and the session_start auto-inject from PR-B / T3.
+    * `.vibecode/team.json.example` — opt-in template that documents
+      the team-mode required-gate ledger from PR-A / T1.
+    * `.vibecode/classifier.env.example` — documented opt-out env vars
+      for the security classifier (T4) and learnings inject (T3).
+    * `.vibecode/README.md` — short banner so new operators discover
+      the directory immediately.
+  The seed is **idempotent** — existing files are never overwritten.
+  CLI users can opt out with `vibe scaffold apply ... --no-vibecode-seed`.
+  `ScaffoldResult` now carries a `vibecode_seeded: tuple[str, ...]`
+  field listing the relative paths that were created.
+* **Master `/vck-pipeline` command (T6)** —
+  `update-package/.claude/commands/vck-pipeline.md` plus a Python
+  runtime `scripts/vibecodekit/pipeline_router.py`.  Single-prompt
+  dispatcher that classifies free-form prose into one of three
+  pipelines:
+    * **A. PROJECT CREATION** — `/vibe-scaffold` → `/vibe-blueprint`
+    * **B. FEATURE DEV** — `/vibe-run` → `/vck-ship`
+    * **C. CODE & SECURITY** — `/vck-cso` → `/vck-review`
+  Wired into `manifest.llm.json`, `SKILL.md`, and `intent_router.TIER_1`
+  (intent `VCK_PIPELINE`).  Below the 0.5 confidence threshold the
+  router asks for clarification instead of guessing.
+* **Audit probes #83 / #84** — pin the new wiring as conformance
+  invariants.  #83 runs `ScaffoldEngine.apply("blog", ...)` end-to-end
+  and verifies the four `.vibecode/` files appear on disk.  #84 looks
+  up `vck-pipeline.md` (honours `VIBECODE_UPDATE_PACKAGE` for L3
+  release-matrix), parses the manifest, and round-trips the dispatcher
+  on three sample prompts (one per pipeline).
+* **19 new regression tests** (`tests/test_pipeline_v015_pr_c.py`)
+  covering scaffold seed idempotency, JSON validity of
+  `team.json.example`, env-var documentation of `classifier.env.example`,
+  CLI opt-out via `--no-vibecode-seed`, all 3 pipeline dispatch cases,
+  low-confidence + empty-input handling, JSON serialisation of
+  `PipelineDecision`, keyword uniqueness invariant, CLI surface, and
+  manifest + intent_router wiring parity.
+
+### Fixed
+
+* **PR #6 follow-up: subprocess tests in `test_pipeline_v015_pr_b.py`
+  no longer leak the developer's real `~/.vibecode/learnings.jsonl`
+  into assertions.**  Devin Review caught that without
+  `VIBECODE_HOME` overridden, the four hook subprocess tests
+  (`test_session_start_hook_emits_learnings_inject_key`,
+  `test_session_start_injects_most_recent_learnings`,
+  `test_session_start_opt_out_with_env_var`,
+  `test_session_start_custom_limit`) would mix real user learnings
+  (timestamps >> 1e9) with the test entries (timestamps `1000.0 + i`),
+  causing intermittent assertion failures.  All four tests now
+  isolate the user store to `tmp_path / "fakehome"`.
+
+### Verification
+
+* `pytest tests` — **584 passed / 0 skipped** (was 565 in PR-B).
+* `conformance_audit --threshold 1.0` — **84 / 84 @ 100 %** (was 82).
+* `validate_release_matrix.py --skill . --update ./update-package` —
+  **PASS**.
+
+## [Unreleased] — v0.15.0-alpha (PR-B — auto-on T3 + T4)
+
+Second slice of the **"One Pipeline, Zero Dead-Code"** rollout
+(`docs/INTEGRATION-PLAN-v0.15.md`).  No version bump yet; `VERSION` stays
+at `0.14.1` until PR-D closes the cycle (T10).
+
+### Added
+
+* **`learnings.load_recent(limit=10, ...)`** — newest-first helper used by
+  the session_start hook to inject prior project context into the host
+  LLM at session start.
+* **`session_start` hook now auto-injects up to 10 most-recent learnings
+  (T3)** into its JSON output under the `learnings_inject` key.  Opt-out
+  via `VIBECODE_LEARNINGS_INJECT=0`; limit overridable via
+  `VIBECODE_LEARNINGS_INJECT_LIMIT`.  Failures are silent — never break
+  session start.
+* **Audit probes #81 / #82** — pin the new auto-on wiring.  #81 verifies
+  the `pre_tool_use` hook contains the new auto-on gate
+  (`!= "0"`) and not the old opt-in gate (`== "1"`).  #82 verifies the
+  `session_start` hook references `load_recent` + emits a
+  `learnings_inject` key, and that `load_recent` itself returns
+  newest-first.
+* **11 new regression tests** (`tests/test_pipeline_v015_pr_b.py`)
+  covering hook-level end-to-end behaviour, opt-out semantics, custom
+  limits, ordering invariants, and audit probe parity.
+
+### Changed
+
+* **`security_classifier` is now auto-on by default (T4)** — the
+  `pre_tool_use` hook used to require `VIBECODE_SECURITY_CLASSIFIER=1`
+  to enable the classifier; it now runs unconditionally.  The regex
+  layer is stdlib-only, ONNX / Haiku layers self-disable when their
+  deps / env vars are missing, so this is safe to flip.  Operators who
+  need the old v0.14.x opt-in semantics can disable with
+  `VIBECODE_SECURITY_CLASSIFIER=0`.
+
+### Verification
+
+* `pytest tests` — **565 passed / 0 skipped** (was 554 in PR-A).
+* `conformance_audit --threshold 1.0` — **82 / 82 @ 100 %** (was 80).
+* `validate_release_matrix.py` — PASS.
+
+## [Unreleased] — v0.15.0-alpha (PR-A — pipeline wiring T1 + T2 + T8)
+
+First slice of the **"One Pipeline, Zero Dead-Code"** rollout
+(`docs/INTEGRATION-PLAN-v0.15.md`).  No version bump yet; the canonical
+`VERSION` file stays at `0.14.1` until PR-D closes the cycle (T10).
+
+### Added
+
+* **`scripts/vibecodekit/session_ledger.py`** — append-only JSONL ledger
+  of completed gates, written to `.vibecode/session_ledger.jsonl`.
+  Concurrent appenders are POSIX-atomic; reads tolerate truncated /
+  corrupt rows.  3 public functions (`record_gate`, `gates_run`,
+  `clear`) + a stable `LEDGER_PATH` constant.
+* **`team_mode` CLI subcommands** — `check` (asserts required gates ran,
+  exit 2 on `TeamGateViolation`), `record --gate <name>` (appends to
+  ledger), `clear` (wipe).  `--gates-run` flag overrides the ledger for
+  one-shot CI checks.
+* **`tests/touchfiles.json`** — diff-based test selection map for VCK-HU
+  itself (16 entries; `test_docs_count_sync` + `test_content_depth`
+  marked `always_run: true`).
+* **Audit probes #78 / #79 / #80** — pin the new wiring as conformance
+  invariants.  Probe #78 verifies `/vck-ship` Bước 0 calls `team_mode
+  check` + Bước 7 clears.  #79 verifies `eval_select` is invoked from
+  both `/vck-ship` Bước 2 and `.github/workflows/ci.yml` (with
+  `fetch-depth: 0`).  #80 round-trips `session_ledger`.
+* **18 new regression tests** (`tests/test_session_ledger.py` — 7;
+  `tests/test_pipeline_v015_alpha.py` — 11).
+* **USAGE_GUIDE §18** — corrected Activation Cheat Sheet (the version
+  added in commit `28c69c9` was lost in PR #3 race; this rewrite
+  reflects v0.15.0-alpha truth, not v0.14.1 aspiration).
+* **README "Activation cheat sheet" table** — links to USAGE_GUIDE §18.
+
+### Changed
+
+* **`/vck-ship` 6-step pipeline → 7-step** (Bước 0 + Bước 7 added).
+  Bước 0 is a team-mode preflight (no-op when `.vibecode/team.json` is
+  absent); Bước 7 wipes the session ledger after the PR is open.
+  Bước 2 now invokes `eval_select` when `tests/touchfiles.json` is
+  present, falling back to the full `pytest tests` suite otherwise.
+* **`/vck-review`, `/vck-qa-only`, `/vck-learn`** now record their own
+  completion via `python -m vibecodekit.team_mode record --gate <name>`
+  so `/vck-ship` Bước 0 can see them.
+* **`.github/workflows/ci.yml`** runs an `eval_select` preview step on
+  every PR + push (visibility-only — full pytest is still the gate).
+  `fetch-depth: 0` is now required for the merge-base computation.
+
+### Fixed (audit-correctness)
+
+* USAGE_GUIDE §18 + README cheat sheet were silently lost when the PR
+  #3 merge raced with the docs commit `28c69c9`.  Restored with
+  truthful wording (no aspirational claims about features that hadn't
+  shipped yet).
+
+### Verification
+
+* `pytest tests` — 554 passed (was 536 on 0.14.1; +18 new cases).
+* `conformance_audit --threshold 1.0` — 80/80 @ 100 % (was 77/77).
+* `validate_release_matrix.py` — L1 + L2 + L3 PASS.
+* CI: 3.9 / 3.11 / 3.12 — pending (this commit triggers).
+
+The remaining tasks (T3 learnings session_start auto-inject, T4
+classifier auto-on, T5 scaffold seeds, T6 master `/vck-pipeline`
+command, T7 orphan-module probe, T9 broader integration probes, T10
+version bump) are deferred to PR-B / PR-C / PR-D per the integration
+plan.
+
+## [0.14.1] — RRI-T deep audit fixes (P0 + P1 from v0.14.0 audit cycle)
+
+Cycle hardening pass after the v0.14.0 merge.  The deep RRI-T audit
+(5 personas × 7 dimensions × 8 stress axes per
+``RRI-T_METHODOLOGY.docx``) surfaced **1 P0 + 4 P1** defects in the new
+modules.  All five are fixed here with regression tests pinned in
+``tests/test_v014_audit_fixes.py`` (19 cases).
+
+### Fixed
+
+* **P0 — `team_mode.write_team_config` race condition (COLLAB axis).**
+  The previous implementation rendered to a shared ``team.json.tmp``,
+  causing concurrent writers (e.g. two Devin sessions running
+  ``vibe team-init`` in parallel) to crash on ``os.replace`` with
+  ``FileNotFoundError``.  Now uses ``tempfile.mkstemp`` with a unique
+  per-writer suffix in the same directory; ``os.replace`` remains
+  atomic and last-writer-wins.
+* **P1 — `security_classifier` newline-split bypass (D4 + D7).**
+  Five injection rules used ``[^.\n]`` to bound their span; attackers
+  could split prose across newlines (``Ignore\nall\nprevious\n
+  instructions``) and silently bypass.  Span class is now ``[^.]`` so
+  newlines are tolerated while sentence boundaries still bound the
+  match.  Bumped span limits from 60 → 80 chars (40 → 60 for
+  ``pi-system-prompt-leak``) to recover precision lost on the new
+  newline allowance.
+* **P1 — `security_classifier` LOCALE coverage (axis 8 — Vietnamese).**
+  The project is VN-first but the rule bank shipped English-only
+  patterns.  Added 4 Vietnamese-language rules (``pi-vn-ignore-prior``,
+  ``pi-vn-you-are-now``, ``pi-vn-system-prompt-leak``,
+  ``pi-vn-roleplay-override``) with high-precision wording mirroring
+  their English counterparts.  Total rule count: 24 → 28.
+* **P1 — `team_mode.TeamConfig.from_dict` silent-coercion bug.**
+  ``{"required": "oops"}`` was silently iterated as
+  ``("o","o","p","s")`` because ``tuple(value)`` accepts any iterable.
+  Now rejects non-list/tuple values explicitly with ``ValueError``.
+  ``read_team_config`` swallows the new error and returns ``None`` so
+  callers fall through to "no team mode" rather than crashing.
+* **P1 — `eval_select` empty-patterns silently skipped.** The module
+  docstring promised "missing or empty touchfile entries fall back to
+  'always run' so a stale map can never cause a test to be silently
+  skipped" — but ``{"tests/x.py": []}`` produced exactly that silent
+  skip.  Empty patterns lists (``[]`` and ``{"files": []}`` without
+  ``always_run``) now promote to always-run, matching the documented
+  contract.
+
+### Added
+
+* **`tests/test_v014_audit_fixes.py`** — 19 regression cases pinning
+  every fix above so future refactors cannot re-introduce the issues.
+
+### Removed
+
+* **`tests/test_version_sync.py`** — stale pre-v0.11.4 layout test that
+  always self-skipped (15 / 15 tests) because the legacy
+  ``skill/vibecodekit-hybrid-ultra/`` + ``claw-code-pack/`` directories
+  no longer exist.  The version-sync invariant is fully covered by
+  ``tests/test_docs_count_sync.py`` (which already gates on the current
+  ``update-package/`` layout — it caught the
+  ``update-package/.claw.json`` drift in this very release).
+
+### Changed (none)
+
+No public-API breaks.  All 77 conformance probes remain green, full
+suite is **536 passed / 0 skipped** (was 517 / 15 — added 19 regression
+cases, deleted 15 dead skips).
+
+### Audit report
+
+See ``docs/AUDIT-v0.14.0.md`` for the full RRI-T cycle write-up
+including persona coverage, stress-axis matrix, and severity
+classification rationale.
+
+## [0.14.0] — gstack integration Phase 3+4 (ML security + plan reviews + polish)
+
+Second gstack-integration release.  Merges Phase 3 (ML security +
+plan-review skills) and Phase 4 (polish + community infrastructure)
+into a single shipping vehicle.  All 67 v0.12.0 probes remain bit-for-bit
+identical; this release adds **10 new probes (#68–#77)** for a total of
+**77 / 77 @ 100 %**.
+
+### Added
+
+* **`scripts/vibecodekit/security_classifier.py`** — 3-layer ensemble
+  prompt-injection / secret-leak detector.  `RegexLayer` ships in the
+  stdlib-only core (24-rule bank covering prompt injection, secret
+  leaks across 8 key formats, exfiltration prose, and IMDS access).
+  `OnnxLayer` and `HaikuLayer` are optional (`[ml]` extra — adds
+  `onnxruntime`, `transformers`, `httpx`).  Both optional layers
+  self-disable cleanly when deps or credentials are missing.  Ensemble
+  vote is **2-of-3 majority of non-abstainers**; every verdict is
+  rendered as a synthetic permission-engine command so
+  `permission_engine.classify_cmd` is always on the decision path.
+* **`scripts/vibecodekit/eval_select.py`** — diff-based test selection
+  with touchfile map.  Supports both list and `{files, always_run}`
+  shapes, glob + prefix matching, unmapped-change reporting, and a
+  `fallback_all_tests` escape hatch when no changes are detected.
+* **`scripts/vibecodekit/learnings.py`** — per-project JSONL learnings
+  store with 3-tier scope (user / project / team), atomic
+  fcntl-locked appends, corrupt-line tolerance, and a cross-scope
+  `load_all` merge helper.
+* **`scripts/vibecodekit/team_mode.py`** — `.vibecode/team.json`
+  coordination file (required gates / optional gates /
+  learnings_required), atomic write, and
+  `assert_required_gates_run()` enforcement.
+* **8 new `/vck-*` specialist slash commands**:
+  - `/vck-office-hours` — YC-style 6 forcing questions
+    (PMF / hurt / why-now / moat / distribution / ask).
+  - `/vck-ceo-review` — 4-mode review (SCOPE EXPANSION /
+    SELECTIVE / HOLD / REDUCTION).
+  - `/vck-eng-review` — lock architecture with 7-item gate
+    (ASCII diagram, state machine, invariants, contracts,
+    error taxonomy, observability, backwards-compat).
+  - `/vck-design-consultation` — build design system from zero
+    (tokens → components → patterns → flows, VN-first).
+  - `/vck-design-review` — UI drift audit + atomic fix loop.
+  - `/vck-learn` — capture one learning to JSONL (scope aware).
+  - `/vck-retro` — weekly retro (Keep / Stop / Try) + 3 action
+    commits.
+  - `/vck-second-opinion` — delegate plan/code review to a
+    different CLI (Codex / Gemini / Ollama) via the permission
+    engine.
+* **Optional ML security hook wiring** — `pre_tool_use.py` calls
+  `security_classifier.classify_text` when `VIBECODE_SECURITY_CLASSIFIER=1`.
+  Off by default; upgrades an existing `allow` decision to `deny` when
+  the ensemble detects prompt injection / secret leak / exfiltration.
+  The hook never crashes the permission path: classifier errors are
+  reported as metadata, decision falls back to the permission engine.
+* **10 new conformance probes (#68–#77)**:
+  - #68 classifier ensemble contract — synthetic command goes through
+    `classify_cmd`.
+  - #69 regex rule bank — ≥ 3 kinds + unique ids.
+  - #70 blocks prompt injection (3 classic samples).
+  - #71 blocks secret leak (AWS / GitHub / PEM).
+  - #72 optional layers abstain without deps / credentials.
+  - #73 eval_select — exact + glob + always_run + unmapped report.
+  - #74 learnings JSONL round-trip across user / team / project.
+  - #75 team_mode required-gate enforcement raises + clears.
+  - #76 GitHub Actions CI workflow present + gates pytest + audit.
+  - #77 `CONTRIBUTING.md` + `USAGE_GUIDE.md §17 browser` present.
+* **`.github/workflows/ci.yml`** — pytest + conformance audit +
+  release-matrix gate across Python 3.9 / 3.11 / 3.12.
+* **`CONTRIBUTING.md`** — VN-first contributing guide with the
+  mandatory quality gates spelled out.
+* **`USAGE_GUIDE.md §17 browser`** — end-user docs for the v0.12
+  browser daemon and its relationship to the new `[ml]` extra.
+* **Tests** (+~500 LOC, ≥ 60 new cases): `tests/test_security_classifier.py`
+  (regex coverage, optional-layer self-disable, ensemble majority,
+  permission-engine integration), `tests/test_eval_select.py`
+  (both touchfile shapes, glob, always_run, unmapped, bad shape
+  rejection), `tests/test_learnings_and_team.py` (round-trip,
+  corrupt-line tolerance, concurrent append via threads, team
+  config round-trip + enforcement), and `tests/test_vck_skills_v014.py`
+  (manifest / SKILL.md / intent_router / subagent_runtime wiring).
+
+### Changed
+
+* `pyproject.toml` — version → 0.14.0; `[ml]` extra now pins
+  `onnxruntime`, `transformers`, `httpx`.  `markers` adds an `ml`
+  pytest marker.
+* `manifest.llm.json`, `SKILL.md`, `scripts/vibecodekit/intent_router.py`,
+  `scripts/vibecodekit/subagent_runtime.py` — wire the 8 new
+  slash commands, 8 new intents, and 8 new command → agent bindings
+  without touching any of the 26 existing `/vibe-*` or 7 existing
+  `/vck-*` commands.
+* `VERSION`, `update-package/VERSION`, `assets/plugin-manifest.json`,
+  `update-package/.claw.json` — bumped to 0.14.0.
+
+### Metrics
+
+* **Tests**: 459 → 519 passed, 15 skipped.
+* **Conformance audit**: 67/67 → **77/77 @ 100 %**.
+* **Release matrix**: L1 (source) + L2 (zip) + L3 (installed project)
+  all PASS.
+* **Core deps**: still stdlib-only.  `[ml]` is opt-in; default
+  installations are unchanged.
+
+### Attribution
+
+Phase 3 + 4 architecture inspired by
+[gstack](https://github.com/garrytan/gstack) (© Garry Tan, MIT,
+commit `675717e3`).  Clean-room Python re-implementation; no gstack
+source is copied.  See `LICENSE-third-party.md` for the full
+attribution manifest and SHA pinning.
+
+## [0.12.0] — gstack integration Phase 1+2 (browser daemon + 6 specialist skills)
+
+First minor release after v0.11.4.1.  Introduces the first round of
+features adapted (with attribution) from
+[gstack](https://github.com/garrytan/gstack) (© Garry Tan, MIT,
+commit `675717e3`) — see `LICENSE-third-party.md` for the full
+attribution manifest.
+
+### Added
+
+* **`LICENSE` (MIT) + `LICENSE-third-party.md`** — the repo is now
+  explicitly MIT-licensed.  The third-party file enumerates every
+  gstack-adapted artefact with commit SHA and scope.
+* **`pyproject.toml`** — PEP 621 metadata.  Core remains stdlib-only;
+  `[browser]` / `[ml]` / `[dev]` / `[all]` optional extras are
+  introduced to isolate the new third-party dependencies behind
+  explicit opt-in.
+* **Browser daemon (`scripts/vibecodekit/browser/`, ~1.5 kLOC Python)**
+  — clean-room reimplementation of gstack's persistent-daemon
+  architecture.  9 modules: `state` (atomic 0o600 state file +
+  idle-timeout), `security` (datamarking envelope + hidden-element
+  strip + bidi/ctrl-char sanitisation + URL blocklist),
+  `permission` (bridge to the existing permission engine — every
+  browser command is classified), `snapshot` (ARIA tree +
+  stable-hash DOM diff), `commands_read` / `commands_write`
+  (verb executors with swappable runners — testable without
+  playwright installed), `cli_adapter` (stdlib-only HTTP client),
+  `manager` + `server` (playwright + FastAPI, extras-only).
+* **7 specialist slash commands (`/vck-cso`, `/vck-review`, `/vck-qa`,
+  `/vck-qa-only`, `/vck-ship`, `/vck-investigate`, `/vck-canary`)**
+  — Vietnamese-first adaptations of the corresponding gstack
+  skills.  Each command file carries an `inspired-by:` frontmatter
+  line pointing at the gstack source commit.
+* **2 new agent roles (`reviewer`, `qa-lead`)** — read-only agents
+  wired into `subagent_runtime.PROFILES` and
+  `DEFAULT_COMMAND_AGENT`.
+* **`references/40-ethos-vck.md`** — ETHOS adaptation (Boil the
+  Lake / Search Before Building / User Sovereignty / Build for
+  Yourself) mapped onto the VIBECODE-MASTER 8-step workflow.
+* **Intent router (+6 VCK-\* intents)** — high-specificity phrases
+  only, so generic "review" / "ship" / "qa" prose still routes to
+  the existing `/vibe-*` pipeline.
+* **Audit probes #54 – #67** — 9 browser-layer probes and 5 skill-v2
+  probes; the conformance audit is extended from 53 to 67 without
+  modifying any existing probe.
+* **Tests (`tests/browser/`, 46 new cases)** — atomic-write guard,
+  0o600 permissions, envelope wrap, hidden-element strip,
+  bidi/ctrl-char strip, URL blocklist (loopback allowed, IMDS
+  refused), permission-engine pipeline verification.
+
+### Changed
+
+* **`SKILL.md`, `manifest.llm.json`, `update-package/VERSION`,
+  `update-package/.claw.json`, `assets/plugin-manifest.json`,
+  root `VERSION`** — version bumped to `0.12.0` and the 7 new
+  `/vck-*` triggers listed under `triggers:`.
+
+### Migration notes
+
+Existing users see **no runtime change** unless they explicitly
+opt in to `pip install "vibecodekit-hybrid-ultra[browser]"`.  All
+26 existing `/vibe-*` commands and all 53 existing audit probes
+remain bit-identical.
+
+## [0.11.4.1] — Root-safe tests & canonical gate clarification
+
+Test-harness and release-gate polish only; runtime is bit-identical
+to v0.11.4.  This patch exists because the v0.11.4 zips were already
+distributed and two reviewer-environment issues needed an explicit
+fix-or-document decision:
+
+### Fixed
+
+* **`tests/test_cli_error_hygiene.py::test_install_into_readonly_dir`
+  failed under `root`.**  Root on POSIX bypasses discretionary
+  `chmod 0400`, so the test's "install into chmod-read-only dir" path
+  no longer surfaced a `PermissionError` and the `assert rc == 1` hit.
+  The test is now marked `@pytest.mark.skipif(os.geteuid() == 0)`
+  with a short reason string.  The sibling test
+  `test_install_into_file_where_dir_expected_emits_clean_json_error`
+  already covers the same surface (clean JSON error on an unhappy
+  filesystem path) deterministically for both root and non-root
+  callers, so no coverage is lost.
+
+### Changed
+
+* **`tools/validate_release_matrix.py` — canonical gate clarified.**
+  The matrix script is layout-matrix only; `pytest` is **not** part
+  of the canonical matrix gate.  `--with-pytest` is retained as an
+  **optional, non-canonical** shortcut (with a `[NON-CANONICAL /
+  OPTIONAL]` argparse help marker) and the module docstring now
+  documents that nested-container / PTY-less CI environments have
+  been observed to hang the pytest subprocess until the 180s budget
+  trips.  **Canonical release gate (v0.11.4.1+)** is:
+    1. `python -m pytest tests -q` (run directly)
+    2. `python tools/validate_release_matrix.py --skill X --update Y`
+  Reviewers should prefer running pytest directly.
+* **`_run` helper uses `stdin=subprocess.DEVNULL`.**  Defence-in-depth
+  against interactive-input prompts inside subprocesses that may
+  otherwise block waiting on a live-ish stdin inherited from a
+  nested tty.
+
+### Verified
+
+* pytest under `uid=1000`: **367 passed, 15 skipped** (matches v0.11.4).
+* pytest under `uid=0` (root): **366 passed, 16 skipped** (+1 skip
+  for the now-gated readonly test, expected and explicit).
+* audit: 53/53 met=True.
+* audit --json: 53/53 met=True.
+* `validate_release_matrix.py` default: PASS in 2.1s.
+* `validate_release_matrix.py --with-pytest` (non-canonical): PASS
+  in 6.7s in the author's VM; may hang in other environments, see
+  docstring.
+
+## [0.11.4] — Stress-dipdive polish (P3 + Obs follow-ups)
+
+Defensive hardening pass after the v0.11.3.1 RRI-T stress/dipdive
+(7 dimensions × 8 stress axes) surfaced 3 P3 items and 2
+observations.  No runtime-architecture change and no feature work.
+
+### Added
+
+* **Obs-1 — dedicated RRI question banks for `api` / `crm` / `mobile`.**
+  `assets/rri-question-bank.json` (schema bumped to 1.2.0) now carries
+  three new buckets, 30 questions each, balanced across 5 personas × 3
+  modes.  Aliases wire `api-todo → api`, `rest-api → api`,
+  `backend → api`, `mobile-app → mobile`, `expo → mobile`,
+  `react-native → mobile`, `rn → mobile`, `crm-app → crm`, `sales → crm`.
+  These presets used to fall back to the 16-question `custom` bank
+  (flagged in the v0.11.3.1 stress-dipdive report as "interview too
+  shallow for SaaS-grade intake").
+* **Obs-2 — Vietnamese-first posture documented** on
+  `load_rri_questions`.  Docstring now states explicitly that
+  personas/modes/IDs are structural and locale-agnostic, while the
+  `q` text is VN-first (matching VIBECODE-MASTER's primary audience)
+  and downstream LLMs are expected to translate on render.
+
+### Changed — hardening
+
+* **P3-1 — concurrent-install serialisation.**  `install_manifest.install`
+  now wraps plan-and-apply in an advisory `fcntl` lock scoped to
+  `<dst>/.vibecode/runtime/install.lock`.  Two parallel installers on
+  the same destination no longer race: the second caller blocks
+  briefly, then re-plans against the committed filesystem and
+  reports all files as idempotent skips.  `dry_run=True` skips the
+  lock (no side effect).  Windows fallback is a no-op (`fcntl`
+  unavailable), preserving cross-platform `install()` semantics.
+* **P3-2 — CLI error hygiene.**  `_cmd_install` and `_cmd_scaffold`
+  now translate `PermissionError`, `FileExistsError`,
+  `IsADirectoryError`, `NotADirectoryError`, generic `OSError`
+  (with `errno`), and (for scaffold) `ValueError` into a single JSON
+  diagnostic on stderr plus `exit 1`.  Users pointing `install` at
+  a read-only volume or `scaffold preview` at an unknown preset no
+  longer see a raw traceback.
+* **P3-3 — Cf-category Unicode strip in permission classifier.**
+  `permission_engine._normalise_unicode` now removes all Unicode
+  characters with category `Cf` (zero-width, BOM, SOFT HYPHEN,
+  WORD JOINER, …) after NFKC normalisation and before dash folding.
+  `rm\u200b -rf /` (ZWS between `rm` and space) now classifies as
+  `blocked`; the stress-dipdive report flagged this as a
+  defense-in-depth gap (original exploit was mitigated by the
+  approval prompt but not by the classifier).
+
+### Verified
+
+* pytest: 354+ passed, 15 skipped, 0 failed (incl. new regression
+  smokes for the ZWS bypass and CLI error hygiene)
+* audit: 53/53 met=True
+* validate_release_matrix default + `--with-pytest`: PASS
+* fresh install + doctor: exit 0
+
+## [0.11.3.1] — Docs/tooling finalize
+
+Reviewer-driven REFINE pass on the v0.11.3 release surface.  Runtime is
+unchanged; this only fixes docs drift the v0.11.3 HOTFIX-005 pass missed
+and hardens the release-gate script so it can never hang.
+
+### Fixed — docs sweep (REFINE-001)
+
+* **README / QUICKSTART / USAGE_GUIDE / SKILL / CLAUDE** — normalise
+  current-release user-facing prose: `v0.11.0/v0.11.2/...` in download
+  URLs → `v0.11.3.1`; `39 / 47 / 50 conformance probes` → `53 probes`;
+  `526 tests / 284 passed` → "all actionable tests pass"; `7 preset × 3
+  stacks` → `10 preset × 3 stacks`; `50/50 PASS` → `53/53 PASS`.
+* **SKILL.md** — relabel the "v0.11.2 content depth" section as
+  `(historical)` and reword the conformance-audit sentence to make it
+  clear the 50-probe count was the historical state at v0.11.2 and the
+  current audit runs 53 probes.
+* **USAGE_GUIDE.md** — relabel the "v0.11.0/v0.11.2 BIG-UPDATE" section
+  as `v0.11.x BIG-UPDATE history` in both skill and update copies so
+  they no longer read as current-release claims.
+* **update-package** `.claw.json` version bumped to `0.11.3.1`.
+
+### Fixed — regression guard (REFINE-002)
+
+* `tests/test_docs_count_sync.py`
+  - scan both the skill bundle docs **and** the sibling update-package
+    docs (`README.md`, `QUICKSTART.md`, `USAGE_GUIDE.md`, `CLAUDE.md`);
+  - expanded `STALE_PATTERNS` with the reviewer-specified drift regex
+    list (intermediate probe counts 44/47/50, `526 tests`, `7 preset`
+    variants, legacy `v0.11.0/v0.11.2` download names);
+  - strip-heuristic now skips entire per-version sections
+    (`## v0.11.2 ...`) and sections explicitly tagged `(historical)`
+    instead of only the heading line, so historical content can no
+    longer leak past the guard;
+  - added a top-of-CHANGELOG.md sanity test that asserts the top
+    section mentions the current `VERSION`.
+
+### Fixed — release gate tooling (REFINE-003)
+
+* `tools/validate_release_matrix.py` now runs each step via
+  `subprocess.Popen(start_new_session=True)` with a hard per-command
+  timeout and `os.killpg(..., SIGKILL)` on expiry — it can never hang;
+* reports `[TIMEOUT] <label>` instead of silent stalls;
+* adds `--fast` to skip the pytest layer when reviewers only want to
+  validate the fresh-install flow.
+
+### Known caveats
+
+* No runtime behaviour change vs v0.11.3 — pytest, audit, installer,
+  doctor, scaffolds, methodology, MCP are byte-identical at the
+  behaviour level; only version strings, docs prose, and the
+  release-gate tool moved.
+
+---
+
 ## [0.11.3] — Wiring patch + packaging correctness hotfix
 
 Closes the three structural wiring gaps the v0.11.2 deep-dive surfaced

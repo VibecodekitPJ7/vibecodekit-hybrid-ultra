@@ -273,6 +273,8 @@ DEFAULT_COMMAND_AGENT: Dict[str, str] = {
     "vck-learn":               "scout",
     "vck-retro":               "coordinator",
     "vck-second-opinion":      "reviewer",
+    # v0.15.0 — master pipeline router (PR-C / T6).
+    "vck-pipeline":            "coordinator",
 }
 
 
