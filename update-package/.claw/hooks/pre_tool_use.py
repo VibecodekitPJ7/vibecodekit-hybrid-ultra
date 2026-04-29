@@ -62,13 +62,16 @@ except Exception as e:
 
 decision = decide(cmd, mode=mode)
 
-# v0.14.0 — optional ML classifier layer.  Off by default; enable by
-# setting VIBECODE_SECURITY_CLASSIFIER=1 (and installing the [ml] extras
-# for the ONNX / Haiku voters).  Even a pure-regex ensemble can upgrade
-# an "allow" to "deny" when a prompt-injection or secret-leak pattern
-# matches.  Layers self-disable when deps are missing; the hook never
-# crashes the permission path.
-if os.environ.get("VIBECODE_SECURITY_CLASSIFIER") == "1":
+# v0.15.0-alpha (PR-B) — security classifier is **auto-on by default**.
+# The regex layer is stdlib-only and the optional ONNX / Haiku layers
+# self-disable when their deps / env vars are missing, so this is safe
+# to run unconditionally.  Operators who need the old v0.14.x opt-in
+# semantics can disable with ``VIBECODE_SECURITY_CLASSIFIER=0``.  Even
+# a pure-regex ensemble can upgrade an "allow" to "deny" when a prompt
+# injection or secret-leak pattern matches.  The try-block below makes
+# any unexpected error non-fatal so the permission path is never
+# interrupted.
+if os.environ.get("VIBECODE_SECURITY_CLASSIFIER", "1") != "0":
     try:
         from vibecodekit.security_classifier import load_default_classifier
         _res = load_default_classifier().classify(cmd)

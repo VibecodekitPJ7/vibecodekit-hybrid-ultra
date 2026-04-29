@@ -1556,6 +1556,75 @@ def _probe_session_ledger_module(tmp: Path) -> Tuple[bool, str]:
     return True, "session_ledger record + read + clear ok"
 
 
+def _probe_classifier_auto_on_default(tmp: Path) -> Tuple[bool, str]:
+    """#81 — pre_tool_use hook runs the security classifier by default
+    (auto-on per v0.15.0-alpha PR-B / T4) and only opts out when
+    ``VIBECODE_SECURITY_CLASSIFIER=0`` is set.
+
+    Verifies the hook source contains the new gate
+    ``os.environ.get("VIBECODE_SECURITY_CLASSIFIER", "1") != "0"`` and
+    NOT the old ``== "1"`` gate.  Static check only: actually exec-ing
+    the hook would require a full payload + permission engine harness.
+    """
+    candidates = [
+        Path(__file__).resolve().parents[2] / "update-package" / ".claw"
+        / "hooks" / "pre_tool_use.py",
+    ]
+    if os.environ.get("VIBECODE_UPDATE_PACKAGE"):
+        candidates.insert(
+            0,
+            Path(os.environ["VIBECODE_UPDATE_PACKAGE"]) / ".claw" / "hooks"
+            / "pre_tool_use.py",
+        )
+    for hook in candidates:
+        if not hook.is_file():
+            continue
+        src = hook.read_text(encoding="utf-8")
+        if 'VIBECODE_SECURITY_CLASSIFIER", "1") != "0"' not in src:
+            return False, "auto-on gate missing in pre_tool_use.py"
+        if 'VIBECODE_SECURITY_CLASSIFIER") == "1"' in src:
+            return False, "old opt-in gate ('== \"1\"') still present — auto-on not actually enabled"
+        return True, "classifier auto-on gate present in pre_tool_use.py"
+    return False, "no pre_tool_use.py found in any candidate root"
+
+
+def _probe_session_start_learnings_inject(tmp: Path) -> Tuple[bool, str]:
+    """#82 — session_start hook auto-injects most-recent learnings into
+    its JSON output (v0.15.0-alpha PR-B / T3).  Verifies the hook
+    references ``load_recent`` and emits a ``learnings_inject`` key.
+    """
+    candidates = [
+        Path(__file__).resolve().parents[2] / "update-package" / ".claw"
+        / "hooks" / "session_start.py",
+    ]
+    if os.environ.get("VIBECODE_UPDATE_PACKAGE"):
+        candidates.insert(
+            0,
+            Path(os.environ["VIBECODE_UPDATE_PACKAGE"]) / ".claw" / "hooks"
+            / "session_start.py",
+        )
+    for hook in candidates:
+        if not hook.is_file():
+            continue
+        src = hook.read_text(encoding="utf-8")
+        if "load_recent" not in src:
+            return False, "session_start.py does not import learnings.load_recent"
+        if "learnings_inject" not in src:
+            return False, "session_start.py output missing 'learnings_inject' key"
+        if 'VIBECODE_LEARNINGS_INJECT' not in src:
+            return False, "session_start.py missing VIBECODE_LEARNINGS_INJECT opt-out gate"
+        # Also verify load_recent itself works end-to-end on a tmp store.
+        from . import learnings as _l
+        store = _l.project_store(root=tmp)
+        store.append(_l.Learning(text="oldest", scope="project"))
+        store.append(_l.Learning(text="newest", scope="project"))
+        recent = _l.load_recent(limit=1, root=tmp)
+        if len(recent) != 1 or recent[0].text != "newest":
+            return False, f"load_recent did not return newest first: {[r.text for r in recent]}"
+        return True, "session_start learnings_inject wired + load_recent ordering correct"
+    return False, "no session_start.py found in any candidate root"
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -1648,6 +1717,9 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("78_vck_ship_team_mode_wired",     _probe_vck_ship_team_mode_wired),
     ("79_eval_select_wired",            _probe_eval_select_wired_into_ci_and_ship),
     ("80_session_ledger_module",        _probe_session_ledger_module),
+    # v0.15.0-alpha — auto-on wiring probes (T3 + T4)
+    ("81_classifier_auto_on_default",   _probe_classifier_auto_on_default),
+    ("82_session_start_learnings_inject", _probe_session_start_learnings_inject),
 ]
 
 

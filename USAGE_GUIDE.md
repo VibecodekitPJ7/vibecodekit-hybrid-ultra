@@ -1204,9 +1204,9 @@ mới đều dormant cho đến khi bạn bật rõ ràng.
 
 | Module | Standalone? | Auto-merge vào flow? | Kích hoạt |
 |---|---|---|---|
-| `vibecodekit.security_classifier` | ✓ CLI + library | ✓ qua `pre_tool_use` hook | env `VIBECODE_SECURITY_CLASSIFIER=1` (auto-on default đến từ T4 ở PR-B) |
+| `vibecodekit.security_classifier` | ✓ CLI + library | ✓ qua `pre_tool_use` hook (auto-on by default từ PR-B / T4) | luôn chạy; opt-out `VIBECODE_SECURITY_CLASSIFIER=0` |
 | `vibecodekit.eval_select` | ✓ CLI tooling | ✓ qua `/vck-ship` Bước 2 + CI preview | đặt `tests/touchfiles.json` |
-| `vibecodekit.learnings` | ✓ CLI | ✓ qua `/vck-learn` + `/vck-retro` (T3 wire vào `session_start` ở PR-B) | gõ slash command |
+| `vibecodekit.learnings` | ✓ CLI | ✓ qua `session_start` hook (PR-B / T3) + `/vck-learn` + `/vck-retro` | tự động (10 mới nhất); opt-out `VIBECODE_LEARNINGS_INJECT=0` |
 | `vibecodekit.team_mode` + `session_ledger` | ✓ CLI init | ✓ qua `/vck-ship` Bước 0 (T1 v0.15-alpha) | tạo `.vibecode/team.json` |
 | `vibecodekit.browser` | ✓ CLI server | ✓ qua `/vck-qa` skill | `pip install -e ".[browser]"` |
 | 15 `/vck-*` slash commands | n/a | ✓ qua manifest + intent_router | gõ trực tiếp trong host |

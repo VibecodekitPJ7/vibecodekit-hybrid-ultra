@@ -4,6 +4,48 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+## [Unreleased] — v0.15.0-alpha (PR-B — auto-on T3 + T4)
+
+Second slice of the **"One Pipeline, Zero Dead-Code"** rollout
+(`docs/INTEGRATION-PLAN-v0.15.md`).  No version bump yet; `VERSION` stays
+at `0.14.1` until PR-D closes the cycle (T10).
+
+### Added
+
+* **`learnings.load_recent(limit=10, ...)`** — newest-first helper used by
+  the session_start hook to inject prior project context into the host
+  LLM at session start.
+* **`session_start` hook now auto-injects up to 10 most-recent learnings
+  (T3)** into its JSON output under the `learnings_inject` key.  Opt-out
+  via `VIBECODE_LEARNINGS_INJECT=0`; limit overridable via
+  `VIBECODE_LEARNINGS_INJECT_LIMIT`.  Failures are silent — never break
+  session start.
+* **Audit probes #81 / #82** — pin the new auto-on wiring.  #81 verifies
+  the `pre_tool_use` hook contains the new auto-on gate
+  (`!= "0"`) and not the old opt-in gate (`== "1"`).  #82 verifies the
+  `session_start` hook references `load_recent` + emits a
+  `learnings_inject` key, and that `load_recent` itself returns
+  newest-first.
+* **11 new regression tests** (`tests/test_pipeline_v015_pr_b.py`)
+  covering hook-level end-to-end behaviour, opt-out semantics, custom
+  limits, ordering invariants, and audit probe parity.
+
+### Changed
+
+* **`security_classifier` is now auto-on by default (T4)** — the
+  `pre_tool_use` hook used to require `VIBECODE_SECURITY_CLASSIFIER=1`
+  to enable the classifier; it now runs unconditionally.  The regex
+  layer is stdlib-only, ONNX / Haiku layers self-disable when their
+  deps / env vars are missing, so this is safe to flip.  Operators who
+  need the old v0.14.x opt-in semantics can disable with
+  `VIBECODE_SECURITY_CLASSIFIER=0`.
+
+### Verification
+
+* `pytest tests` — **565 passed / 0 skipped** (was 554 in PR-A).
+* `conformance_audit --threshold 1.0` — **82 / 82 @ 100 %** (was 80).
+* `validate_release_matrix.py` — PASS.
+
 ## [Unreleased] — v0.15.0-alpha (PR-A — pipeline wiring T1 + T2 + T8)
 
 First slice of the **"One Pipeline, Zero Dead-Code"** rollout

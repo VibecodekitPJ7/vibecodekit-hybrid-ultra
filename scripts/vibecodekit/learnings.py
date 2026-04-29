@@ -34,6 +34,7 @@ __all__ = [
     "project_store",
     "team_store",
     "load_all",
+    "load_recent",
     "capture",
 ]
 
@@ -156,6 +157,23 @@ def load_all(root: Optional[Path] = None,
     out.extend(team_store(root).load())
     out.extend(project_store(root).load())
     return out
+
+
+def load_recent(limit: int = 10,
+                root: Optional[Path] = None,
+                home: Optional[Path] = None) -> List[Learning]:
+    """Return the ``limit`` most-recent learnings across all scopes.
+
+    Sorted by ``captured_ts`` descending so the freshest item comes
+    first.  Used by the ``session_start`` hook to inject prior context
+    into the host LLM (auto-on by default; opt-out with
+    ``VIBECODE_LEARNINGS_INJECT=0``).
+    """
+    if limit <= 0:
+        return []
+    items = load_all(root=root, home=home)
+    items.sort(key=lambda l: l.captured_ts, reverse=True)
+    return items[:limit]
 
 
 def capture(text: str,

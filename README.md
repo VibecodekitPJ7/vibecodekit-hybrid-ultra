@@ -48,9 +48,9 @@ ETHOS adaptation.
 
 | Module | Auto-merged into VCK-HU flow? | Activate by |
 |---|---|---|
-| `security_classifier` | ✓ via `pre_tool_use` hook | `export VIBECODE_SECURITY_CLASSIFIER=1` |
+| `security_classifier` | ✓ via `pre_tool_use` hook (auto-on default since v0.15.0-alpha PR-B) | always on; opt-out `VIBECODE_SECURITY_CLASSIFIER=0` |
 | `eval_select` | ✓ via `/vck-ship` Bước 2 + CI preview | drop `tests/touchfiles.json` |
-| `learnings` | ✓ via `/vck-learn`, `/vck-retro` | run slash commands |
+| `learnings` | ✓ via `session_start` hook (auto-inject 10 latest, PR-B) + `/vck-learn` + `/vck-retro` | always on; opt-out `VIBECODE_LEARNINGS_INJECT=0` |
 | `team_mode` + `session_ledger` | ✓ via `/vck-ship` Bước 0 (gate enforcement) | `python -m vibecodekit.team_mode init …` |
 | browser daemon | ✓ via `/vck-qa` skill | `pip install -e ".[browser]"` |
 | 15 `/vck-*` slash commands | ✓ via manifest + intent_router | type `/vck-<name>` in host |
