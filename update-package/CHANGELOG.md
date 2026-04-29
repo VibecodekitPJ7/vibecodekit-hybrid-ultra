@@ -4,6 +4,65 @@ All notable changes to VibecodeKit Hybrid Ultra are listed here.  The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semver](https://semver.org/).
 
+## [0.15.3] — Audit-tool fix + cleanup (post-T4)
+
+Patch release that closes the four non-critical findings from the v0.15.0
+deep-dive audit (`docs/AUDIT-v0.14.0.md` follow-up note + Bug #1, #4,
+#5, #6 in the audit report).  No behavioural changes for end users —
+all fixes are either invariant guards, doc cross-references, or UX
+nicety on the CLI.  T4 (`/vck-review` + `/vck-cso` security_classifier
+wiring + Bug #2 + #3) already shipped in v0.15.2; this 0.15.3 release
+is the parallel branch that was rebased on top after v0.15.2 merged.
+
+### Fixed
+
+* **Bug #1 — `_find_slash_command()` missed `update-package/` when run
+  from the repo root** (`scripts/vibecodekit/conformance_audit.py:33`).
+  The previous loop walked `here.parents[level]` for `level ∈ [0, 4]`
+  and never inspected `here` itself, so `vibe-refine.md` and
+  `vibe-module.md` (children of `here / update-package`) were
+  silently invisible without `VIBECODE_UPDATE_PACKAGE` exported.
+  Probes #40 + #44 now PASS locally with `python -m
+  vibecodekit.conformance_audit --threshold 1.0` from the repo root.
+* **Bug #4 — `learnings.recent_for_prompt(limit, scopes)` markdown
+  addendum helper added** to `scripts/vibecodekit/learnings.py`.
+  `load_recent` now also accepts a `scopes` iterable (subset of
+  `("user", "project", "team")`).  The `session_start` hook serializes
+  both the JSON `items` array (for hosts that prefer structured data)
+  and an `addendum` markdown string (for hosts that prefer prompt
+  injection — Claude Code / Cursor).  New env var
+  `VIBECODE_LEARNINGS_INJECT_SCOPES="user,project"` restricts the
+  injected set.
+* **Bug #5 — `docs/AUDIT-v0.14.0.md` now links forward to the v0.15
+  closure of D1–D4 dormant findings** with a callout pointing at
+  `docs/INTEGRATION-PLAN-v0.15.md` and the v0.15.0 CHANGELOG entries.
+* **Bug #6 — `vibe team`, `vibe learn`, `vibe pipeline` CLI
+  pass-throughs** added to `scripts/vibecodekit/cli.py`.  Forward
+  every positional / option after the subcommand verbatim to
+  `python -m vibecodekit.team_mode|learnings|pipeline_router` so
+  operators have a uniform `vibe …` interface.  Existing
+  `python -m vibecodekit.<module>` callers continue to work
+  unchanged.
+* **Cosmetic** — `.github/workflows/ci.yml` step name "conformance_audit
+  (77 / 77 @ 100 %)" updated to "(87 / 87 @ 100 %)" to reflect the
+  current probe count post-PR-D.
+
+### Added
+
+* **12 regression tests** in `tests/test_v015_1_audit_tool_cleanup.py`
+  pinning all four bug fixes — including a subprocess test that runs
+  the full `conformance_audit --threshold 1.0` *without* setting
+  `VIBECODE_UPDATE_PACKAGE`, which is the exact regression that Bug #1
+  introduced.
+
+### Changed
+
+* Version bumped `0.15.2 → 0.15.3` across all sync surfaces (root +
+  `update-package/`).
+
+
+
+
 ## [0.15.2] — T4-completion: classifier wired into /vck-review + /vck-cso
 
 Closes Bug #2 + Bug #3 from the v0.15.0 deep-dive audit
@@ -60,6 +119,7 @@ on the two skills that were supposed to *use* the classifier at the
 review/audit gates.  This PR finishes that wiring without re-opening
 the v0.15.0 rollout (PR-A/B/C/D), so the dormant-module guard now holds
 at three call-site classes — runtime hook, CSO audit, and review gate.
+
 
 ## [0.15.0] — One Pipeline, Zero Dead-Code (PR-D — orphan-module probe + version cut)
 

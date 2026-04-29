@@ -35,6 +35,7 @@ __all__ = [
     "team_store",
     "load_all",
     "load_recent",
+    "recent_for_prompt",
     "capture",
 ]
 
@@ -161,19 +162,54 @@ def load_all(root: Optional[Path] = None,
 
 def load_recent(limit: int = 10,
                 root: Optional[Path] = None,
-                home: Optional[Path] = None) -> List[Learning]:
-    """Return the ``limit`` most-recent learnings across all scopes.
+                home: Optional[Path] = None,
+                scopes: Optional[Iterable[str]] = None) -> List[Learning]:
+    """Return the ``limit`` most-recent learnings, optionally scope-filtered.
 
     Sorted by ``captured_ts`` descending so the freshest item comes
     first.  Used by the ``session_start`` hook to inject prior context
     into the host LLM (auto-on by default; opt-out with
     ``VIBECODE_LEARNINGS_INJECT=0``).
+
+    ``scopes`` (added v0.15.1) restricts the result to a subset of the
+    canonical scope tuple ``("user", "project", "team")``.  When
+    ``None`` (default) all scopes are included, preserving the v0.15.0
+    behaviour.  Unknown scope labels are silently dropped.
     """
     if limit <= 0:
         return []
     items = load_all(root=root, home=home)
+    if scopes is not None:
+        allowed = {s for s in scopes if s in SCOPES}
+        items = [l for l in items if l.scope in allowed]
     items.sort(key=lambda l: l.captured_ts, reverse=True)
     return items[:limit]
+
+
+def recent_for_prompt(limit: int = 10,
+                      scopes: Optional[Iterable[str]] = None,
+                      root: Optional[Path] = None,
+                      home: Optional[Path] = None) -> str:
+    """Format the most-recent learnings as a markdown addendum.
+
+    Returns a markdown snippet ready to inject into the host LLM's
+    system-prompt addendum at session start.  Empty string when no
+    learnings exist (caller can skip injection cleanly).
+
+    The format is intentionally compact — one bullet per learning,
+    prefixed with ``[scope]`` and a tags inline so the LLM has just
+    enough context to reference prior decisions.  Added in v0.15.1
+    to close the markdown-addendum gap from the v0.15.0 plan T3.
+    """
+    items = load_recent(limit=limit, scopes=scopes, root=root, home=home)
+    if not items:
+        return ""
+    lines: List[str] = ["## Prior learnings (auto-injected at session start)"]
+    for l in items:
+        tags = f" `#{' #'.join(l.tags)}`" if l.tags else ""
+        text = l.text.strip().replace("\n", " ")
+        lines.append(f"- **[{l.scope}]**{tags} {text}")
+    return "\n".join(lines)
 
 
 def capture(text: str,

@@ -33,15 +33,23 @@ from . import (
 def _find_slash_command(here: Path, name: str) -> Path | None:
     """Locate a `.claude/commands/<name>` shipped alongside the skill bundle.
 
-    v0.11.1 fix for F5: the original probes hard-coded
-    ``here.parent.parent / "claw-code-pack" / ".claude" / "commands"``
-    which only resolved on the author's monorepo box.  We now:
+    v0.15.1 fix (Bug #1 from the v0.15.0 deep-dive audit): probes #40 and
+    #44 used to call this with ``here = repo_root`` and the loop walked
+    ``here.parents[level]`` which never inspects ``here`` itself.  Since
+    the canonical source-tree layout has ``update-package/`` as a *child*
+    of the repo root (not a sibling of any ancestor), the lookup
+    silently returned ``None`` whenever ``VIBECODE_UPDATE_PACKAGE`` was
+    not exported — which is the typical local-dev case.  The function
+    now walks ``here`` first, then its parents, so both layouts work.
+
+    Resolution order:
 
       1) honour ``$VIBECODE_UPDATE_PACKAGE`` if set;
-      2) walk up to 4 levels of parents and check
-         ``./.claude/commands/<name>`` and any sibling whose name
-         matches a known update-package label (claw-code-pack,
-         update-package, kit*, *_v0*).
+      2) walk ``here`` itself, then up to 4 levels of parents, checking
+         ``base/.claude/commands/<name>`` and any *child* of ``base``
+         whose name matches a known update-package label (claw-code-pack,
+         update-package, kit*, vibecodekit-update*);
+      3) fall back to ``cwd``.
     """
     env = os.environ.get("VIBECODE_UPDATE_PACKAGE")
     if env:
@@ -50,16 +58,18 @@ def _find_slash_command(here: Path, name: str) -> Path | None:
             return cand
     KNOWN_PACKAGE_DIRS = ("claw-code-pack", "update-package")
     KNOWN_PREFIXES = ("kit", "vibecodekit-update")
+    bases: List[Path] = [here]
     for level in range(0, 5):
         try:
-            base = here.parents[level]
+            bases.append(here.parents[level])
         except IndexError:
             break
-        # Direct .claude under this ancestor
+    for base in bases:
+        # Direct .claude under this base
         cand = base / ".claude" / "commands" / name
         if cand.exists():
             return cand
-        # Any sibling matching known patterns
+        # Any child of base matching known update-package labels
         if base.is_dir():
             for sib in base.iterdir():
                 if not sib.is_dir():
