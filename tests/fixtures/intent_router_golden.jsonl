@@ -1,0 +1,111 @@
+# KHÔNG sửa khi chưa cập nhật methodology note trong BENCHMARKS-METHODOLOGY.md
+# Format: 1 dòng JSON / entry — schema:
+#   {"prose": str, "expected_intents": list[str], "locale": "en"|"vi"|"mixed",
+#    "tag": "clear"|"edge"|"ambiguous"}
+# Phân bổ: 40 EN clear + 40 VI clear + 20 edge / ambiguous (≥100 total).
+# Set-inclusion gate (>= 0.75): expected_intents ⊆ actual_intents.  Clarification
+# expected khi expected_intents = []  (router phải KHÔNG match intent nào).
+{"prose": "scan this repo for security issues", "expected_intents": ["SCAN"], "locale": "en", "tag": "clear"}
+{"prose": "derive needs and user needs matrix", "expected_intents": ["SCAN"], "locale": "en", "tag": "clear"}
+{"prose": "kick off the brand vision and concept", "expected_intents": ["VISION"], "locale": "en", "tag": "clear"}
+{"prose": "run RRI reverse interview on the prd", "expected_intents": ["RRI"], "locale": "en", "tag": "clear"}
+{"prose": "build the testing matrix RRI-T stress axis", "expected_intents": ["RRI-T"], "locale": "en", "tag": "clear"}
+{"prose": "do a flow physics ux critique", "expected_intents": ["RRI-UX"], "locale": "en", "tag": "clear"}
+{"prose": "RRI-UI design system tokens", "expected_intents": ["RRI-UI"], "locale": "en", "tag": "clear"}
+{"prose": "scaffold a portfolio site", "expected_intents": ["BUILD"], "locale": "en", "tag": "clear"}
+{"prose": "build a landing page for our launch", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "en", "tag": "clear"}
+{"prose": "create a saas app with multi user auth", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "en", "tag": "clear"}
+{"prose": "build a docs site with developer documentation", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "en", "tag": "clear"}
+{"prose": "verify the changes and audit them", "expected_intents": ["VERIFY"], "locale": "en", "tag": "clear"}
+{"prose": "deploy to vercel for go live", "expected_intents": ["SHIP"], "locale": "en", "tag": "clear"}
+{"prose": "release a hotfix to production now", "expected_intents": ["SHIP"], "locale": "en", "tag": "clear"}
+{"prose": "add module to existing codebase for billing", "expected_intents": ["MODULE"], "locale": "en", "tag": "clear"}
+{"prose": "tweak the copy on the hero, just a tiny refine", "expected_intents": ["REFINE"], "locale": "en", "tag": "clear"}
+{"prose": "fix a bug, hotfix needed asap", "expected_intents": ["MAINTAIN"], "locale": "en", "tag": "clear"}
+{"prose": "compare options, advise on architecture", "expected_intents": ["ADVISOR"], "locale": "en", "tag": "clear"}
+{"prose": "remember claude.md context for next session", "expected_intents": ["MEMORY"], "locale": "en", "tag": "clear"}
+{"prose": "doctor selfcheck the kit installation", "expected_intents": ["DOCTOR"], "locale": "en", "tag": "clear"}
+{"prose": "show me the dashboard metrics", "expected_intents": ["DASHBOARD"], "locale": "en", "tag": "clear"}
+{"prose": "/vck-cso run owasp top 10 stride threat model", "expected_intents": ["VCK_CSO"], "locale": "en", "tag": "clear"}
+{"prose": "audit my code for security review", "expected_intents": ["VCK_CSO"], "locale": "en", "tag": "clear"}
+{"prose": "do an adversarial review, multi-specialist review please", "expected_intents": ["VCK_REVIEW"], "locale": "en", "tag": "clear"}
+{"prose": "code review my pull request please", "expected_intents": ["VCK_REVIEW"], "locale": "en", "tag": "clear"}
+{"prose": "/vck-qa real-browser qa checklist VN-12", "expected_intents": ["VCK_QA"], "locale": "en", "tag": "clear"}
+{"prose": "no-fix-without-investigation, run /vck-investigate", "expected_intents": ["VCK_INVESTIGATE"], "locale": "en", "tag": "clear"}
+{"prose": "post-deploy canary monitor for 30 minutes", "expected_intents": ["VCK_CANARY"], "locale": "en", "tag": "clear"}
+{"prose": "atomic ship orchestrator: test review push pr", "expected_intents": ["VCK_SHIP"], "locale": "en", "tag": "clear"}
+{"prose": "yc office hours, 6 forcing questions about pmf", "expected_intents": ["VCK_OFFICE_HOURS"], "locale": "en", "tag": "clear"}
+{"prose": "ceo mode review with scope expansion lens", "expected_intents": ["VCK_CEO_REVIEW"], "locale": "en", "tag": "clear"}
+{"prose": "engineering review, lock architecture invariants", "expected_intents": ["VCK_ENG_REVIEW"], "locale": "en", "tag": "clear"}
+{"prose": "design system from scratch with proper design tokens spacing", "expected_intents": ["VCK_DESIGN_CONSULTATION"], "locale": "en", "tag": "clear"}
+{"prose": "/vck-design-review for ui drift audit", "expected_intents": ["VCK_DESIGN_REVIEW"], "locale": "en", "tag": "clear"}
+{"prose": "/vck-learn capture a learning to the team store", "expected_intents": ["VCK_LEARN"], "locale": "en", "tag": "clear"}
+{"prose": "/vck-retro for our weekly retro", "expected_intents": ["VCK_RETRO"], "locale": "en", "tag": "clear"}
+{"prose": "second opinion via codex review", "expected_intents": ["VCK_SECOND_OPINION"], "locale": "en", "tag": "clear"}
+{"prose": "use vck-pipeline master pipeline router for all gates", "expected_intents": ["VCK_PIPELINE"], "locale": "en", "tag": "clear"}
+{"prose": "performance refactor and rollback if needed", "expected_intents": ["MAINTAIN"], "locale": "en", "tag": "clear"}
+{"prose": "write tests and unit tests for the api", "expected_intents": ["VERIFY"], "locale": "en", "tag": "clear"}
+{"prose": "kiểm tra bảo mật repo này", "expected_intents": ["SCAN"], "locale": "vi", "tag": "clear"}
+{"prose": "phân tích nhu cầu user và derive needs", "expected_intents": ["SCAN"], "locale": "vi", "tag": "clear"}
+{"prose": "định hướng tầm nhìn thương hiệu mới", "expected_intents": ["VISION"], "locale": "vi", "tag": "clear"}
+{"prose": "phỏng vấn ngược, đặt câu hỏi ngược cho yêu cầu", "expected_intents": ["RRI"], "locale": "vi", "tag": "clear"}
+{"prose": "ma trận test stress axis cho login flow", "expected_intents": ["RRI-T"], "locale": "vi", "tag": "clear"}
+{"prose": "phê bình ux trên luồng người dùng", "expected_intents": ["RRI-UX"], "locale": "vi", "tag": "clear"}
+{"prose": "thiết kế ui với design system tokens", "expected_intents": ["RRI-UI"], "locale": "vi", "tag": "clear"}
+{"prose": "tạo dự án mới shop online", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "build từ đầu một crm cho team sales", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "tạo blog cá nhân full stack", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "tạo api todo cho mobile app", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "build dashboard analytics cho admin", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "tạo portfolio cá nhân", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "build saas app multi-user", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "tạo docs trang tài liệu cho dev", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "kiểm tra kết quả, validate output", "expected_intents": ["VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "viết tests cho module thanh toán", "expected_intents": ["VERIFY"], "locale": "vi", "tag": "clear"}
+{"prose": "đẩy lên production, triển khai vercel", "expected_intents": ["SHIP"], "locale": "vi", "tag": "clear"}
+{"prose": "phát hành bản release mới", "expected_intents": ["SHIP"], "locale": "vi", "tag": "clear"}
+{"prose": "thêm module vào codebase có sẵn", "expected_intents": ["MODULE"], "locale": "vi", "tag": "clear"}
+{"prose": "tinh chỉnh polish phần text copy", "expected_intents": ["REFINE"], "locale": "vi", "tag": "clear"}
+{"prose": "đổi màu primary token một chút", "expected_intents": ["REFINE"], "locale": "vi", "tag": "clear"}
+{"prose": "sửa bug login lỗi rồi", "expected_intents": ["MAINTAIN"], "locale": "vi", "tag": "clear"}
+{"prose": "nâng cấp performance, tối ưu query", "expected_intents": ["MAINTAIN"], "locale": "vi", "tag": "clear"}
+{"prose": "tư vấn kiến trúc microservices", "expected_intents": ["ADVISOR"], "locale": "vi", "tag": "clear"}
+{"prose": "đánh giá so sánh giữa fastapi và django", "expected_intents": ["ADVISOR"], "locale": "vi", "tag": "clear"}
+{"prose": "ghi nhớ context vào claude.md", "expected_intents": ["MEMORY"], "locale": "vi", "tag": "clear"}
+{"prose": "chẩn đoán hệ thống, tự kiểm tra kit", "expected_intents": ["DOCTOR"], "locale": "vi", "tag": "clear"}
+{"prose": "bảng điều khiển tổng quan hôm nay", "expected_intents": ["DASHBOARD"], "locale": "vi", "tag": "clear"}
+{"prose": "/vck-cso owasp top 10 audit cho repo", "expected_intents": ["VCK_CSO"], "locale": "vi", "tag": "clear"}
+{"prose": "review code my code trước khi merge", "expected_intents": ["VCK_REVIEW"], "locale": "vi", "tag": "clear"}
+{"prose": "real browser qa checklist vn-12 trên prod", "expected_intents": ["VCK_QA"], "locale": "vi", "tag": "clear"}
+{"prose": "/vck-investigate root cause của bug", "expected_intents": ["VCK_INVESTIGATE"], "locale": "vi", "tag": "clear"}
+{"prose": "canary monitor 30 phút sau ship", "expected_intents": ["VCK_CANARY"], "locale": "vi", "tag": "clear"}
+{"prose": "atomic ship vck-ship orchestrator pipeline", "expected_intents": ["VCK_SHIP"], "locale": "vi", "tag": "clear"}
+{"prose": "office hours yc cho founder mode", "expected_intents": ["VCK_OFFICE_HOURS"], "locale": "vi", "tag": "clear"}
+{"prose": "ceo mode review với scope reduction", "expected_intents": ["VCK_CEO_REVIEW"], "locale": "vi", "tag": "clear"}
+{"prose": "lock architecture invariants review trước beta", "expected_intents": ["VCK_ENG_REVIEW"], "locale": "vi", "tag": "clear"}
+{"prose": "/vck-design-consultation cho bộ design system", "expected_intents": ["VCK_DESIGN_CONSULTATION"], "locale": "vi", "tag": "clear"}
+{"prose": "/vck-design-review audit ui drift", "expected_intents": ["VCK_DESIGN_REVIEW"], "locale": "vi", "tag": "clear"}
+{"prose": "/vck-learn ghi bài học cho team", "expected_intents": ["VCK_LEARN"], "locale": "vi", "tag": "clear"}
+{"prose": "retro tuần này về ship rate", "expected_intents": ["VCK_RETRO"], "locale": "vi", "tag": "clear"}
+{"prose": "phản biện plan này, second opinion", "expected_intents": ["VCK_SECOND_OPINION"], "locale": "vi", "tag": "clear"}
+{"prose": "chọn pipeline phù hợp, vck pipeline router", "expected_intents": ["VCK_PIPELINE"], "locale": "vi", "tag": "clear"}
+{"prose": "hello there, can you help me?", "expected_intents": [], "locale": "en", "tag": "ambiguous"}
+{"prose": "what should I do next?", "expected_intents": [], "locale": "en", "tag": "ambiguous"}
+{"prose": "tell me more about your capabilities", "expected_intents": [], "locale": "en", "tag": "ambiguous"}
+{"prose": "thanks, that was helpful", "expected_intents": [], "locale": "en", "tag": "ambiguous"}
+{"prose": "the weather is nice today", "expected_intents": [], "locale": "en", "tag": "ambiguous"}
+{"prose": "xin chào, mình có một câu hỏi", "expected_intents": [], "locale": "vi", "tag": "ambiguous"}
+{"prose": "bạn có thể giúp gì cho mình", "expected_intents": [], "locale": "vi", "tag": "ambiguous"}
+{"prose": "cảm ơn nhiều nhé", "expected_intents": [], "locale": "vi", "tag": "ambiguous"}
+{"prose": "trời hôm nay đẹp quá", "expected_intents": [], "locale": "vi", "tag": "ambiguous"}
+{"prose": "không biết làm sao luôn á", "expected_intents": [], "locale": "vi", "tag": "ambiguous"}
+{"prose": "scan and verify in one go", "expected_intents": ["SCAN", "VERIFY"], "locale": "en", "tag": "edge"}
+{"prose": "vision and brand for the new product", "expected_intents": ["VISION"], "locale": "en", "tag": "edge"}
+{"prose": "scaffold and verify the new project pipeline", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "en", "tag": "edge"}
+{"prose": "fix and refactor the legacy module", "expected_intents": ["MAINTAIN"], "locale": "en", "tag": "edge"}
+{"prose": "architecture review and analysis", "expected_intents": ["ADVISOR"], "locale": "en", "tag": "edge"}
+{"prose": "phỏng vấn ngược và phân tích nhu cầu cùng lúc", "expected_intents": ["SCAN", "RRI"], "locale": "vi", "tag": "edge"}
+{"prose": "tạo dự án mới và viết tests luôn", "expected_intents": ["SCAN", "VISION", "RRI", "BUILD", "VERIFY"], "locale": "vi", "tag": "edge"}
+{"prose": "tinh chỉnh và đẩy lên production", "expected_intents": ["REFINE", "SHIP"], "locale": "vi", "tag": "edge"}
+{"prose": "kiểm tra bảo mật và review code", "expected_intents": ["SCAN", "VCK_REVIEW"], "locale": "vi", "tag": "edge"}
+{"prose": "doctor selfcheck rồi tinh chỉnh polish nhẹ", "expected_intents": ["DOCTOR", "REFINE"], "locale": "vi", "tag": "edge"}

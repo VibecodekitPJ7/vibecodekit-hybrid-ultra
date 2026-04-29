@@ -50,7 +50,37 @@ System"), **not** parity with any external model or tool.
 | "588 pytest cases pass" | Unit + integration tests pass (code correctness) |
 | "release-matrix L1+L2+L3 PASS" | Layout validation across 3 deployment modes |
 
-## 4. Roadmap for external benchmarks (Phase 2)
+## 4. Intent router accuracy (set-inclusion, N=104)
+
+`tests/test_intent_router_golden.py` chạy `IntentRouter().classify()`
+trên dataset có nhãn ở `tests/fixtures/intent_router_golden.jsonl`
+(40 EN clear + 40 VI clear + 24 edge / ambiguous, total **104**
+entries) và đo:
+
+| Metric | Định nghĩa | Giá trị hiện tại | Gate |
+|---|---|---|---|
+| `set_inclusion_accuracy` | `mean(expected_intents ⊆ actual_intents)` — router được phép trả thêm intent superset | **98.1 %** (102/104 ở v0.16.2) | **≥ 75 %** (hard, không hạ ngưỡng nếu tụt) |
+| `exact_match_accuracy` | `mean(expected == actual)` — báo cáo only | **88.5 %** (92/104) | ≥ 50 % (cảnh báo super set quá rộng) |
+| Per-locale (EN, VI) | set-inclusion riêng từng locale | EN ≥ 75 %, VI ≥ 75 % | đảm bảo không lệch sang một locale |
+
+Không phải benchmark code-quality (như HumanEval) — đây thuần là
+classification accuracy của bộ phân loại keyword + multi-tier weighted
+scoring.  Mục đích: đảm bảo prose tiếng Việt + tiếng Anh + slash
+typing đều land đúng `/vibe-*` / `/vck-*` slash command.
+
+Cách rerun:
+
+```bash
+VIBECODE_UPDATE_PACKAGE="$(pwd)/update-package" \
+  PYTHONPATH=./scripts python3 -m pytest \
+    tests/test_intent_router_golden.py -v
+```
+
+Threshold `0.75` được hard-code trong test.  **KHÔNG hạ ngưỡng** nếu
+baseline tụt xuống dưới — sửa router (mở rộng `TIER_1` triggers, điều
+chỉnh weight) hoặc cập nhật JSONL kèm methodology note ở đây.
+
+## 5. Roadmap for external benchmarks (Phase 2)
 
 We plan to add external benchmark runs to provide ground-truth quality
 numbers.  Candidates (in order of implementation priority):
@@ -67,7 +97,7 @@ run nightly on `main`, and referenced from this document.
 
 ---
 
-## 5. Contributing benchmark results
+## 6. Contributing benchmark results
 
 If you run VCK-HU against any external benchmark, we welcome PRs adding
 results to `benchmarks/<benchmark-name>/results.json`.  Include:
