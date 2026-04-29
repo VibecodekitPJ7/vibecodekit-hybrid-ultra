@@ -54,9 +54,9 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/N-NewteamPJ369/vibecodekit-hybrid-ultra"
-Issues = "https://github.com/N-NewteamPJ369/vibecodekit-hybrid-ultra/issues"
-Changelog = "https://github.com/N-NewteamPJ369/vibecodekit-hybrid-ultra/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/VibecodekitPJ3/vibecodekit-hybrid-ultra"
+Issues = "https://github.com/VibecodekitPJ3/vibecodekit-hybrid-ultra/issues"
+Changelog = "https://github.com/VibecodekitPJ3/vibecodekit-hybrid-ultra/blob/main/CHANGELOG.md"
 
 [project.scripts]
 vibecodekit = "vibecodekit.cli:main"
