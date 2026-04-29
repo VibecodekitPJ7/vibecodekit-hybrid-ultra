@@ -9,7 +9,7 @@ Lifecycle:
   here when they finish (via ``python -m vibecodekit.team_mode record``).
 - ``/vck-ship`` Bước 0 reads it (via ``team_mode check``) and refuses
   to proceed if any gate from ``.vibecode/team.json`` is missing.
-- ``/vck-ship`` Bước 6 calls ``team_mode clear`` after the PR is open,
+- ``/vck-ship`` Bước 7 calls ``team_mode clear`` after the PR is open,
   resetting the ledger for the next ship cycle.
 
 The ledger is **append-only JSONL** so concurrent appenders do not

@@ -37,8 +37,6 @@ Tài liệu hướng dẫn cách sử dụng kit trong **ChatGPT**, **OpenAI Cod
 13. [Memory hierarchy 3-tier](#13-memory-hierarchy-3-tier)
 14. [CLI cheatsheet](#14-cli-cheatsheet)
 15. [Troubleshooting](#15-troubleshooting)
-17. [Browser daemon (`[browser]` extra) — v0.12.0+](#17-browser-daemon-browser-extra--v0120)
-18. [Activation Cheat Sheet — gstack-port modules (v0.12.0–v0.15.0)](#18-activation-cheat-sheet--gstack-port-modules-v0120v0150)
 16. [v0.11.x BIG-UPDATE history — 6 tính năng mới](#16-v0110-big-update--6-tính-năng-mới)
     1. [`/vibe` — single-prompt router (F4)](#161-vibe--single-prompt-router-f4)
     2. [`/vibe-scaffold` — 10 preset × 3 stacks (F1)](#162-vibe-scaffold--scaffold-engine-f1)
@@ -46,6 +44,8 @@ Tài liệu hướng dẫn cách sử dụng kit trong **ChatGPT**, **OpenAI Cod
     4. [CLAUDE.md auto-maintain (F6)](#164-claudemd-auto-maintain-f6)
     5. [Auto-commit hook + sensitive-file guard (F3)](#165-auto-commit-hook--sensitive-file-guard-f3)
     6. [VN error translator + VN faker (F5)](#166-vn-error-translator--vn-faker-f5)
+17. [Browser daemon (`[browser]` extra) — v0.12.0+](#17-browser-daemon-browser-extra--v0120)
+18. [Activation Cheat Sheet — gstack-port modules (v0.12.0–v0.15.0)](#18-activation-cheat-sheet--gstack-port-modules-v0120v0150)
 
 ---
 

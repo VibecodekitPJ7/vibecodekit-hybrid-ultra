@@ -88,10 +88,10 @@ python -m vibecodekit.team_mode clear
 
 | Cú pháp | Mô tả |
 |---|---|
-| `/vck-ship` | Full pipeline 6 bước |
+| `/vck-ship` | Full pipeline 7 bước (Bước 0 → Bước 7) |
 | `/vck-ship --skip-qa` | Bỏ bước 4 (cho repo không có UI) |
 | `/vck-ship --draft` | Tạo draft PR thay vì ready |
-| `/vck-ship --dry-run` | Chạy bước 1-4, không commit/push/PR |
+| `/vck-ship --dry-run` | Chạy bước 0-4, không commit/push/PR |
 | `/vck-ship --base develop` | Base branch khác `main` |
 
 ## Failure modes
