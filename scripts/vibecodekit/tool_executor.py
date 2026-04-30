@@ -484,20 +484,31 @@ def execute_one(root: Path, block: Dict, bus: EventBus, mode: str,
             return {"block": block, "status": "deny", "result": {"permission": permission},
                     "hooks": {"pre": pre, "post": []}}
 
-    # Dispatch
-    impl = TOOL_IMPL.get(tool)
-    if impl is None:
-        return {"block": block, "status": "error", "result": {"error": f"unknown tool '{tool}'"},
-                "hooks": {"pre": pre, "post": []}}
-    try:
-        if tool == "run_command":
+    # Dispatch.  ``run_command`` is special-cased here because nó cần
+    # ``bus`` / ``mode`` / ``rules`` (3 tham số ngoài shape ``(root, inp)``
+    # của các tool khác trong ``TOOL_IMPL``); vì thế nó KHÔNG đăng ký
+    # trong ``TOOL_IMPL`` mà được gọi trực tiếp.  Cycle 7 PR1: phải kiểm
+    # tra special-case TRƯỚC khi ``impl is None`` raise unknown — bug cũ
+    # khiến ``run_command`` qua ``execute_blocks`` luôn trả "unknown tool".
+    if tool == "run_command":
+        try:
             out = _tool_run_command(root, inp, bus, mode, rules=rules)
-        else:
+            status = "ok" if "error" not in out else "error"
+        except Exception as e:  # pragma: no cover - defensive
+            out = {"error": f"{type(e).__name__}: {e}"}
+            status = "error"
+    else:
+        impl = TOOL_IMPL.get(tool)
+        if impl is None:
+            return {"block": block, "status": "error",
+                    "result": {"error": f"unknown tool '{tool}'"},
+                    "hooks": {"pre": pre, "post": []}}
+        try:
             out = impl(root, inp)
-        status = "ok" if "error" not in out else "error"
-    except Exception as e:  # pragma: no cover - defensive
-        out = {"error": f"{type(e).__name__}: {e}"}
-        status = "error"
+            status = "ok" if "error" not in out else "error"
+        except Exception as e:  # pragma: no cover - defensive
+            out = {"error": f"{type(e).__name__}: {e}"}
+            status = "error"
 
     post = run_hooks(str(root), "post_tool_use", {"tool": tool, "input": inp, "result": out, "status": status})
     if is_blocked(post):
