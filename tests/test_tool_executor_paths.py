@@ -403,6 +403,50 @@ class TestExecuteOne:
         assert out["status"] == "deny"
         assert out["result"]["permission"]["decision"] == "deny"
 
+    def test_run_command_allow_dispatch(self, tmp_path: Path,
+                                         monkeypatch: pytest.MonkeyPatch
+                                         ) -> None:
+        """Cycle 7 PR1 regression — `run_command` đi qua execute_one phải
+        dispatch sang ``_tool_run_command`` (TRƯỚC fix bug, sẽ trả
+        ``unknown tool`` vì impl is None)."""
+        bus = EventBus(tmp_path)
+        with patch("vibecodekit.tool_executor.subprocess.Popen") as mock_popen:
+            proc = MagicMock()
+            proc.communicate.return_value = ("ok-out", "")
+            proc.returncode = 0
+            mock_popen.return_value = proc
+            out = te.execute_one(
+                tmp_path,
+                {"tool": "run_command", "input": {"cmd": "git status"}},
+                bus, mode="default",
+            )
+        assert out["status"] == "ok", out
+        assert out["result"]["returncode"] == 0
+        assert "stdout" in out["result"]
+        assert mock_popen.called
+
+    def test_run_command_dispatch_via_execute_blocks(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Cycle 7 PR1 regression — execute_blocks route run_command
+        sang _tool_run_command thay vì 'unknown tool'."""
+        with patch("vibecodekit.tool_executor.subprocess.Popen") as mock_popen:
+            proc = MagicMock()
+            proc.communicate.return_value = ("hello\n", "")
+            proc.returncode = 0
+            mock_popen.return_value = proc
+            out = te.execute_blocks(
+                tmp_path,
+                blocks=[{"tool": "run_command",
+                          "input": {"cmd": "echo hello"}}],
+                mode="default",
+            )
+        assert len(out["results"]) == 1
+        r = out["results"][0]
+        assert r["status"] == "ok", r
+        assert r["result"]["returncode"] == 0
+        assert "unknown tool" not in str(r["result"])
+
 
 # ---------------------------------------------------------------------------
 # execute_blocks — partition + parallel + abort
