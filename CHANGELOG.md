@@ -12,6 +12,7 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Added (cycle 8 PR3)
 - `.github/workflows/codeql.yml` — CodeQL SAST scan (Python) chạy trên
   mọi PR + weekly cron (Thứ 3 06:00 UTC).  Query set:
