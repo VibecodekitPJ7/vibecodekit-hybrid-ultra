@@ -8,7 +8,7 @@ Smoke + integration test cho Layer 4b/4c của ``permission_engine``:
   deny; ``class="mutation"``; không ghi audit.
 * ``rm -rf /etc`` (target không trong safe list) → vẫn deny.
 * ``chmod 755 ./script.sh`` → không deny.
-* Audit log ``~/.vibecodekit/security/attempts.jsonl`` ghi 1 dòng JSON
+* Audit log ``~/.vibecode/security/attempts.jsonl`` ghi 1 dòng JSON
   mỗi deny + rate-cap 60/min (dropped_count tăng trong meta).
 * Audit log KHÔNG ghi cmd plaintext (chỉ sha256 hash).
 """
@@ -66,6 +66,16 @@ SAFE_EXCEPTION_PROBES = [
     "rm -rf .venv venv",
     "rm -rf coverage",
     "rm -rf ./node_modules ./.next",
+    # macOS ``rm`` dùng ``-Rf`` (capital R) như default pattern.
+    "rm -Rf node_modules",
+    "rm -RF dist",
+    "rm -rF build",
+    # BSD-style long flags (force + recursive).
+    "rm --recursive --force dist",
+    "rm --force --recursive coverage",
+    # Separate flags.
+    "rm -R -f node_modules",
+    "rm -f -R dist",
 ]
 
 
@@ -165,3 +175,22 @@ def test_audit_log_fallback_tempdir_when_no_home(
         _audit_log._ensure_dir(resolved)
     finally:
         os.chmod(ro_home, 0o700)
+
+
+def test_audit_log_default_path_uses_dot_vibecode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Audit dir phải align với ``~/.vibecode/`` (cùng dotdir với
+    denial_store / memory_hierarchy / learnings) — KHÔNG dùng dotdir
+    ``~/.vibecodekit/`` cũ.  CONTRIBUTING.md rule: no mutable state
+    ngoài ``~/.vibecode/`` + ``.vibecode/``."""
+    monkeypatch.delenv("VIBECODE_AUDIT_LOG_DIR", raising=False)
+    writable_home = tmp_path / "writable_home"
+    writable_home.mkdir()
+    monkeypatch.setenv("HOME", str(writable_home))
+    resolved = _audit_log._audit_dir()
+    # Cần kết thúc bằng ``.vibecode/security`` KHÔNG phải
+    # ``.vibecodekit/security``.
+    assert resolved.name == "security"
+    assert resolved.parent.name == ".vibecode"
+    assert resolved.parent.parent == writable_home

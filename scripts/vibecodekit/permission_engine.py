@@ -344,13 +344,16 @@ RM_RF_SAFE_TARGETS = frozenset({
     ".ruff_cache", ".venv", "venv",
 })
 
-# Match `rm` với ít nhất 1 flag recursive+force, capture tail.
+# Match `rm` với ít nhất 1 flag recursive+force, capture tail.  Case-
+# insensitive cho ``r``/``f`` vì macOS ``rm`` accept ``-Rf`` (capital R)
+# là variant phổ biến; BSD long flag dùng ``--recursive --force``
+# hoặc ``-RF``.
 _RM_RF_PREFIX_RX = re.compile(
     r"^\s*rm\s+("
-    r"-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*"       # -rf, -Rf, -rfv
-    r"|-[a-zA-Z]*f[a-zA-Z]*r[a-zA-Z]*"      # -fr, -Fr, -fvr
-    r"|-r[a-zA-Z]*\s+-f[a-zA-Z]*"            # -r -f
-    r"|-f[a-zA-Z]*\s+-r[a-zA-Z]*"            # -f -r
+    r"-[a-zA-Z]*[rR][a-zA-Z]*[fF][a-zA-Z]*"  # -rf, -Rf, -rF, -RF, -rfv
+    r"|-[a-zA-Z]*[fF][a-zA-Z]*[rR][a-zA-Z]*"  # -fr, -Fr, -fR, -FR, -fvr
+    r"|-[rR][a-zA-Z]*\s+-[fF][a-zA-Z]*"        # -r -f, -R -f, -R -F
+    r"|-[fF][a-zA-Z]*\s+-[rR][a-zA-Z]*"        # -f -r, -F -R
     r"|--recursive\s+--force"
     r"|--force\s+--recursive"
     r")\b\s*(.+)$"
