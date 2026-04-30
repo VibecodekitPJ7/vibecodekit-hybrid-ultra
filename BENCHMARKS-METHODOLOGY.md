@@ -208,17 +208,17 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
 
 ---
 
-## 4.5. Coverage gate (cycle 6 PR3 → cycle 7 PR2)
+## 4.5. Coverage gate (cycle 6 PR3 → cycle 7 PR2 → cycle 8 PR2)
 
 Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
 
-| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 3 target |
-|----------------------------------------|:-:|:-:|:-:|
-| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
-| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | ≥ 85% |
-| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | ≥ 85% |
-| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | ≥ 85% |
-| **TOTAL** (global gate)                | ≥ 60% (61%) | **≥ 70%** (72%) | ≥ 80% |
+| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 2b (cycle 8) | Phase 3 target |
+|----------------------------------------|:-:|:-:|:-:|:-:|
+| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
+| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 85% |
+| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | **≥ 80%** (100%) | ≥ 85% |
+| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | **≥ 80%** (100%, +3 test) | ≥ 85% |
+| **TOTAL** (global gate)                | ≥ 60% (61%) | ≥ 70% (72%) | **≥ 72%** (72%) | ≥ 80% |
 
 `omit` rationale (cycle 7 PR2):
 
@@ -227,11 +227,27 @@ Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
 * `deploy_orchestrator.py` — heavy subprocess + git mock; phù hợp PR
   riêng cycle 8.
 
+Phase 2b (cycle 8 PR2) — vn_error_translator polish:
+
+* 3 test bổ sung trong `tests/test_vn_error_translator.py`:
+  - **Graceful degrade** khi `_yaml is None` (monkeypatch sys.modules).
+  - **Multi-YAML ranking** — 2 file cùng pattern, confidence cao đứng
+    đầu.
+  - **Multi-line traceback chain** — root-cause ranked correctly.
+* Module đã đạt 100% từ cycle 7 với PyYAML installed; 3 test mới mở
+  rộng *behavior coverage* (xác nhận degrade path, ranking semantics).
+* Global TOTAL floor 70 → 72 để khoá achievement actual sau cycle 7
+  (KHÔNG dám raise lên 75 trong PR2 vì TOTAL hiện tại 72% — đẩy lên
+  75% cần mở scope sang `memory_writeback.py` 0% / `manifest_llm.py` 0%
+  / `auto_writeback.py` 0%, phù hợp Phase 3).
+
 Rationale: `tool_executor.py` là hot-path subprocess execute — module
 nguy hiểm nhất, đáng có coverage cao nhất.  Phase 2a (cycle 7) phủ thêm
 3 module Vietnamese-locale (faker / error translator) + team
-coordination layer.  Phase 3 sẽ siết global TOTAL ≥ 80% qua mở thêm
-deploy_orchestrator + browser/manager + cli (subprocess test).
+coordination layer.  Phase 2b (cycle 8) chỉ polish vn_error_translator
++ lock floor; mở rộng cấp module sẽ ở Phase 3.  Phase 3 sẽ siết global
+TOTAL ≥ 80% qua mở thêm deploy_orchestrator + browser/manager + cli
+(subprocess test) + memory_writeback + manifest_llm.
 
 CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
 
