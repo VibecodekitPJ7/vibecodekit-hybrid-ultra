@@ -24,7 +24,7 @@ import re
 import shlex
 import warnings
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Literal, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple
 
 from ._audit_log import record_attempt as _record_audit_attempt
 from ._logging import get_logger
@@ -517,11 +517,16 @@ class Decision:
     cls: ClassName
     reason: str
     mode: PermissionMode
-    prior: Optional[dict] = None
+    prior: Optional[Dict[str, Any]] = None
     extra: Dict[str, object] = field(default_factory=dict)
 
-    def to_dict(self) -> dict:
-        d = {"decision": self.decision, "class": self.cls, "reason": self.reason, "mode": self.mode}
+    def to_dict(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {
+            "decision": self.decision,
+            "class": self.cls,
+            "reason": self.reason,
+            "mode": self.mode,
+        }
         if self.prior:
             d["prior"] = self.prior
         if self.extra:
