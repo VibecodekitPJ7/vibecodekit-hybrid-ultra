@@ -73,11 +73,12 @@ jobs:
         run: |
           python -m ruff check scripts/vibecodekit --select F401,F841,F811
 
-      - name: mypy strict (5 core modules)
-        # Cycle 6 PR2: strict gate cho permission_engine, scaffold_engine,
-        # verb_router, denial_store, _audit_log.  Các module khác (tool_executor,
-        # team_mode, task_runtime, subagent_runtime) relax trong mypy.ini —
-        # cycle sau sẽ siết.
+      - name: mypy strict (9 core modules)
+        # Cycle 6 PR2: strict gate cho 5 module (permission_engine,
+        #   scaffold_engine, verb_router, denial_store, _audit_log).
+        # Cycle 7 PR3: mở rộng strict cho 4 module subprocess/runtime
+        #   (tool_executor, team_mode, task_runtime, subagent_runtime)
+        #   — block ``strict = False`` trong ``mypy.ini`` đã bị xoá.
         env:
           PYTHONPATH: ./scripts
         run: |
@@ -86,7 +87,11 @@ jobs:
             scripts/vibecodekit/scaffold_engine.py \
             scripts/vibecodekit/verb_router.py \
             scripts/vibecodekit/denial_store.py \
-            scripts/vibecodekit/_audit_log.py
+            scripts/vibecodekit/_audit_log.py \
+            scripts/vibecodekit/tool_executor.py \
+            scripts/vibecodekit/team_mode.py \
+            scripts/vibecodekit/task_runtime.py \
+            scripts/vibecodekit/subagent_runtime.py
 
       - name: eval_select preview (diff-based test selection)
         # Visibility-only on every event: prints the selection so reviewers

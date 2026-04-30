@@ -26,7 +26,7 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable, Optional, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 from ._logging import get_logger
 
@@ -58,15 +58,15 @@ class TeamConfig:
     created_ts: float = 0.0
     updated_ts: float = 0.0
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["required"] = list(self.required)
         d["optional"] = list(self.optional)
         return d
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "TeamConfig":
-        def _seq(value: object) -> tuple:
+    def from_dict(cls, raw: dict[str, Any]) -> "TeamConfig":
+        def _seq(value: object) -> tuple[str, ...]:
             # A bare string would be silently iterated as ("o", "o", "p", "s")
             # by ``tuple(value)``, which is a footgun for hand-edited JSON.
             # Reject strings explicitly; require a real list/tuple.
@@ -215,21 +215,21 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = ap.parse_args(argv)
     if args.cmd == "init":
-        cfg = TeamConfig(
+        new_cfg = TeamConfig(
             team_id=args.team_id,
             required=tuple(args.required),
             optional=tuple(args.optional),
             learnings_required=args.learnings_required,
         )
-        new = write_team_config(cfg)
-        _log.info("team_init", extra={"config": new.as_dict()})
+        written = write_team_config(new_cfg)
+        _log.info("team_init", extra={"config": written.as_dict()})
         return 0
     if args.cmd == "show":
-        cfg = read_team_config()
-        if cfg is None:
+        show_cfg = read_team_config()
+        if show_cfg is None:
             _log.info("team_show_none", extra={"config": None})
             return 1
-        _log.info("team_show", extra={"config": cfg.as_dict()})
+        _log.info("team_show", extra={"config": show_cfg.as_dict()})
         return 0
     if args.cmd == "check":
         # Lazy import so the module remains importable even when the
@@ -239,8 +239,8 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
             gates = [g.strip() for g in args.gates_run.split(",") if g.strip()]
         else:
             gates = session_ledger.gates_run()
-        cfg = read_team_config()
-        if cfg is None:
+        check_cfg = read_team_config()
+        if check_cfg is None:
             if not args.quiet:
                 _log.info("team_check_skip",
                           extra={"reason": "no .vibecode/team.json"})
@@ -257,8 +257,8 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
         if not args.quiet:
             _log.info(
                 "team_check_ok",
-                extra={"team_id": cfg.team_id,
-                       "required": sorted(cfg.required)},
+                extra={"team_id": check_cfg.team_id,
+                       "required": sorted(check_cfg.required)},
             )
         return 0
     if args.cmd == "record":

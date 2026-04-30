@@ -26,7 +26,7 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from ._platform_lock import file_lock
 from .event_bus import EventBus
@@ -117,7 +117,7 @@ def _state_lock_path(d: Path) -> Path:
 
 
 @contextlib.contextmanager
-def _locked_state(d: Path):
+def _locked_state(d: Path) -> Iterator[None]:
     """Hold an exclusive advisory lock on the agent's state directory.
 
     Used to serialise read-modify-write cycles on ``state.json`` (e.g. parent
@@ -148,7 +148,7 @@ def _atomic_write_state(path: Path, payload: Dict[str, Any]) -> None:
         raise
 
 
-def spawn(root: str | os.PathLike, role: str, objective: str,
+def spawn(root: "str | os.PathLike[str]", role: str, objective: str,
           parent: Optional[str] = None) -> Dict[str, Any]:
     if role not in PROFILES:
         raise ValueError(f"unknown role: {role}; known: {list(PROFILES)}")
@@ -186,13 +186,14 @@ def spawn(root: str | os.PathLike, role: str, objective: str,
 def _set_status(d: Path, sp: Path, status: str) -> Dict[str, Any]:
     """Read-modify-write the agent's status field under the directory lock."""
     with _locked_state(d):
-        state = json.loads(sp.read_text(encoding="utf-8"))
+        state: Dict[str, Any] = json.loads(sp.read_text(encoding="utf-8"))
         state["status"] = status
         _atomic_write_state(sp, state)
         return state
 
 
-def run(root: str | os.PathLike, agent_id: str, blocks: List[Dict]) -> Dict[str, Any]:
+def run(root: "str | os.PathLike[str]", agent_id: str,
+        blocks: List[Dict[str, Any]]) -> Dict[str, Any]:
     root = Path(root).resolve()
     d = _agent_dir(root, agent_id)
     sp = d / "state.json"
@@ -225,7 +226,8 @@ def run(root: str | os.PathLike, agent_id: str, blocks: List[Dict]) -> Dict[str,
     return {"agent_id": agent_id, "result": result}
 
 
-def bubble_to_parent(root: str | os.PathLike, agent_id: str, request: Dict) -> Dict:
+def bubble_to_parent(root: "str | os.PathLike[str]", agent_id: str,
+                      request: Dict[str, Any]) -> Dict[str, Any]:
     """Record a high-risk permission request that must be resolved by the parent."""
     root = Path(root).resolve()
     d = _agent_dir(root, agent_id)
@@ -329,7 +331,7 @@ def resolve_command_agent(command: str, commands_dir: Optional[Path] = None) -> 
 
 
 def spawn_for_command(
-    root: str | os.PathLike,
+    root: "str | os.PathLike[str]",
     command: str,
     objective: str,
     *,

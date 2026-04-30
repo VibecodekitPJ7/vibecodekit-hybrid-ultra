@@ -47,7 +47,7 @@ import threading
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from vibecodekit._platform_lock import file_lock
 
@@ -118,7 +118,7 @@ def _lock_path(root: Path) -> Path:
 
 
 @contextlib.contextmanager
-def _locked_index(root: Path):
+def _locked_index(root: Path) -> Iterator[None]:
     lp = _lock_path(root)
     fd = os.open(str(lp), os.O_RDWR | os.O_CREAT, 0o600)
     try:
@@ -128,17 +128,19 @@ def _locked_index(root: Path):
         os.close(fd)
 
 
-def _read_index(root: Path) -> Dict[str, dict]:
+def _read_index(root: Path) -> Dict[str, Dict[str, Any]]:
     p = _index_path(root)
     if not p.exists():
         return {}
     try:
-        return json.loads(p.read_text(encoding="utf-8") or "{}")
+        out: Dict[str, Dict[str, Any]] = json.loads(
+            p.read_text(encoding="utf-8") or "{}")
+        return out
     except json.JSONDecodeError:
         return {}
 
 
-def _write_index(root: Path, data: Dict[str, dict]) -> None:
+def _write_index(root: Path, data: Dict[str, Dict[str, Any]]) -> None:
     p = _index_path(root)
     tmp_fd, tmp = tempfile.mkstemp(prefix=".tasks.", suffix=".tmp", dir=str(p.parent))
     try:
@@ -163,7 +165,7 @@ def _upsert(root: Path, task: Task) -> None:
 # ---------------------------------------------------------------------------
 # Create
 # ---------------------------------------------------------------------------
-def create_task(root: str | os.PathLike, kind: str, description: str,
+def create_task(root: "str | os.PathLike[str]", kind: str, description: str,
                 meta: Optional[Dict[str, Any]] = None) -> Task:
     if kind not in TASK_TYPES:
         raise ValueError(f"unknown task kind: {kind}; known: {TASK_TYPES}")
@@ -185,7 +187,8 @@ def create_task(root: str | os.PathLike, kind: str, description: str,
 # ---------------------------------------------------------------------------
 # Read
 # ---------------------------------------------------------------------------
-def list_tasks(root: str | os.PathLike, *, only: Optional[str] = None) -> List[dict]:
+def list_tasks(root: "str | os.PathLike[str]", *,
+               only: Optional[str] = None) -> List[Dict[str, Any]]:
     root_p = Path(root).resolve()
     with _locked_index(root_p):
         idx = _read_index(root_p)
@@ -196,7 +199,7 @@ def list_tasks(root: str | os.PathLike, *, only: Optional[str] = None) -> List[d
     return out
 
 
-def get_task(root: str | os.PathLike, task_id: str) -> Optional[dict]:
+def get_task(root: "str | os.PathLike[str]", task_id: str) -> Optional[Dict[str, Any]]:
     if not _is_valid_task_id(task_id):
         return None
     root_p = Path(root).resolve()
@@ -204,7 +207,7 @@ def get_task(root: str | os.PathLike, task_id: str) -> Optional[dict]:
         return _read_index(root_p).get(task_id)
 
 
-def read_task_output(root: str | os.PathLike, task_id: str,
+def read_task_output(root: "str | os.PathLike[str]", task_id: str,
                      offset: int = 0, length: int = 64 * 1024) -> Dict[str, Any]:
     """Incremental read of a task's output — mirrors Claude Code outputOffset."""
     if not _is_valid_task_id(task_id):
@@ -242,7 +245,7 @@ def read_task_output(root: str | os.PathLike, task_id: str,
 # ---------------------------------------------------------------------------
 # Run (local_bash) — non-blocking, appends to output_file
 # ---------------------------------------------------------------------------
-def start_local_bash(root: str | os.PathLike, cmd: str,
+def start_local_bash(root: "str | os.PathLike[str]", cmd: str,
                      *, timeout_sec: Optional[int] = None,
                      description: Optional[str] = None) -> Task:
     root_p = Path(root).resolve()
@@ -323,7 +326,7 @@ def _finish(root: Path, task_id: str, status: str, *,
     })
 
 
-def kill_task(root: str | os.PathLike, task_id: str) -> bool:
+def kill_task(root: "str | os.PathLike[str]", task_id: str) -> bool:
     if not _is_valid_task_id(task_id):
         return False
     root_p = Path(root).resolve()
@@ -353,7 +356,7 @@ def _notifications_lock_path(root: Path, task_id: str) -> Path:
 
 
 @contextlib.contextmanager
-def _locked_notifications(root: Path, task_id: str):
+def _locked_notifications(root: Path, task_id: str) -> Iterator[None]:
     """Advisory lock shared by all enqueue / drain operations on a task's
     notification file (v0.9 P0-1 fix — prevents losing entries that get
     appended between the drain's read and truncate steps)."""
@@ -374,7 +377,8 @@ def _enqueue_notification(root: Path, task_id: str, payload: Dict[str, Any]) -> 
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def drain_notifications(root: str | os.PathLike, task_id: str) -> List[dict]:
+def drain_notifications(root: "str | os.PathLike[str]",
+                          task_id: str) -> List[Dict[str, Any]]:
     if not _is_valid_task_id(task_id):
         return []
     root_p = Path(root).resolve()
@@ -399,12 +403,12 @@ def drain_notifications(root: str | os.PathLike, task_id: str) -> List[dict]:
 # ---------------------------------------------------------------------------
 # Stall detection (§7.4)
 # ---------------------------------------------------------------------------
-def check_stalls(root: str | os.PathLike) -> List[dict]:
+def check_stalls(root: "str | os.PathLike[str]") -> List[Dict[str, Any]]:
     """Inspect running tasks; enqueue stall notifications for ones that look
     like they're waiting on interactive input."""
     root_p = Path(root).resolve()
     now = time.time()
-    stalled: List[dict] = []
+    stalled: List[Dict[str, Any]] = []
     for rec in list_tasks(root_p, only="running"):
         out_path = root_p / rec["output_file"]
         if not out_path.exists():
@@ -445,7 +449,7 @@ def check_stalls(root: str | os.PathLike) -> List[dict]:
 _DREAM_DEDUP_THRESHOLD = 0.92  # cosine sim cutoff — entries above this are considered duplicates
 
 
-def start_dream(root: str | os.PathLike) -> Task:
+def start_dream(root: "str | os.PathLike[str]") -> Task:
     """Start a *dream* task that consolidates session memory.
 
     v0.9 implements the full 4-phase Claude Code DreamTask pipeline
@@ -485,7 +489,7 @@ def start_dream(root: str | os.PathLike) -> Task:
                               "sessions": [p.name for p in session_files]})
 
             # --- Phase 2: gather ---
-            events: List[dict] = []
+            events: List[Dict[str, Any]] = []
             for jp in session_files:
                 try:
                     lines = jp.read_text(encoding="utf-8").splitlines()[-200:]
@@ -590,7 +594,7 @@ def start_dream(root: str | os.PathLike) -> Task:
 # ---------------------------------------------------------------------------
 # local_agent — runs a sub-agent plan in a daemon thread
 # ---------------------------------------------------------------------------
-def start_local_agent(root: str | os.PathLike, *,
+def start_local_agent(root: "str | os.PathLike[str]", *,
                       role: str, objective: str,
                       blocks: Optional[List[Dict[str, Any]]] = None,
                       description: Optional[str] = None) -> Task:
@@ -629,7 +633,7 @@ def start_local_agent(root: str | os.PathLike, *,
 # ---------------------------------------------------------------------------
 # local_workflow — declarative multi-step pipeline
 # ---------------------------------------------------------------------------
-def start_local_workflow(root: str | os.PathLike, *,
+def start_local_workflow(root: "str | os.PathLike[str]", *,
                          steps: List[Dict[str, Any]],
                          description: Optional[str] = None) -> Task:
     """Execute a scripted pipeline in the background.  Each step is a dict::
@@ -728,7 +732,7 @@ def start_local_workflow(root: str | os.PathLike, *,
 # ---------------------------------------------------------------------------
 # monitor_mcp — periodically pings an MCP server and records health
 # ---------------------------------------------------------------------------
-def start_monitor_mcp(root: str | os.PathLike, *,
+def start_monitor_mcp(root: "str | os.PathLike[str]", *,
                       server_name: str,
                       interval_sec: float = 15.0,
                       max_checks: int = 10,
@@ -789,7 +793,8 @@ def start_monitor_mcp(root: str | os.PathLike, *,
 # ---------------------------------------------------------------------------
 # Wait helper for tests
 # ---------------------------------------------------------------------------
-def wait_for(root: str | os.PathLike, task_id: str, *, timeout: float = 10.0) -> dict:
+def wait_for(root: "str | os.PathLike[str]", task_id: str, *,
+             timeout: float = 10.0) -> Dict[str, Any]:
     root_p = Path(root).resolve()
     start = time.time()
     while time.time() - start < timeout:

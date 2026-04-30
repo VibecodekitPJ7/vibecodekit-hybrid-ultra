@@ -73,7 +73,7 @@ def _resolve_under_root(root: Path, rel: str) -> Path:
 # Tool implementations
 # ---------------------------------------------------------------------------
 
-def _tool_list_files(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_list_files(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     rel = inp.get("path", ".")
     depth = int(inp.get("depth", 1))
     target = _resolve_under_root(root, rel)
@@ -93,7 +93,7 @@ def _tool_list_files(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"files": out, "truncated": False}
 
 
-def _tool_read_file(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_read_file(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     """Read a file slice.
 
     Accepts optional ``offset`` (byte position) and ``length`` (bytes to
@@ -138,7 +138,7 @@ def _tool_read_file(root: Path, inp: Dict) -> Dict[str, Any]:
     }
 
 
-def _tool_grep(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_grep(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     pattern = inp["pattern"]
     glob = inp.get("glob", "**/*")
     case_insensitive = bool(inp.get("ignore_case", False))
@@ -165,8 +165,8 @@ def _tool_grep(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"matches": matches, "truncated": False}
 
 
-def _tool_run_command(root: Path, inp: Dict, bus: EventBus,
-                      mode: str, rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+def _tool_run_command(root: Path, inp: Dict[str, Any], bus: EventBus,
+                      mode: str, rules: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     cmd = inp.get("cmd") or inp.get("command") or ""
     timeout = int(inp.get("timeout", DEFAULT_CMD_TIMEOUT))
     # The executor re-checks permission here; the query loop is expected to
@@ -219,7 +219,7 @@ def _tool_run_command(root: Path, inp: Dict, bus: EventBus,
         return {"cmd": cmd, "error": str(e), "executed": False}
 
 
-def _tool_write_file(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_write_file(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     rel = inp["path"]
     content = inp.get("content", "")
     target = _resolve_under_root(root, rel)
@@ -229,7 +229,7 @@ def _tool_write_file(root: Path, inp: Dict) -> Dict[str, Any]:
             "modifier": {"kind": "file_changed", "path": str(target.relative_to(root))}}
 
 
-def _tool_append_file(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_append_file(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     rel = inp["path"]
     content = inp.get("content", "")
     target = _resolve_under_root(root, rel)
@@ -240,13 +240,13 @@ def _tool_append_file(root: Path, inp: Dict) -> Dict[str, Any]:
             "modifier": {"kind": "file_changed", "path": str(target.relative_to(root))}}
 
 
-def _tool_delete_file(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_delete_file(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     # Always blocked in the schema; we return a clear permission payload.
     return {"permission": {"decision": "deny", "class": "blocked",
                            "reason": "delete_file is always blocked; use run_command with explicit approval"}}
 
 
-def _tool_glob(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_glob(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     pattern = inp.get("pattern") or "**/*"
     max_results = int(inp.get("max_results", 500))
     base = _resolve_under_root(root, inp.get("path", "."))
@@ -259,7 +259,7 @@ def _tool_glob(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"matches": matches, "truncated": False}
 
 
-def _tool_task_start(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_task_start(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import task_runtime
     kind = inp.get("kind", "local_bash")
     if kind == "local_bash":
@@ -311,7 +311,7 @@ def _tool_task_start(root: Path, inp: Dict) -> Dict[str, Any]:
             "output_file": t.output_file}
 
 
-def _tool_task_status(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_task_status(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import task_runtime
     tid = inp.get("task_id")
     if tid:
@@ -320,7 +320,7 @@ def _tool_task_status(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"tasks": task_runtime.list_tasks(root, only=inp.get("only"))}
 
 
-def _tool_task_read(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_task_read(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import task_runtime
     tid = inp.get("task_id")
     if not tid:
@@ -332,7 +332,7 @@ def _tool_task_read(root: Path, inp: Dict) -> Dict[str, Any]:
     )
 
 
-def _tool_task_kill(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_task_kill(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import task_runtime
     tid = inp.get("task_id")
     if not tid:
@@ -340,7 +340,7 @@ def _tool_task_kill(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"killed": task_runtime.kill_task(root, tid)}
 
 
-def _tool_task_notifications(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_task_notifications(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import task_runtime
     tid = inp.get("task_id")
     if not tid:
@@ -348,12 +348,12 @@ def _tool_task_notifications(root: Path, inp: Dict) -> Dict[str, Any]:
     return {"notifications": task_runtime.drain_notifications(root, tid)}
 
 
-def _tool_mcp_list(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_mcp_list(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import mcp_client
     return {"servers": mcp_client.list_servers(root)}
 
 
-def _tool_mcp_call(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_mcp_call(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import mcp_client
     name = inp.get("server")
     tool = inp.get("tool")
@@ -363,7 +363,7 @@ def _tool_mcp_call(root: Path, inp: Dict) -> Dict[str, Any]:
                                 timeout=float(inp.get("timeout", 10.0)))
 
 
-def _tool_memory_retrieve(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_memory_retrieve(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import memory_hierarchy
     q = inp.get("query") or ""
     if not q:
@@ -377,7 +377,7 @@ def _tool_memory_retrieve(root: Path, inp: Dict) -> Dict[str, Any]:
     )}
 
 
-def _tool_memory_add(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_memory_add(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import memory_hierarchy
     tier = inp.get("tier", "project")
     text = inp.get("text")
@@ -390,12 +390,12 @@ def _tool_memory_add(root: Path, inp: Dict) -> Dict[str, Any]:
     )
 
 
-def _tool_memory_stats(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_memory_stats(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import memory_hierarchy
     return {"stats": memory_hierarchy.tier_stats(root)}
 
 
-def _tool_approval_create(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_approval_create(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import approval_contract
     return approval_contract.create(
         root,
@@ -412,12 +412,12 @@ def _tool_approval_create(root: Path, inp: Dict) -> Dict[str, Any]:
     )
 
 
-def _tool_approval_list(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_approval_list(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import approval_contract
     return {"pending": approval_contract.list_pending(root)}
 
 
-def _tool_approval_respond(root: Path, inp: Dict) -> Dict[str, Any]:
+def _tool_approval_respond(root: Path, inp: Dict[str, Any]) -> Dict[str, Any]:
     from . import approval_contract
     aid = inp.get("approval_id")
     choice = inp.get("choice")
@@ -455,8 +455,8 @@ TOOL_IMPL = {
 # Execute one block / batch
 # ---------------------------------------------------------------------------
 
-def execute_one(root: Path, block: Dict, bus: EventBus, mode: str,
-                profile: Optional[Dict] = None, rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+def execute_one(root: Path, block: Dict[str, Any], bus: EventBus, mode: str,
+                profile: Optional[Dict[str, Any]] = None, rules: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Execute a single tool block end-to-end, with hook + ACL + permission."""
     tool = block.get("tool") or ""
     inp = block.get("input") or {}
@@ -517,9 +517,9 @@ def execute_one(root: Path, block: Dict, bus: EventBus, mode: str,
     return {"block": block, "status": status, "result": out, "hooks": {"pre": pre, "post": post}}
 
 
-def execute_blocks(root: str | os.PathLike, blocks: List[Dict], session_id: Optional[str] = None,
-                   mode: str = "default", profile: Optional[Dict] = None,
-                   rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+def execute_blocks(root: "str | os.PathLike[str]", blocks: List[Dict[str, Any]], session_id: Optional[str] = None,
+                   mode: str = "default", profile: Optional[Dict[str, Any]] = None,
+                   rules: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     root = Path(root).resolve()
     bus = EventBus(root, session_id)
     batches = partition_tool_blocks(blocks)
