@@ -12,6 +12,19 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.0] — 2026-04-30
+
+Enterprise hardening release — tổng hợp cycle 6 (SECURITY.md, structured
+logging, SBOM, permission engine strict-deny + audit log, typed
+`PermissionDecision` dataclass, mypy strict gate, coverage 80% gate
+phase 1) + cycle 7 (mypy strict expansion 5 → 9 modules, coverage Phase
+2a phủ `vn_faker` / `vn_error_translator` / `team_mode`) + cycle 8
+(canonical org lock `VibecodekitPJ7` final, coverage Phase 2b polish
++ floor 70 → 72, CodeQL SAST workflow).  Backward-compatible: zero
+breaking change runtime; deprecated dict-return shape của
+`permission_engine.decide()` vẫn hoạt động (emit `DeprecationWarning`,
+removal target v1.0.0).
+
 ### Added (cycle 8 PR3)
 - `.github/workflows/codeql.yml` — CodeQL SAST scan (Python) chạy trên
   mọi PR + weekly cron (Thứ 3 06:00 UTC).  Query set:
