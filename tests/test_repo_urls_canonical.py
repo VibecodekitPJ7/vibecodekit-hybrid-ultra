@@ -3,18 +3,27 @@ allowed organisation.  Prevents stale fork / personal-account URLs from
 leaking into releases.
 
 Lý do tồn tại của từng org trong ``ALLOWED_ORGS`` (PR2 mở rộng,
-updated PR1 cycle 6 — re-lock sau 8 lần rebrand):
+updated PR1 cycle 8 — re-lock sau 9 lần rebrand):
 
-- ``VibecodekitPJ6`` — **canonical PERMANENT** GitHub org của project
-  hiện tại từ v0.16.2+.  Repo này đã rebrand 8 lần
-  (``ykjpalbubp`` → ... → ``VibecodekitPJ3`` → ``VibecodekitPJ4`` →
-  ``VibecodekitPJ5`` → ``VibecodekitPJ6``); xem ``CHANGELOG.md``
-  cho lịch sử đầy đủ.  Cycle 6 commit: **PJ6 là canonical permanent —
-  không còn rebrand thêm**.  Drift guard này **không có cơ chế
-  env-gated bypass** (anti-pattern đã loại bỏ ở PR1 cycle 6); nếu
-  fork CI cần override, fork phải tự sync ``ALLOWED_ORGS`` hoặc
-  dùng ``pytest -k 'not test_repo_urls_canonical'`` cho fork suite.
-  Mọi tài liệu chỉ nên link tới ``VibecodekitPJ6``.
+- ``VibecodekitPJ7`` — **canonical FINAL** GitHub org của project
+  hiện tại từ v0.17.0+.  Repo này đã rebrand 9 lần
+  (``ykjpalbubp`` → ``N-NewteamPJ369`` → ``VibecodekitPJ`` →
+  ``VibecodekitPJ2`` → ``VibecodekitPJ3`` → ``VibecodekitPJ4`` →
+  ``VibecodekitPJ5`` → ``VibecodekitPJ6`` → ``VibecodekitPJ7``);
+  xem ``CHANGELOG.md`` cho lịch sử đầy đủ.
+
+  **CAM KẾT MẠNH (cycle 8 PR1):** ``VibecodekitPJ7`` là canonical
+  **FINAL** — DỪNG REBRAND Ở ĐÂY.  Mỗi lần rebrand là enterprise
+  red flag, tạo churn documentation + CI cost.  Nếu PR sau muốn
+  đổi canonical org lần thứ 10, **reviewer phải reject** trừ khi
+  có lý do hard-blocking (legal / trademark) được trình bày rõ
+  ràng trong PR body kèm sign-off của maintainer.
+
+  Drift guard này **không có cơ chế env-gated bypass**
+  (anti-pattern đã loại bỏ ở PR1 cycle 6); nếu fork CI cần
+  override, fork phải tự sync ``ALLOWED_ORGS`` hoặc dùng
+  ``pytest -k 'not test_repo_urls_canonical'`` cho fork suite.
+  Mọi tài liệu chỉ nên link tới ``VibecodekitPJ7``.
 - ``VagabondKingsman`` — upstream attribution cho
   `taw-kit <https://github.com/VagabondKingsman/taw-kit>`_, layer
   được tích hợp vào VibecodeKit Hybrid Ultra ở giai đoạn BIG-UPDATE
@@ -44,7 +53,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Orgs that are legitimate references in this codebase.  Đọc comment
 # block ở đầu file cho lý do chi tiết.  Nếu cần thêm/bớt entry, đồng
 # thời cập nhật ``tests/test_no_further_rebrands.py`` để giữ size cap.
-ALLOWED_ORGS = {"VibecodekitPJ6", "VagabondKingsman", "garrytan"}
+ALLOWED_ORGS = {"VibecodekitPJ7", "VagabondKingsman", "garrytan"}
 
 # Placeholder orgs used in examples (e.g. "github.com/.../pull/42").
 _PLACEHOLDER_ORGS = {"...", "OWNER", "owner", "example", "your-org"}

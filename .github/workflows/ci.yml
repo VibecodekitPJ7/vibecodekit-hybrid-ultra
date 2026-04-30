@@ -32,23 +32,23 @@ jobs:
       - name: Assert canonical org (drift guard, hard fail)
         # Hard fail.  KHÔNG có cơ chế bypass — fork CI phải tự sync ALLOWED_ORGS
         # hoặc fork với canonical org khớp.  Xem
-        # ``tests/test_repo_urls_canonical.py``: canonical org PERMANENT là
-        # VibecodekitPJ6 (cycle 6, sau 8 lần rebrand).  Anti-pattern
-        # env-gated bypass (cycle 5) đã được loại bỏ ở PR1 cycle 6 —
-        # quy tắc tự tắt được không phải quy tắc.
+        # ``tests/test_repo_urls_canonical.py``: canonical org FINAL là
+        # VibecodekitPJ7 (cycle 8 PR1, sau 9 lần rebrand — ĐÂY LÀ LẦN CUỐI).
+        # Anti-pattern env-gated bypass (cycle 5) đã được loại bỏ ở
+        # PR1 cycle 6 — quy tắc tự tắt được không phải quy tắc.
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         run: |
           owner="${{ github.repository_owner }}"
           echo "owner=$owner"
-          if [ "$owner" != "VibecodekitPJ6" ]; then
-            echo "::error::Canonical org là VibecodekitPJ6, nhưng đang chạy dưới '$owner'.  Fork CI: sync ALLOWED_ORGS trong tests/test_repo_urls_canonical.py hoặc dùng pytest -k 'not test_repo_urls_canonical' cho fork suite."
+          if [ "$owner" != "VibecodekitPJ7" ]; then
+            echo "::error::Canonical org là VibecodekitPJ7 (cycle 8 final lock).  Fork CI: sync ALLOWED_ORGS hoặc pytest -k 'not test_repo_urls_canonical'."
             exit 1
           fi
           # Cross-check git remote (chống case repo settings drift).
           remote="$(git config --get remote.origin.url || true)"
           echo "remote=$remote"
-          if ! echo "$remote" | grep -qE "VibecodekitPJ6/"; then
-            echo "::error::remote.origin.url không match VibecodekitPJ6/ — drift."
+          if ! echo "$remote" | grep -qE "VibecodekitPJ7/"; then
+            echo "::error::remote.origin.url không match VibecodekitPJ7/ — drift."
             exit 1
           fi
 
