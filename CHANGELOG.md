@@ -12,6 +12,7 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Added (cycle 8 PR2)
 - **Coverage Phase 2b** — `tests/test_vn_error_translator.py` thêm 3 test:
   - `test_graceful_degrade_when_pyyaml_absent`: monkeypatch
