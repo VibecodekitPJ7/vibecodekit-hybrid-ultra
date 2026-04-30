@@ -1805,6 +1805,7 @@ def _probe_no_orphan_module(tmp: Path) -> Tuple[bool, str]:
         search_paths.extend(p for p in sub.glob("*.py")
                             if p.stem != "conformance_audit")
     hooks_found = tests_found = cmds_found = False
+    examples_found = False
     repo_root = repo_candidates[-1]  # for relative_to fallback
     for cand in repo_candidates:
         hooks_dir = cand / "update-package" / ".claw" / "hooks"
@@ -1821,6 +1822,15 @@ def _probe_no_orphan_module(tmp: Path) -> Tuple[bool, str]:
         if cmd_dir.is_dir() and not cmds_found:
             search_paths.extend(cmd_dir.glob("*.md"))
             cmds_found = True
+            repo_root = cand
+        # examples/ chứa các script demo độc lập, mỗi script import
+        # 1 module public (vn_faker, quality_gate, ...).  Tính là
+        # production call site theo PR7 (v0.16.2 — gỡ 5 entry khỏi
+        # _audit_allowlist.json).
+        examples_dir = cand / "examples"
+        if examples_dir.is_dir() and not examples_found:
+            search_paths.extend(examples_dir.glob("*.py"))
+            examples_found = True
             repo_root = cand
 
     # When running from an installed-only environment (no tests, no
