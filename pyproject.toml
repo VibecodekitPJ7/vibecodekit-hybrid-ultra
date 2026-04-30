@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vibecodekit-hybrid-ultra"
-version = "0.18.0"
+version = "0.19.0"
 description = "Defensive, audit-driven runtime + skill bundle for AI-assisted coding workflows. VIBECODE-MASTER methodology + RRI question banks + permission engine + scaffold engine + 67-probe audit + sub-second browser daemon."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -107,8 +107,16 @@ select = ["F401", "F841", "F811"]
 #   hook_interceptor.py (62 miss), auto_commit_hook.py (59 miss) — tổng
 #   ~277 stmt gap.  Defer sang Phase 4 (cycle 10) cùng với scope browser/*
 #   submodule (domain riêng, code-path lớn nhất chưa được test).
-# Phase 4 (cycle 10): cover browser/* + hook_interceptor + auto_commit_hook
-#   + đưa cli.py trở lại scope (qua subprocess test) → global TOTAL >=80%.
+# Cycle 10 (Phase 4, fail_under=80): hoàn tất Phase 4 spec target 80%:
+#   - PR1 hook_interceptor.py (33% → 98%, +65pp, 31 test) +
+#     auto_commit_hook.py (40% → 99%, +59pp, 37 test). TOTAL 76 → 78.
+#   - PR2 browser/manager.py (178 stmt, 0% → 100%, +48 test).  Stub
+#     ``playwright.sync_api`` vào sys.modules trước khi import (idempotent
+#     với playwright real).  TOTAL 78 → 80.
+#   - PR3 (this) bump fail_under 76 → 80, lock spec target.
+# Phase 5 (future): mở scope đưa cli.py + deploy_orchestrator.py trở lại
+#   (subprocess test), polish mcp_client (62%) + browser/cli_adapter (33%)
+#   → global TOTAL >=85%.  Mypy strict expand từ 9/44 module → 20+/44.
 [tool.coverage.run]
 source = ["scripts/vibecodekit"]
 omit = [
@@ -120,7 +128,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 76
+fail_under = 80
 show_missing = true
 skip_empty = true
 exclude_lines = [

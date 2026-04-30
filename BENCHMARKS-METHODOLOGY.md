@@ -212,16 +212,19 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
 
 Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
 
-| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 2b (cycle 8) | Phase 3 (cycle 9) | Phase 4 target |
-|----------------------------------------|:-:|:-:|:-:|:-:|:-:|
-| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
-| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 85% |
-| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | ≥ 85% |
-| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | **≥ 80%** (100%, +3 test) | **≥ 80%** (100%) | ≥ 85% |
-| `scripts/vibecodekit/memory_writeback.py` | 0% | 0% | 0% | **100%** (+40 test) | ≥ 90% |
-| `scripts/vibecodekit/manifest_llm.py`  |   0% | 0% | 0% | **100%** (+12 test) | ≥ 90% |
-| `scripts/vibecodekit/auto_writeback.py` | 0% | 0% | 0% | **100%** (+20 test) | ≥ 90% |
-| **TOTAL** (global gate)                | ≥ 60% (61%) | ≥ 70% (72%) | **≥ 72%** (72%) | **≥ 76%** (76%) | ≥ 80% |
+| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 2b (cycle 8) | Phase 3 (cycle 9) | Phase 4 (cycle 10) | Phase 5 target |
+|----------------------------------------|:-:|:-:|:-:|:-:|:-:|:-:|
+| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
+| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
+| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | ≥ 90% |
+| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | **≥ 80%** (100%, +3 test) | **≥ 80%** (100%) | **≥ 80%** (100%) | ≥ 90% |
+| `scripts/vibecodekit/memory_writeback.py` | 0% | 0% | 0% | **100%** (+40 test) | **100%** | ≥ 95% |
+| `scripts/vibecodekit/manifest_llm.py`  |   0% | 0% | 0% | **100%** (+12 test) | **100%** | ≥ 95% |
+| `scripts/vibecodekit/auto_writeback.py` | 0% | 0% | 0% | **100%** (+20 test) | **100%** | ≥ 95% |
+| `scripts/vibecodekit/hook_interceptor.py` | 33% | 33% | 33% | 33% | **98%** (+31 test) | ≥ 90% |
+| `scripts/vibecodekit/auto_commit_hook.py` | 40% | 40% | 40% | 40% | **99%** (+37 test) | ≥ 95% |
+| `scripts/vibecodekit/browser/manager.py` |   0% | 0% | 0% | 0% | **100%** (+48 test) | ≥ 95% |
+| **TOTAL** (global gate)                | ≥ 60% (61%) | ≥ 70% (72%) | **≥ 72%** (72%) | **≥ 76%** (76%) | **≥ 80%** (80%) | ≥ 85% |
 
 `omit` rationale (cycle 7 PR2):
 
@@ -255,12 +258,38 @@ Phase 3 (cycle 9 PR1 + PR2 + PR3) — module 0% phủ kín:
   hai đều **100%**.  Frontmatter parser 5 nhánh, build_manifest 4 case,
   RefreshDecision dataclass + try_refresh 7 nhánh (gồm exception swallow
   primary + secondary state-write failure).
-* **PR3** (this): bump `fail_under` 72 → **76** (lock actual TOTAL
+* **PR3**: bump `fail_under` 72 → **76** (lock actual TOTAL
   achievement +4pp).  Mục tiêu spec ban đầu Phase 3 = 80% defer Phase 4
   vì sau khi cover 3 module 0% chỉ +4pp (72→76), KHÔNG đủ chạm 80%.
   Còn ~277 stmt gap chủ yếu ở `browser/manager.py` (178 stmt 0%),
   `mcp_client.py` (124 miss), `hook_interceptor.py` (62 miss),
   `auto_commit_hook.py` (59 miss).
+
+Phase 4 (cycle 10 PR1 + PR2 + PR3) — hoàn tất spec target 80%:
+
+* **PR1**: `tests/test_hook_interceptor_and_auto_commit.py` (+68 test)
+  phủ `hook_interceptor.py` (93 stmt, 33% → **98%**, +65pp) +
+  `auto_commit_hook.py` (98 stmt, 40% → **99%**, +59pp).  Test cover:
+  `_filter_env` (drop secret-like env keys), `_scrub_str` /
+  `_scrub_payload` recursive (AWS/sk-/ghp_/Bearer/private-key + bypass
+  `VIBECODE_HOOK_ALLOW_SECRETS=1`), `run_hooks` 7 nhánh (chmod
+  fallback, JSON decision parse, TimeoutExpired → 124, command env),
+  `is_blocked` 5 case; `is_sensitive` 21 parametrize, `Sensitive
+  FileGuard.check` 6 case (path + 3 token type + private key block),
+  `AutoCommitHook.decide` 7 case (opt-out / not-git / nothing /
+  sensitive / debounced / malformed stamp / ready), `commit` 3 case
+  (refusal / success bumps stamp / git failure no-stamp).  TOTAL 76 → 78.
+* **PR2**: `tests/test_browser_manager.py` (+48 test) phủ
+  `browser/manager.py` (178 stmt, 0% → **100%**).  Stub
+  `playwright.sync_api` vào `sys.modules` *trước* khi import (idempotent
+  với real playwright).  Mock minimal protocol surface
+  (`_FakePage`/`_FakeContext`/`_FakeBrowser`/`_FakeChromium`/
+  `_FakePlaywright`).  `BrowserManager.start` (idempotent + headless),
+  `stop` (close all + clear), `_open_tab` raises khi browser=None,
+  `run_read_verb` 10 verb, `run_write_verb` 10 verb, `get_manager`
+  singleton lifecycle.  TOTAL 78 → 80.
+* **PR3** (this): bump `fail_under` 76 → **80** — Phase 4 spec target
+  HIT.  Lock toan bộ +4pp từ 2 PR đầu.
 
 Rationale: `tool_executor.py` là hot-path subprocess execute — module
 nguy hiểm nhất, đáng có coverage cao nhất.  Phase 2a (cycle 7) phủ thêm
@@ -269,10 +298,14 @@ coordination layer.  Phase 2b (cycle 8) chỉ polish vn_error_translator
 + lock floor.  Phase 3 (cycle 9) phủ kín 3 module 0% còn lại
 (`memory_writeback` / `manifest_llm` / `auto_writeback`) bằng 72 test
 mới — đạt 100% mỗi nhưng global TOTAL chỉ +4pp do scale module nhỏ vs
-gap còn lại lớn.  Phase 4 (cycle 10) sẽ siết global TOTAL ≥ 80% qua mở
-thêm `browser/*` submodule (domain riêng, code-path lớn nhất chưa
-test) + `hook_interceptor` + `auto_commit_hook` + đưa `cli.py` /
-`deploy_orchestrator.py` trở lại scope qua subprocess test.
+gap còn lại lớn.  Phase 4 (cycle 10) hoàn tất spec target 80% qua
+mở scope `browser/manager.py` (178 stmt 0% → 100%) +
+`hook_interceptor.py` (33% → 98%) + `auto_commit_hook.py` (40% →
+99%).  Tổng 116 test mới qua 3 PR.  Phase 5 (future cycle 11+) sẽ
+mở scope `mcp_client.py` (62%) + `browser/cli_adapter.py` (33%) + đưa
+`cli.py` / `deploy_orchestrator.py` trở lại scope qua subprocess test —
+mục tiêu global TOTAL ≥ 85%.  Mypy strict expand từ 9/44 module →
+20+/44.  Optional RBAC multi-tenant nếu user demand.
 
 CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
 
