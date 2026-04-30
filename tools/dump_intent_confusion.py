@@ -8,8 +8,13 @@ Mục đích (PR4 sau review #4):
 - Trước đây confusion matrix chỉ dump khi golden eval **fail** (debug
   artefact ad-hoc).  Release note giữa các minor version cần baseline
   cố định để so sánh router accuracy theo thời gian.
-- Script này stdlib-only, không phụ thuộc pytest.  Có thể chạy thủ
-  công sau mỗi bump VERSION (xem ``BENCHMARKS-METHODOLOGY.md``).
+- Script tự nó chỉ dùng stdlib, NHƯNG import ``_compute_confusion_matrix``
+  + ``_load_golden`` từ ``tests/test_intent_router_golden.py``, mà file
+  test đó có ``import pytest`` ở top-level (cho ``@pytest.mark.parametrize``
+  ở line 320).  Vì vậy chạy script này **yêu cầu pytest** đã cài đặt.
+  Trong CI / dev shell pytest luôn có sẵn (xem ``pyproject.toml`` test
+  deps); đây là dev tool, không phải binary phân phối.  Có thể chạy
+  thủ công sau mỗi bump VERSION (xem ``BENCHMARKS-METHODOLOGY.md``).
 
 Schema:
 
