@@ -29,49 +29,26 @@ jobs:
           # eval_select needs the merge-base — fetch full history.
           fetch-depth: 0
 
-      - name: Assert canonical org (drift guard)
-        # Refuse to publish CI status under a non-canonical owner.  Đồng bộ với
-        # ``tests/test_repo_urls_canonical.py``: canonical org là VibecodekitPJ4
-        # (đổi từ PJ3 ở PR1 sau review #4).
-        #
-        # Fork CI opt-out: set repo variable ``CANONICAL_ORG_STRICT=false`` trên
-        # fork (Settings → Secrets and variables → Actions → Variables) để
-        # chuyển step này sang warning-only mode.  Upstream (``VibecodekitPJ4``)
-        # **không** set biến này → giữ strict fail-fast như cũ.  Tham chiếu
-        # discussion: PR6 Devin session, option B — env-gated strict mode.
+      - name: Assert canonical org (drift guard, hard fail)
+        # Hard fail.  KHÔNG có cơ chế bypass — fork CI phải tự sync ALLOWED_ORGS
+        # hoặc fork với canonical org khớp.  Xem
+        # ``tests/test_repo_urls_canonical.py``: canonical org PERMANENT là
+        # VibecodekitPJ6 (cycle 6, sau 8 lần rebrand).  Anti-pattern
+        # env-gated bypass (cycle 5) đã được loại bỏ ở PR1 cycle 6 —
+        # quy tắc tự tắt được không phải quy tắc.
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        env:
-          STRICT_MODE: ${{ vars.CANONICAL_ORG_STRICT }}
         run: |
           owner="${{ github.repository_owner }}"
           echo "owner=$owner"
-          # Default strict (empty var) → fail on non-canonical.  Set var to
-          # "false" trên fork để warning-only.  Accept bất kỳ casing
-          # ("false", "False", "FALSE", "no", "0") vì GitHub Actions
-          # Variables UI có thể render bool-ish string dưới nhiều form.
-          strict_raw="${STRICT_MODE:-true}"
-          strict="$(echo "$strict_raw" | tr '[:upper:]' '[:lower:]')"
-          case "$strict" in
-            false|no|0|off) strict="false" ;;
-            *)              strict="true"  ;;
-          esac
-          if [ "$owner" != "VibecodekitPJ4" ]; then
-            if [ "$strict" = "false" ]; then
-              echo "::warning::Running under non-canonical org '$owner' — fork CI, advisory only (CANONICAL_ORG_STRICT=$strict_raw)."
-              exit 0
-            fi
-            echo "::error::Canonical org là VibecodekitPJ4, nhưng đang chạy dưới '$owner'."
+          if [ "$owner" != "VibecodekitPJ6" ]; then
+            echo "::error::Canonical org là VibecodekitPJ6, nhưng đang chạy dưới '$owner'.  Fork CI: sync ALLOWED_ORGS trong tests/test_repo_urls_canonical.py hoặc dùng pytest -k 'not test_repo_urls_canonical' cho fork suite."
             exit 1
           fi
           # Cross-check git remote (chống case repo settings drift).
           remote="$(git config --get remote.origin.url || true)"
           echo "remote=$remote"
-          if ! echo "$remote" | grep -qE "VibecodekitPJ4/"; then
-            if [ "$strict" = "false" ]; then
-              echo "::warning::remote.origin.url không match VibecodekitPJ4/ — fork drift, advisory only."
-              exit 0
-            fi
-            echo "::error::remote.origin.url không match VibecodekitPJ4/ — drift."
+          if ! echo "$remote" | grep -qE "VibecodekitPJ6/"; then
+            echo "::error::remote.origin.url không match VibecodekitPJ6/ — drift."
             exit 1
           fi
 

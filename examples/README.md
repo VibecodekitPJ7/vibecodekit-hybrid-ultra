@@ -6,7 +6,7 @@ Standalone scripts demonstrating core VibecodeKit capabilities.
 ## Quick start
 
 ```bash
-git clone https://github.com/VibecodekitPJ4/vibecodekit-hybrid-ultra.git
+git clone https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra.git
 cd vibecodekit-hybrid-ultra
 
 # All-in-one demo (< 2 seconds):
