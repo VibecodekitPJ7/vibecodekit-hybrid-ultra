@@ -7,7 +7,7 @@ so PRs land smoothly.
 ## TL;DR
 
 ```bash
-git clone https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra
+git clone https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra
 cd vibecodekit-hybrid-ultra
 
 # Core (stdlib only, no third-party deps)

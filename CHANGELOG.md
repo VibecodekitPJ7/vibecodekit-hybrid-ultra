@@ -35,6 +35,15 @@ and [Semver](https://semver.org/).
   coverage table + section rationale cho Phase 2b polish + lý do
   defer 75% target sang Phase 3.
 
+### Changed (cycle 8 PR1)
+- **Canonical org**: `VibecodekitPJ6` → `VibecodekitPJ7` (rebrand #9, FINAL).
+  Fork contributor: sync `ALLOWED_ORGS` trong `tests/test_repo_urls_canonical.py`
+  hoặc `pytest -k 'not test_repo_urls_canonical'`.  Drift guard trong
+  `.github/workflows/ci.yml` cũng cập nhật từ literal `VibecodekitPJ6` →
+  `VibecodekitPJ7`; không thêm cơ chế env-gated bypass (anti-pattern đã loại
+  bỏ ở cycle 6 PR1).  Cam kết mạnh: PJ7 là canonical **FINAL** — dừng rebrand
+  ở đây; xem docstring `tests/test_repo_urls_canonical.py` cho rationale.
+
 ### Changed (cycle 7 PR3)
 - **mypy --strict expansion 5 → 9 core module.**  4 module trước đây
   `strict = False` trong `mypy.ini` đã được fix:
