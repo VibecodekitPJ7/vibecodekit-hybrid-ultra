@@ -12,6 +12,25 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed (cycle 7 PR3)
+- **mypy --strict expansion 5 → 9 core module.**  4 module trước đây
+  `strict = False` trong `mypy.ini` đã được fix:
+  - `tool_executor.py` (28 errors → 0): generic `Dict` / `List[Dict]` /
+    `Optional[Dict]` / `os.PathLike` annotate đầy đủ.
+  - `team_mode.py` (7 errors → 0): `dict[str, Any]` / `tuple[str, ...]`;
+    rename CLI `cfg` → `init_cfg` / `show_cfg` / `check_cfg` để tránh
+    `Optional[TeamConfig]` narrow → `unreachable` warning.
+  - `task_runtime.py` (25 errors → 0): `Iterator[None]` cho
+    `@contextlib.contextmanager`, `Dict[str, Dict[str, Any]]` cho
+    index, `os.PathLike[str]` quoted.
+  - `subagent_runtime.py` (8 errors → 0): tương tự.
+- Block `strict = False` trong `mypy.ini` bị xoá hoàn toàn.  CI step
+  `mypy strict (5 core modules)` đổi tên `(9 core modules)` + thêm 4
+  file vào command line.
+- `tests/test_mypy_strict_clean.py` mở rộng `CORE_MODULES` 5 → 9.
+- **Zero runtime change.**  Chỉ thêm/đổi type annotation và variable
+  rename (`cfg` → `init_cfg/show_cfg/check_cfg` ở CLI `team_mode`).
+
 ### Added (cycle 7)
 - **Coverage Phase 2a** (`pyproject.toml [tool.coverage]` + `.github/workflows/ci.yml`):
   - `vn_faker.py` 0% → 100% (23 test cases).
