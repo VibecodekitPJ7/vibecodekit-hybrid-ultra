@@ -114,6 +114,11 @@ Safe-exception (Layer 4c) cho `rm -rf <target>` nếu target thuộc:
 - Dependabot (`.github/dependabot.yml`) mở tối đa 5 PR/week cho `pip` +
   5 PR/week cho `github-actions` ecosystem (default của Dependabot v2
   khi không set `open-pull-requests-limit`).
+- CodeQL SAST scan (`.github/workflows/codeql.yml`, cycle 8 PR3) chạy
+  `security-extended` + `security-and-quality` queries trên mọi PR +
+  weekly cron (Thứ 3 06:00 UTC).  Findings xuất hiện ở GitHub Security
+  tab (yêu cầu `permissions.security-events: write`).  CodeQL pair với
+  pip-audit (SCA) + actionlint (workflow lint) cho 3-layer security CI.
 
 ## References
 - Inspired by `garrytan/gstack` `ARCHITECTURE.md` "Security model" layout,
