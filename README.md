@@ -12,7 +12,7 @@
 ## Quick demo (< 2 seconds, zero network)
 
 ```bash
-git clone https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra.git
+git clone https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra.git
 cd vibecodekit-hybrid-ultra
 PYTHONPATH=./scripts python -m vibecodekit.cli demo
 ```
@@ -157,12 +157,12 @@ vibecodekit-hybrid-ultra/
 ### Option 1 — drop the skill into Claude Code / Cursor
 
 Download the latest skill bundle from
-[Releases](https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra/releases/latest):
+[Releases](https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra/releases/latest):
 
 ```bash
 # Skill bundle (full runtime + tests + docs)
 # Replace vX.Y.Z with the latest release tag (see /releases page).
-curl -L https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra/releases/download/vX.Y.Z/vibecodekit-hybrid-ultra-vX.Y.Z-skill.zip -o skill.zip
+curl -L https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra/releases/download/vX.Y.Z/vibecodekit-hybrid-ultra-vX.Y.Z-skill.zip -o skill.zip
 unzip skill.zip -d ~/.claude/skills/vibecodekit-hybrid-ultra
 ```
 
@@ -170,7 +170,7 @@ unzip skill.zip -d ~/.claude/skills/vibecodekit-hybrid-ultra
 
 ```bash
 # Replace vX.Y.Z with the latest release tag (see /releases page).
-curl -L https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra/releases/download/vX.Y.Z/vibecodekit-hybrid-ultra-vX.Y.Z-update-package.zip -o update.zip
+curl -L https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra/releases/download/vX.Y.Z/vibecodekit-hybrid-ultra-vX.Y.Z-update-package.zip -o update.zip
 unzip update.zip -d /path/to/your/project/
 ```
 
@@ -183,7 +183,7 @@ docs, etc.).
 ## Develop locally
 
 ```bash
-git clone https://github.com/VibecodekitPJ6/vibecodekit-hybrid-ultra.git
+git clone https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra.git
 cd vibecodekit-hybrid-ultra
 
 # Run the canonical release gate
