@@ -54,6 +54,12 @@ Tools registered via `tools.json` chạy qua permission engine trước khi exec
 - Logging: `print()` ad-hoc thay vì `logging` — ✅ instrumented (PR2, 4 event point).
 - 4 pattern hiện trả "ask" thay vì "deny" — ✅ fixed (PR4): `chmod 777 /`,
   `shutdown`, `history -c`, `rm $(...)` giờ deny với `rule_id` ổn định.
+- ~~Canonical drift bypass (`CANONICAL_ORG_STRICT=false` env var) cho phép
+  silent disable drift guard~~ — ✅ fixed (PR1 cycle 6): env-gated bypass
+  đã loại bỏ.  Canonical org là `VibecodekitPJ6` từ v0.16.2+ (lock
+  PERMANENT sau 8 lần rebrand).  Drift guard không còn cơ chế env-gated
+  bypass — vi phạm phải fix `ALLOWED_ORGS` trong fork (hoặc skip test
+  suite riêng), không bypass guard.
 
 ## Strict-deny catalog (PR4)
 

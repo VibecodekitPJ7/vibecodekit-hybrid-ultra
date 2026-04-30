@@ -12,6 +12,24 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed (BREAKING for forks)
+- **Canonical org re-locked** từ `VibecodekitPJ4` (cycle 5) → `VibecodekitPJ6`
+  (cycle 6, PERMANENT).  Repo này đã rebrand 8 lần
+  (`ykjpalbubp` → ... → `PJ4` → `PJ5` → `PJ6`); cycle 6 commit: PJ6 là
+  canonical permanent — không còn rebrand thêm.
+- **Anti-pattern `CANONICAL_ORG_STRICT=false` env bypass đã bị loại bỏ**
+  khỏi `.github/workflows/ci.yml`.  Drift guard giờ là hard fail; quy tắc
+  tự tắt được không phải quy tắc.
+- **Migration cho fork CI**: nếu fork dưới org khác `VibecodekitPJ6`,
+  fork phải:
+  - Sync `ALLOWED_ORGS` trong `tests/test_repo_urls_canonical.py` để
+    thêm fork org, **hoặc**
+  - Skip suite riêng: `pytest -k 'not test_repo_urls_canonical'` cho
+    fork CI; **hoặc**
+  - Sửa `.github/workflows/ci.yml` block "Assert canonical org" để
+    nhận fork org.  Cảnh báo: nếu rebase upstream, conflict sẽ xuất
+    hiện trên file này — đó là cố ý, để fork phải re-confirm chính sách.
+
 ### Added
 - **Typed public API** (`vibecodekit.permission_engine`, PR5):
   - `PermissionDecision` frozen dataclass — fields `decision`,
