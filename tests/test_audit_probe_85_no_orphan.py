@@ -47,22 +47,30 @@ def test_audit_allowlist_json_is_valid() -> None:
 
 def test_audit_allowlist_only_contains_approved_entries() -> None:
     """The allowlist is bounded — adding entries requires a v-bump and a
-    documented decision.  Currently approved set:
+    documented decision.  Currently approved set: empty.
 
-    * v0.15.0 / Q5(b) — ``vn_faker`` + ``vn_error_translator`` (test
-      utilities consumed only by tests + downstream demos).
-    * v0.16.0-\u03b1 / audit P2 #6 — ``quality_gate`` + ``tool_use_parser``
-      + ``worktree_executor`` (genuine public Python API; the operator
-      chose option (b) allowlist for these three and option (a) wire-
-      properly for ``auto_commit_hook``).
+    Lịch sử:
+
+    * v0.15.0 / Q5(b) — th\u00eam ``vn_faker`` + ``vn_error_translator``
+      (test utilities consumed only by tests + downstream demos).
+    * v0.16.0-\u03b1 / audit P2 #6 — th\u00eam ``quality_gate`` +
+      ``tool_use_parser`` + ``worktree_executor`` (genuine public
+      Python API; operator ch\u1ecdn option (b) allowlist cho 3 module
+      n\u00e0y v\u00e0 option (a) wire-properly cho ``auto_commit_hook``).
+    * v0.16.2 / PR7 — g\u1ee1 c\u1ea3 5 entry sau khi th\u00eam example
+      ri\u00eang cho t\u1eebng module (``examples/04..08``).  Probe #85
+      search corpus \u0111\u00e3 m\u1edf r\u1ed9ng \u0111\u1ec3 bao g\u1ed3m
+      ``examples/*.py``, n\u00ean kh\u00f4ng c\u1ea7n allowlist n\u1eefa.
     """
     blob = json.loads((PKG / "_audit_allowlist.json").read_text(
         encoding="utf-8"))
-    expected = {
-        "vn_faker", "vn_error_translator",
-        "quality_gate", "tool_use_parser", "worktree_executor",
-    }
-    assert set(blob["no_orphan_module"].keys()) == expected
+    expected: set[str] = set()
+    assert set(blob["no_orphan_module"].keys()) == expected, (
+        "Allowlist baseline drift — n\u1ebfu th\u00eam entry m\u1edbi, "
+        "c\u1eadp nh\u1eadt test n\u00e0y c\u00f9ng v\u1edbi v-bump v\u00e0 "
+        "ghi ch\u00fa v\u00e0o docstring docstring \u0111\u1ec3 audit "
+        "trail r\u00f5 r\u00e0ng."
+    )
 
 
 def test_no_orphan_module_probe_is_in_PROBES_registry() -> None:

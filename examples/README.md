@@ -16,6 +16,11 @@ PYTHONPATH=./scripts python -m vibecodekit.cli demo
 PYTHONPATH=./scripts python examples/01_permission_engine.py
 PYTHONPATH=./scripts python examples/02_scaffold_preview.py
 PYTHONPATH=./scripts python examples/03_mcp_selfcheck.py
+PYTHONPATH=./scripts python examples/04_vn_faker.py
+PYTHONPATH=./scripts python examples/05_vn_error_translator.py
+PYTHONPATH=./scripts python examples/06_quality_gate.py
+PYTHONPATH=./scripts python examples/07_tool_use_parser.py
+PYTHONPATH=./scripts python examples/08_worktree_executor.py
 ```
 
 ## What each example does
@@ -25,6 +30,11 @@ PYTHONPATH=./scripts python examples/03_mcp_selfcheck.py
 | `01_permission_engine.py` | Classify 20 shell commands through the 6-layer permission pipeline |
 | `02_scaffold_preview.py` | List and preview all 10 scaffold presets across available stacks |
 | `03_mcp_selfcheck.py` | Call the bundled MCP selfcheck server via in-process transport |
+| `04_vn_faker.py` | Generate a Vietnamese user profile + 3-SKU shop catalog (deterministic, ``seed=42``) |
+| `05_vn_error_translator.py` | Translate 3 common Python errors to Vietnamese with fix suggestions |
+| `06_quality_gate.py` | Run the 7-dimension × 8-axis release gate on a sample scorecard (PASS + FAIL scenario) |
+| `07_tool_use_parser.py` | Parse 3 ad-hoc tool-use formats (JSON array, single ``<tool>`` tag, mixed prose) |
+| `08_worktree_executor.py` | Spawn an isolated git worktree (Pattern #8) on a temp repo, then clean up |
 
 ## All-in-one demo
 
