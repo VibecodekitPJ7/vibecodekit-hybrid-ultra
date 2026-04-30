@@ -12,6 +12,56 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.0] — 2026-04-30
+
+Coverage Phase 3 release — phủ test cho 3 module 0% còn lại (cycle 8
+defer): `memory_writeback.py` (229 stmt), `manifest_llm.py` (67 stmt),
+`auto_writeback.py` (66 stmt) → **100% mỗi**.  Global TOTAL coverage:
+72% → **76%** (+4pp).  Floor `fail_under` 72 → 76 (pragmatic lock —
+spec-target 80% defer Phase 4 vì cần mở scope sang `browser/*` 0% domain
+là code-path lớn nhất chưa được test).  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 9 PR1)
+- `tests/test_memory_writeback.py` — 40 test phủ `memory_writeback.py`
+  (229 stmt, was 0%) → **100%**.  Phủ 5 section detector (stack /
+  scripts / conventions / gotchas / test-strategy), `MemoryWriteback`
+  class methods (init / update / check / nest, dry-run, drift,
+  path-traversal guard), helpers (`_read` / `_build_section` /
+  `_extract_sections` / `_replace_section`), `DiffReport` /
+  `DriftReport` dataclass shape.
+
+### Added (cycle 9 PR2)
+- `tests/test_manifest_llm_and_auto_writeback.py` — 32 test phủ 2
+  module (133 stmt total, was 0%) → **100% mỗi**.
+  - `manifest_llm.py` (12 test): frontmatter parser 5 nhánh (empty /
+    inline list / multi-line list / quoted / dash-orphan), `_ref_title`
+    H1 + fallback, `build_manifest` 4 case (full / missing plugin →
+    raise / SKILL.md optional / no refs dir), `emit` 2 case (default
+    + explicit output + indent), `_main` argparse round-trip.
+  - `auto_writeback.py` (20 test): `RefreshDecision` dataclass,
+    `_read_last_run` / `_write_last_run` round-trip + malformed JSON
+    fallback + atomic .tmp cleanup, `should_refresh` 5 nhánh (no state
+    / within / after / disable marker / default `now=None`),
+    `try_refresh` 7 nhánh (no_claude_md / opted_out / rate_limited /
+    ok happy / force overrides / exception swallow primary + secondary
+    state-write failure / default `now`).
+
+### Changed (cycle 9 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 72 → **76** (Phase 3).  Lock actual achievement (76%
+  TOTAL sau khi PR1+PR2 phủ 3 module 0% → 100% mỗi).  Mục tiêu spec
+  ban đầu 80% (Phase 3) defer Phase 4 (cycle 10) vì còn ~277 stmt gap
+  ở `browser/manager.py` (178 stmt 0%), `mcp_client.py` (124 miss),
+  `hook_interceptor.py` (62 miss), `auto_commit_hook.py` (59 miss) —
+  cần mở scope sang browser/* domain (code-path lớn nhất chưa test).
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 (coverage gate): thêm cột
+  **Phase 3 (cycle 9)** vào table phase progression + section
+  rationale cho lock 72 → 76 + roadmap Phase 4 (target 80%).
+- `RELEASE_NOTES_v0.18.0.md` — release notes mới highlight Phase 3
+  coverage achievements (3/3 module 0%-target → 100%, floor +4pp,
+  +72 test).
+
 ## [0.17.0] — 2026-04-30
 
 Enterprise hardening release — tổng hợp cycle 6 (SECURITY.md, structured

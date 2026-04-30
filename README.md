@@ -4,7 +4,7 @@
 > Use when an AI agent needs to audit shell commands through a 6-layer pipeline, scaffold a project from a preset, expose tools via Model Context Protocol, or run RRI / RRI-T / RRI-UX methodology gates.
 > Start at [`QUICKSTART.md`](QUICKSTART.md) or run `PYTHONPATH=./scripts python -m vibecodekit.cli demo` for an offline 2-second tour.
 
-> **Current release:** v0.17.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 87 conformance probes, …).
+> **Current release:** v0.18.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 87 conformance probes, …).
 >
 > **License:** MIT — see [`LICENSE`](LICENSE) and the third-party
 > attribution manifest [`LICENSE-third-party.md`](LICENSE-third-party.md).
@@ -81,7 +81,7 @@ Full walkthrough: [`USAGE_GUIDE.md` §18](USAGE_GUIDE.md#18-activation-cheat-she
 
 ## Layout
 
-**Surface inventory (v0.17.0)** — moved here from the opening to keep
+**Surface inventory (v0.18.0)** — moved here from the opening to keep
 the front matter focused on what the kit *does* rather than how many
 buttons it has:
 
