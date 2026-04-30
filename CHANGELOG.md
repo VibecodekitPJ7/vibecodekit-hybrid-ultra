@@ -12,6 +12,21 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+### Added (cycle 8 PR3)
+- `.github/workflows/codeql.yml` — CodeQL SAST scan (Python) chạy trên
+  mọi PR + weekly cron (Thứ 3 06:00 UTC).  Query set:
+  `security-extended` + `security-and-quality`.  Findings upload lên
+  GitHub Security tab qua `permissions.security-events: write`.  Pair
+  với `pip-audit` (SCA) + `actionlint` (workflow lint) cho 3-layer
+  security CI.
+- `tests/test_codeql_workflow_present.py` — 6 test guard:
+  - File tồn tại + non-empty.
+  - `codeql-action/init@v3` + `analyze@v3` (KHÔNG @v2 EOL).
+  - Trigger chứa `pull_request` + `schedule` (cron).
+  - Matrix language chứa `python`.
+  - Query set bao gồm `security-extended`.
+  - `permissions.security-events: write`.
+
 ### Changed (cycle 7 PR3)
 - **mypy --strict expansion 5 → 9 core module.**  4 module trước đây
   `strict = False` trong `mypy.ini` đã được fix:

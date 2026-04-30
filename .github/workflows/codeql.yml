@@ -1,0 +1,51 @@
+name: codeql
+
+# CodeQL SAST scan (Python).  Pair với pip-audit (SCA, security.yml) +
+# actionlint (workflow lint, actionlint.yml) để có 3-layer security CI.
+# Cycle 8 PR3.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Thứ 3 hàng tuần, 6:00 UTC.  Cùng giờ với pip-audit weekly cron
+    # (security.yml — Monday 06:00 UTC) nhưng khác ngày để tránh job
+    # collide trên runner pool.
+    - cron: "0 6 * * 2"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # security-extended thêm queries beyond default (CWE coverage rộng);
+          # security-and-quality thêm code-quality queries (anti-patterns, dead
+          # code).  Trade-off: scan time tăng ~30-60s — acceptable cho weekly
+          # cron + on-PR.
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
