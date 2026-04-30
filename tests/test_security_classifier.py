@@ -138,12 +138,39 @@ def test_rule_bank_has_all_three_kinds_and_unique_ids():
     assert len(set(ids)) == len(ids)
 
 
-def test_classifier_cli_emits_json(tmp_path, capsys):
+def test_classifier_cli_emits_json(tmp_path, monkeypatch):
+    """Cycle 6 PR4: classifier CLI emit qua structured logger thay vì
+    print(stdout); test redirect handler vào StringIO + verify
+    JSON shape qua logger payload."""
+    import io
+    import json as _json
+
+    from vibecodekit import _logging as vl
     from vibecodekit.security_classifier import _main
-    rc = _main(["--text", "hello world", "--json"])
-    captured = capsys.readouterr()
-    import json
-    payload = json.loads(captured.out)
-    assert payload["decision"] == "allow"
-    assert "permission_command" in payload
-    assert rc == 0
+
+    monkeypatch.setenv("VIBECODE_LOG_JSON", "1")
+    monkeypatch.setenv("VIBECODE_LOG_LEVEL", "DEBUG")
+    vl.reset_for_tests()
+    try:
+        # Capture log output cho logger module.
+        import logging as _logging
+        logger = vl.get_logger("vibecodekit.security_classifier")
+        for h in list(logger.handlers):
+            logger.removeHandler(h)
+        stream = io.StringIO()
+        h = _logging.StreamHandler(stream)
+        h.setFormatter(vl._JsonFormatter())
+        logger.addHandler(h)
+
+        rc = _main(["--text", "hello world", "--json"])
+        assert rc == 0
+        raw = stream.getvalue().strip().splitlines()
+        assert raw, "expected log line for --json output"
+        last = _json.loads(raw[-1])
+        # Payload nested dưới `result` field theo migration shape.
+        assert last["msg"] == "classifier_result_json"
+        result = last["result"]
+        assert result["decision"] == "allow"
+        assert "permission_command" in result
+    finally:
+        vl.reset_for_tests()

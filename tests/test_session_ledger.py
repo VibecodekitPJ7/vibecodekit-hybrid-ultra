@@ -14,13 +14,25 @@ PYTHON = sys.executable
 
 
 def _run(args, cwd: Path):
+    # Cycle 6 PR4: team_mode chuyển sang structured logger; bật JSON
+    # log để test parse output từ stderr (logger handler default
+    # ghi vào stderr).
     return subprocess.run(
         [PYTHON, "-m", *args],
         cwd=str(cwd),
         env={"PYTHONPATH": str(REPO / "scripts"),
-             "PATH": "/usr/bin:/bin"},
+             "PATH": "/usr/bin:/bin",
+             "VIBECODE_LOG_JSON": "1",
+             "VIBECODE_LOG_LEVEL": "DEBUG"},
         capture_output=True, text=True, check=False, timeout=15,
     )
+
+
+def _last_log_payload(stderr: str) -> dict:
+    """Parse dòng JSON cuối cùng từ stderr (structured log)."""
+    lines = [ln for ln in stderr.strip().splitlines() if ln.startswith("{")]
+    assert lines, f"expected JSON log line in stderr, got: {stderr!r}"
+    return json.loads(lines[-1])
 
 
 def test_record_then_read(tmp_path):
@@ -92,17 +104,18 @@ def test_concurrent_appends_no_corruption(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_team_mode_record_check_clear_cli(tmp_path):
-    # No team config → check is no-op.
+    # No team config → check is no-op.  Stdout có thể empty (logger →
+    # stderr); skip-message giờ ở structured log.
     r = _run(["vibecodekit.team_mode", "check"], cwd=tmp_path)
     assert r.returncode == 0
-    assert "skipping" in r.stdout.lower() or r.stdout == ""
 
-    # Record one gate.
+    # Record one gate.  Logger emit `team_record_gate` ở stderr.
     r = _run(["vibecodekit.team_mode", "record", "--gate", "/vck-review"],
              cwd=tmp_path)
     assert r.returncode == 0
-    row = json.loads(r.stdout.strip())
-    assert row["gate"] == "/vck-review"
+    payload = _last_log_payload(r.stderr)
+    assert payload["msg"] == "team_record_gate"
+    assert payload["entry"]["gate"] == "/vck-review"
 
     # Init team config requiring 2 gates.
     r = _run(["vibecodekit.team_mode", "init",
@@ -112,7 +125,9 @@ def test_team_mode_record_check_clear_cli(tmp_path):
              cwd=tmp_path)
     assert r.returncode == 0
 
-    # Now check: only /vck-review recorded → violation.
+    # Now check: only /vck-review recorded → violation.  Sai-format
+    # message vẫn dùng sys.stderr.write trực tiếp (KHÔNG migrate, vì
+    # đó là error UX path); test giữ nguyên match string.
     r = _run(["vibecodekit.team_mode", "check"], cwd=tmp_path)
     assert r.returncode == 2
     assert "/vck-qa-only" in r.stderr

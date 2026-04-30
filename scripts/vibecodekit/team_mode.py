@@ -28,6 +28,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional, Sequence
 
+from ._logging import get_logger
+
+_log = get_logger("vibecodekit.team_mode")
+
 __all__ = [
     "TeamConfig",
     "TEAM_FILE",
@@ -218,14 +222,14 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
             learnings_required=args.learnings_required,
         )
         new = write_team_config(cfg)
-        print(json.dumps(new.as_dict(), ensure_ascii=False, indent=2))
+        _log.info("team_init", extra={"config": new.as_dict()})
         return 0
     if args.cmd == "show":
         cfg = read_team_config()
         if cfg is None:
-            print("(no team config)")
+            _log.info("team_show_none", extra={"config": None})
             return 1
-        print(json.dumps(cfg.as_dict(), ensure_ascii=False, indent=2))
+        _log.info("team_show", extra={"config": cfg.as_dict()})
         return 0
     if args.cmd == "check":
         # Lazy import so the module remains importable even when the
@@ -238,7 +242,8 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
         cfg = read_team_config()
         if cfg is None:
             if not args.quiet:
-                print("team_mode: no .vibecode/team.json — skipping gate check")
+                _log.info("team_check_skip",
+                          extra={"reason": "no .vibecode/team.json"})
             return 0
         try:
             assert_required_gates_run(gates)
@@ -250,15 +255,16 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
             )
             return 2
         if not args.quiet:
-            print(
-                f"team_mode: all required gates satisfied for team "
-                f"{cfg.team_id!r} ({sorted(cfg.required)})"
+            _log.info(
+                "team_check_ok",
+                extra={"team_id": cfg.team_id,
+                       "required": sorted(cfg.required)},
             )
         return 0
     if args.cmd == "record":
         from . import session_ledger
         entry = session_ledger.record_gate(args.gate)
-        print(json.dumps(entry, ensure_ascii=False))
+        _log.info("team_record_gate", extra={"entry": entry})
         return 0
     if args.cmd == "clear":
         from . import session_ledger
