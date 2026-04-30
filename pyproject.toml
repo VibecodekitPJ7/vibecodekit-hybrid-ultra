@@ -85,3 +85,27 @@ target-version = "py39"
 # Style rules cố tình KHÔNG bật ở giai đoạn này để tránh diff lớn / fight với
 # convention hiện tại (PEP8, naming).  Mở rộng select set ở PR sau nếu cần.
 select = ["F401", "F841", "F811"]
+
+# Cycle 6 PR3: coverage scaffold.  fail_under=60 ở Phase 1 (giai đoạn này
+# chỉ siết tool_executor.py >=80%).  Phase 2 sẽ raise lên 80 sau khi
+# vn_*, team_mode đạt 80%.  Phase 3 = global TOTAL >=80%.
+[tool.coverage.run]
+source = ["scripts/vibecodekit"]
+omit = [
+  "scripts/vibecodekit/_audit_allowlist.json",
+  "*/tests/*",
+  "*/examples/*",
+]
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true
+skip_empty = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+
+[tool.coverage.paths]
+source = ["scripts/vibecodekit/", "*/scripts/vibecodekit/"]
