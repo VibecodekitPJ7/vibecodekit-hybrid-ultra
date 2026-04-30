@@ -1,9 +1,12 @@
 """CI guard: drift guard không có cơ chế env-gated bypass.
 
-Cycle 6 commit (xem ``CHANGELOG.md`` Unreleased): canonical org
-``VibecodekitPJ6`` lock PERMANENT, và anti-pattern
+Cycle 6 commit (xem ``CHANGELOG.md``): anti-pattern
 ``CANONICAL_ORG_STRICT=false`` env bypass đã bị xoá khỏi
 ``.github/workflows/ci.yml``.
+
+Cycle 8 PR1 commit (xem ``CHANGELOG.md`` Unreleased): canonical org
+``VibecodekitPJ7`` lock FINAL (rebrand lần thứ 9 từ ``VibecodekitPJ6``
+— ĐÂY LÀ LẦN CUỐI).
 
 Nếu PR sau vô tình tái thêm cơ chế bypass (env var, repo variable,
 secret toggle), test này fail — buộc reviewer cân nhắc lại trước khi
@@ -21,15 +24,15 @@ def _ci_yml_text() -> str:
     return _CI_YML.read_text(encoding="utf-8")
 
 
-def test_allowed_orgs_contains_pj6():
-    """``ALLOWED_ORGS`` phải chứa ``VibecodekitPJ6`` (canonical permanent)."""
+def test_allowed_orgs_contains_pj7():
+    """``ALLOWED_ORGS`` phải chứa ``VibecodekitPJ7`` (canonical final)."""
     from tests.test_repo_urls_canonical import ALLOWED_ORGS
 
-    assert "VibecodekitPJ6" in ALLOWED_ORGS, (
-        "ALLOWED_ORGS không còn chứa 'VibecodekitPJ6' — canonical org "
-        "đã rebrand lần thứ 9?  Cycle 6 đã commit PJ6 PERMANENT; nếu "
-        "thực sự cần đổi, mở PR riêng và cập nhật cả "
-        "tests/test_canonical_org_no_bypass.py + CHANGELOG."
+    assert "VibecodekitPJ7" in ALLOWED_ORGS, (
+        "ALLOWED_ORGS không còn chứa 'VibecodekitPJ7' — canonical org "
+        "đã rebrand lần thứ 10?  Cycle 8 PR1 đã commit PJ7 FINAL; nếu "
+        "thực sự cần đổi (legal / trademark), mở PR riêng và cập nhật "
+        "cả tests/test_canonical_org_no_bypass.py + CHANGELOG."
     )
 
 
@@ -52,12 +55,12 @@ def test_ci_yml_no_env_bypass_for_canonical_org():
     )
 
 
-def test_ci_yml_references_pj6():
-    """``.github/workflows/ci.yml`` phải reference ``VibecodekitPJ6``
+def test_ci_yml_references_pj7():
+    """``.github/workflows/ci.yml`` phải reference ``VibecodekitPJ7``
     (assertion cứng cho canonical owner)."""
     text = _ci_yml_text()
-    assert "VibecodekitPJ6" in text, (
-        ".github/workflows/ci.yml không còn reference 'VibecodekitPJ6' — "
+    assert "VibecodekitPJ7" in text, (
+        ".github/workflows/ci.yml không còn reference 'VibecodekitPJ7' — "
         "drift guard có vẻ đã bị xoá hoặc đổi canonical org ngầm.  "
-        "Cycle 6 commit: PJ6 là canonical PERMANENT."
+        "Cycle 8 PR1 commit: PJ7 là canonical FINAL."
     )
