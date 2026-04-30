@@ -208,6 +208,36 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
 
 ---
 
+## 4.5. Coverage gate (cycle 6 PR3)
+
+Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
+
+| Module                                 | Phase 1 floor | Phase 2 target | Phase 3 target |
+|----------------------------------------|:-:|:-:|:-:|
+| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** | ≥ 85% | ≥ 90% |
+| `scripts/vibecodekit/team_mode.py`     |  —  | ≥ 80% | ≥ 85% |
+| `scripts/vibecodekit/vn_*.py`          |  —  | ≥ 80% | ≥ 85% |
+| **TOTAL** (global gate)                | ≥ 60% | ≥ 70% | ≥ 80% |
+
+Rationale: `tool_executor.py` là hot-path subprocess execute — module
+nguy hiểm nhất, đáng có coverage cao nhất.  Phase 1 (cycle 6) chỉ siết
+module này; Phase 2/3 sẽ mở rộng dần để tránh diff lớn / thay đổi
+behavior không cần thiết.
+
+CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
+
+```bash
+python -m coverage run --source=scripts/vibecodekit -m pytest tests -q
+python -m coverage report
+python -m coverage report --include='scripts/vibecodekit/tool_executor.py' \
+    --fail-under=80
+python -m coverage xml -o coverage.xml
+```
+
+Coverage XML upload qua `actions/upload-artifact@v4` cho per-PR view.
+
+---
+
 ## 5. Roadmap for external benchmarks (Phase 2)
 
 We plan to add external benchmark runs to provide ground-truth quality
