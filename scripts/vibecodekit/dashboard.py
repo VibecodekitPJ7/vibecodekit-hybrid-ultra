@@ -14,6 +14,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List
 
+from ._logging import get_logger
+
+_log = get_logger("vibecodekit.dashboard")
+
 
 def summarise(root: str | os.PathLike = ".") -> Dict[str, Any]:
     root = Path(root).resolve()
@@ -73,24 +77,22 @@ def _main() -> None:
     args = ap.parse_args()
     s = summarise(args.root)
     if args.json:
-        print(json.dumps(s, ensure_ascii=False, indent=2))
+        _log.info("dashboard_summary_json", extra={"summary": s})
         return
-    print(f"root: {s['root']}")
-    print(f"session: {s['session']}    total events: {s['event_total']}")
-    print("--- tool counts ---")
-    for k, v in sorted(s["tool_counts"].items(), key=lambda x: -x[1]):
-        print(f"  {k:<14} {v}")
-    print("--- event counts ---")
-    for k, v in sorted(s["event_counts"].items(), key=lambda x: -x[1]):
-        print(f"  {k:<24} {v}")
+    _log.info("dashboard_root", extra={"root": s["root"]})
+    _log.info(
+        "dashboard_session",
+        extra={"session": s["session"], "event_total": s["event_total"]},
+    )
+    _log.info("dashboard_tool_counts", extra={"tool_counts": s["tool_counts"]})
+    _log.info("dashboard_event_counts", extra={"event_counts": s["event_counts"]})
     if s["recovery_counts"]:
-        print("--- recovery ---")
-        for k, v in s["recovery_counts"].items():
-            print(f"  {k:<24} {v}")
+        _log.info(
+            "dashboard_recovery_counts",
+            extra={"recovery_counts": s["recovery_counts"]},
+        )
     if s["errors"]:
-        print("--- errors ---")
-        for e in s["errors"]:
-            print(f"  turn {e['turn']} {e['status']:<8} {e['tool']}")
+        _log.info("dashboard_errors", extra={"errors": s["errors"]})
 
 
 if __name__ == "__main__":

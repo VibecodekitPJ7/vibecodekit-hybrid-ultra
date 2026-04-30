@@ -40,6 +40,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
+from ._logging import get_logger
+
+_log = get_logger("vibecodekit.security_classifier")
+
 __all__ = [
     "Verdict",
     "LayerVote",
@@ -750,20 +754,30 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.scan_diff is not None:
         out = scan_diff(args.scan_diff)
-        # --scan-* outputs are inherently structured → always JSON.
-        print(json.dumps(out, ensure_ascii=False, indent=2))
+        # --scan-* outputs are inherently structured; route qua logger
+        # cho observability pipeline (`2>&1 | jq`).  Deny verdict emit ở
+        # level warning để tách match vs miss.
+        level = "warning" if out["exit_code"] != 0 else "info"
+        getattr(_log, level)("classifier_scan_diff", extra={"result": out})
         return out["exit_code"]
     if args.scan_paths is not None:
         out = scan_paths(args.scan_paths)
-        print(json.dumps(out, ensure_ascii=False, indent=2))
+        level = "warning" if out["exit_code"] != 0 else "info"
+        getattr(_log, level)("classifier_scan_paths", extra={"result": out})
         return out["exit_code"]
 
     text = args.text if args.text is not None else _sys.stdin.read()
     res = classify_text(text)
     if args.json:
-        print(json.dumps(res.as_dict(), ensure_ascii=False, indent=2))
+        _log.info("classifier_result_json", extra={"result": res.as_dict()})
     else:
-        print(f"{res.verdict.decision}\t{res.permission_class}\t{res.verdict.reason}")
+        level = "debug" if res.verdict.decision == "allow" else "warning"
+        getattr(_log, level)(
+            "classifier_result",
+            extra={"decision": res.verdict.decision,
+                   "permission_class": res.permission_class,
+                   "reason": res.verdict.reason},
+        )
     return 0 if res.verdict.decision == "allow" else 2
 
 

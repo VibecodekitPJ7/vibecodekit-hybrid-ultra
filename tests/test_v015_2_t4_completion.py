@@ -74,7 +74,10 @@ class ScanPathsCLI(unittest.TestCase):
         self.assertIn("not found", out["verdicts"][0]["reason"])
 
     def test_cli_scan_paths_emits_json(self) -> None:
-        env = {**os.environ, "PYTHONPATH": str(_PKG)}
+        # Cycle 6 PR4: classifier CLI emit qua structured logger
+        # (stderr) thay vì print(stdout).  Bật JSON log + parse stderr.
+        env = {**os.environ, "PYTHONPATH": str(_PKG),
+               "VIBECODE_LOG_JSON": "1", "VIBECODE_LOG_LEVEL": "DEBUG"}
         proc = subprocess.run(
             [sys.executable, "-m", "vibecodekit.security_classifier",
              "--scan-paths", "ok.txt"],
@@ -83,7 +86,13 @@ class ScanPathsCLI(unittest.TestCase):
         self.assertIn(proc.returncode, (0, 2),
                       f"unexpected exit {proc.returncode}; "
                       f"stdout={proc.stdout}; stderr={proc.stderr}")
-        data = json.loads(proc.stdout)
+        log_lines = [ln for ln in proc.stderr.strip().splitlines()
+                     if ln.startswith("{")]
+        self.assertTrue(log_lines, f"expected JSON log line, got: "
+                                   f"{proc.stderr!r}")
+        last = json.loads(log_lines[-1])
+        self.assertEqual(last["msg"], "classifier_scan_paths")
+        data = last["result"]
         self.assertEqual(data["scope"], "paths")
         self.assertEqual(data["files_scanned"], 1)
 

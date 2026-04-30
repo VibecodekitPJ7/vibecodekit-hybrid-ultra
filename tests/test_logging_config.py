@@ -155,3 +155,119 @@ def test_permission_engine_logs_deny(clean_logger_cache: None) -> None:
     last = json.loads(logged.splitlines()[-1])
     assert last["decision"] == "deny"
     assert last["name"] == "vibecodekit.permission_engine"
+
+
+# ---------------------------------------------------------------------------
+# Cycle 6 PR4 — assert each migrated module emits log dưới đúng namespace.
+# ---------------------------------------------------------------------------
+
+
+def _capture_module_logs(module_logger: str) -> io.StringIO:
+    """Tạo StringIO handler cho một module logger, set DEBUG."""
+    os.environ["VIBECODE_LOG_LEVEL"] = "DEBUG"
+    os.environ["VIBECODE_LOG_JSON"] = "1"
+    stream = io.StringIO()
+    _make_logger_with_stream(module_logger, stream)
+    return stream
+
+
+def test_dashboard_main_emits_structured_log(
+    clean_logger_cache: None, tmp_path: "object"
+) -> None:
+    """`dashboard._main` phải emit log namespace ``vibecodekit.dashboard``."""
+    import sys
+
+    stream = _capture_module_logs("vibecodekit.dashboard")
+    from vibecodekit import dashboard as dash
+
+    saved_argv = sys.argv[:]
+    try:
+        sys.argv = ["dashboard", "--root", str(tmp_path), "--json"]
+        dash._main()
+    finally:
+        sys.argv = saved_argv
+    raw = stream.getvalue().strip().splitlines()
+    assert raw, "expected dashboard to emit at least one log line"
+    payload = json.loads(raw[-1])
+    assert payload["name"] == "vibecodekit.dashboard"
+    assert payload["level"] == "INFO"
+
+
+def test_team_mode_show_emits_structured_log(
+    clean_logger_cache: None, tmp_path: "object", monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`team_mode._main show` (no config) phải emit log ``vibecodekit.team_mode``."""
+    stream = _capture_module_logs("vibecodekit.team_mode")
+    monkeypatch.chdir(tmp_path)
+    from vibecodekit import team_mode
+
+    rc = team_mode._main(["show"])
+    assert rc == 1
+    raw = stream.getvalue().strip().splitlines()
+    assert raw
+    payload = json.loads(raw[-1])
+    assert payload["name"] == "vibecodekit.team_mode"
+
+
+def test_security_classifier_main_emits_structured_log(
+    clean_logger_cache: None,
+) -> None:
+    """`security_classifier._main --text --json` phải emit log
+    ``vibecodekit.security_classifier`` (allow path → INFO level)."""
+    stream = _capture_module_logs("vibecodekit.security_classifier")
+    from vibecodekit import security_classifier as sc
+
+    rc = sc._main(["--text", "hello world", "--json"])
+    assert rc in (0, 2)
+    raw = stream.getvalue().strip().splitlines()
+    assert raw
+    payload = json.loads(raw[-1])
+    assert payload["name"] == "vibecodekit.security_classifier"
+
+
+def test_learnings_capture_emits_structured_log(
+    clean_logger_cache: None, tmp_path: "object", monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`learnings._main capture` phải emit log ``vibecodekit.learnings``."""
+    stream = _capture_module_logs("vibecodekit.learnings")
+    monkeypatch.chdir(tmp_path)
+    from vibecodekit import learnings
+
+    rc = learnings._main(["capture", "--scope", "project", "test learning"])
+    assert rc == 0
+    raw = stream.getvalue().strip().splitlines()
+    assert raw
+    payload = json.loads(raw[-1])
+    assert payload["name"] == "vibecodekit.learnings"
+    assert payload["msg"] == "learning_captured"
+
+
+def test_no_print_in_migrated_modules() -> None:
+    """Cycle 6 PR4 invariant: 4 migrated module KHÔNG còn ``print(``.
+
+    `conformance_audit.py` GIỮ 3 print final-report theo carve-out
+    spec ('final report user xem trên terminal → GIỮ').  Embedded
+    Python-string trong probe không tính (không phải module print).
+    """
+    import re
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    migrated = [
+        "dashboard.py",
+        "team_mode.py",
+        "security_classifier.py",
+        "learnings.py",
+    ]
+    for fname in migrated:
+        src = (repo / "scripts" / "vibecodekit" / fname).read_text(
+            encoding="utf-8"
+        )
+        # ``print(`` ở đầu dòng (sau optional whitespace). Loại trừ
+        # chuỗi bên trong dedent triple-quoted (ít nhất với module
+        # đã migrate, KHÔNG có embedded probe).
+        matches = re.findall(r"^[ \t]*print\(", src, flags=re.MULTILINE)
+        assert not matches, (
+            f"{fname} vẫn còn {len(matches)} print() — phải migrate sang "
+            f"_log.info / _log.warning / _log.debug"
+        )

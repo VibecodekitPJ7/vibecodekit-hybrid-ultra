@@ -26,6 +26,9 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Sequence
 
 from . import _platform_lock
+from ._logging import get_logger
+
+_log = get_logger("vibecodekit.learnings")
 
 __all__ = [
     "Learning",
@@ -258,7 +261,7 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
             " ".join(args.text), scope=args.scope,
             tags=args.tag, author=args.author,
         )
-        print(json.dumps(rec.as_dict(), ensure_ascii=False))
+        _log.info("learning_captured", extra={"record": rec.as_dict()})
         return 0
     if args.cmd == "list":
         if args.scope == "user":
@@ -270,15 +273,22 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
         else:
             items = load_all()
         if args.json:
-            print(json.dumps([i.as_dict() for i in items], ensure_ascii=False, indent=2))
+            _log.info(
+                "learnings_list_json",
+                extra={"items": [i.as_dict() for i in items]},
+            )
         else:
-            for it in items:
-                ts = time.strftime("%Y-%m-%d", time.localtime(it.captured_ts))
-                print(f"[{ts}] ({it.scope}) {it.text}")
+            formatted = [
+                {"ts": time.strftime("%Y-%m-%d",
+                                     time.localtime(it.captured_ts)),
+                 "scope": it.scope, "text": it.text}
+                for it in items
+            ]
+            _log.info("learnings_list", extra={"items": formatted})
         return 0
     if args.cmd == "clear":
         project_store().clear()
-        print("project learnings cleared")
+        _log.info("learnings_cleared", extra={"scope": "project"})
         return 0
     return 2
 
