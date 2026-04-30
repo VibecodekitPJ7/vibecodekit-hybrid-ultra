@@ -29,6 +29,27 @@ jobs:
           # eval_select needs the merge-base — fetch full history.
           fetch-depth: 0
 
+      - name: Assert canonical org (drift guard)
+        # Refuse to publish CI status under a non-canonical owner.  Đồng bộ với
+        # ``tests/test_repo_urls_canonical.py``: canonical org là VibecodekitPJ4
+        # (đổi từ PJ3 ở PR1 sau review #4).  Forks chạy CI sẽ fail step này —
+        # đây là chủ đích để tránh fork publish status như upstream.
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        run: |
+          owner="${{ github.repository_owner }}"
+          echo "owner=$owner"
+          if [ "$owner" != "VibecodekitPJ4" ]; then
+            echo "::error::Canonical org là VibecodekitPJ4, nhưng đang chạy dưới '$owner'."
+            exit 1
+          fi
+          # Cross-check git remote (chống case repo settings drift).
+          remote="$(git config --get remote.origin.url || true)"
+          echo "remote=$remote"
+          if ! echo "$remote" | grep -qE "VibecodekitPJ4/"; then
+            echo "::error::remote.origin.url không match VibecodekitPJ4/ — drift."
+            exit 1
+          fi
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:

@@ -2,11 +2,17 @@
 allowed organisation.  Prevents stale fork / personal-account URLs from
 leaking into releases.
 
-Lý do tồn tại của từng org trong ``ALLOWED_ORGS`` (PR2 mở rộng):
+Lý do tồn tại của từng org trong ``ALLOWED_ORGS`` (PR2 mở rộng,
+updated PR1 unfreeze sau review #4):
 
-- ``VibecodekitPJ3`` — **canonical** GitHub org của project hiện tại.
-  Mọi tài liệu chỉ nên link tới org này (hoặc một mirror redirect chính
-  thức như ``VibecodekitPJ4``).  Nếu cần đổi canonical org sau này,
+- ``VibecodekitPJ4`` — **canonical** GitHub org của project hiện tại
+  (đổi từ ``VibecodekitPJ3`` ở PR1 sau review #4).  Lý do đổi: physical
+  ``git remote origin`` đã chỉ về ``VibecodekitPJ4`` từ trước (PJ3 chỉ
+  còn redirect 301 trên GitHub) — drift guard cũ certify ``VibecodekitPJ3``
+  trong khi mọi PR thực tế tạo trên ``VibecodekitPJ4`` → certify sai.
+  Đồng bộ về reality: PJ3 không còn xuất hiện trong canonical repo URL
+  (vẫn pass redirect cho user external bookmark).  Mọi tài liệu chỉ
+  nên link tới ``VibecodekitPJ4``.  Nếu cần đổi canonical org sau này,
   ``ALLOWED_ORGS`` phải được cập nhật trong **một** PR riêng có
   reference issue + ghi chú lý do; không được đổi ngầm trong PR
   feature.
@@ -39,7 +45,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Orgs that are legitimate references in this codebase.  Đọc comment
 # block ở đầu file cho lý do chi tiết.  Nếu cần thêm/bớt entry, đồng
 # thời cập nhật ``tests/test_no_further_rebrands.py`` để giữ size cap.
-ALLOWED_ORGS = {"VibecodekitPJ3", "VagabondKingsman", "garrytan"}
+ALLOWED_ORGS = {"VibecodekitPJ4", "VagabondKingsman", "garrytan"}
 
 # Placeholder orgs used in examples (e.g. "github.com/.../pull/42").
 _PLACEHOLDER_ORGS = {"...", "OWNER", "owner", "example", "your-org"}
