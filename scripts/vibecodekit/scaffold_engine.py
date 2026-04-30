@@ -164,7 +164,10 @@ class ScaffoldEngine:
         manifest = self.dir / preset / "manifest.json"
         if not manifest.is_file():
             raise FileNotFoundError(f"unknown preset: {preset}")
-        return json.loads(manifest.read_text(encoding="utf-8"))
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError(f"manifest.json for preset {preset!r} không phải dict")
+        return data
 
     def _stack_spec(self, preset: str, stack: str) -> dict[str, Any]:
         data = self._read_manifest(preset)
@@ -174,7 +177,12 @@ class ScaffoldEngine:
                 f"preset {preset!r} has no stack {stack!r}; "
                 f"available: {sorted(stacks)}"
             )
-        return stacks[stack]
+        spec = stacks[stack]
+        if not isinstance(spec, dict):
+            raise ValueError(
+                f"preset {preset!r} stack {stack!r} không phải dict"
+            )
+        return spec
 
     def _stack_files_root(self, preset: str, stack: str) -> Path:
         return self.dir / preset / stack

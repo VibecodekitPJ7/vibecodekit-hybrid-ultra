@@ -107,12 +107,16 @@ def _bump_meta_counter_locked(meta_path: Path, now: float) -> None:
     current: dict[str, object] = {}
     if meta_path.exists():
         try:
-            current = json.loads(meta_path.read_text(encoding="utf-8") or "{}")
+            loaded = json.loads(meta_path.read_text(encoding="utf-8") or "{}")
+            if isinstance(loaded, dict):
+                current = loaded
         except json.JSONDecodeError:
             current = {}
     if current.get("hour_key") != hk:
         current = {"hour_key": hk, "dropped_count": 0}
-    current["dropped_count"] = int(current.get("dropped_count", 0)) + 1
+    raw_count = current.get("dropped_count", 0)
+    prev = raw_count if isinstance(raw_count, int) else 0
+    current["dropped_count"] = prev + 1
     meta_path.write_text(
         json.dumps(current, ensure_ascii=False, sort_keys=True) + "\n",
         encoding="utf-8",

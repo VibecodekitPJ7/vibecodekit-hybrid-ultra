@@ -27,7 +27,7 @@ import os
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, Iterator, Optional
+from typing import Any, Dict, Iterator, Optional
 
 from vibecodekit._logging import get_logger
 from vibecodekit._platform_lock import file_lock
@@ -46,7 +46,7 @@ def _key(action: str) -> str:
 class DenialStore:
     def __init__(
         self,
-        root: str | os.PathLike = ".",
+        root: str | os.PathLike[str] = ".",
         max_consecutive: int = DEFAULT_MAX_CONSECUTIVE,
         max_total: int = DEFAULT_MAX_TOTAL,
         ttl_seconds: int = DEFAULT_TTL_SECONDS,
@@ -81,15 +81,16 @@ class DenialStore:
         finally:
             os.close(fd)
 
-    def _read(self) -> Dict[str, dict]:
+    def _read(self) -> Dict[str, Any]:
         if not self.path.exists():
             return {}
         try:
-            return json.loads(self.path.read_text(encoding="utf-8") or "{}")
+            data = json.loads(self.path.read_text(encoding="utf-8") or "{}")
         except json.JSONDecodeError:
             return {}
+        return data if isinstance(data, dict) else {}
 
-    def _write(self, data: Dict[str, dict]) -> None:
+    def _write(self, data: Dict[str, Any]) -> None:
         """Atomic write via temp file + ``os.replace``."""
         tmp_fd, tmp_name = tempfile.mkstemp(
             prefix=".denials.", suffix=".tmp", dir=str(self.path.parent)
@@ -116,7 +117,7 @@ class DenialStore:
             del self._data[k]
 
     # -------- API (all read-modify-write under the lock) --------
-    def record_denial(self, action: str, reason: str) -> dict:
+    def record_denial(self, action: str, reason: str) -> Dict[str, Any]:
         with self._locked():
             self._data = self._read()
             state = self._data.setdefault("_state", {"consecutive": 0, "total": 0})
@@ -146,31 +147,31 @@ class DenialStore:
             self._write(self._data)
             self._state = state
 
-    def denied_before(self, action: str) -> Optional[dict]:
+    def denied_before(self, action: str) -> Optional[Dict[str, Any]]:
         """Return the recorded entry only if it crosses the threshold (≥ 2 same cmd)."""
         with self._locked():
             self._data = self._read()
         k = _key(action)
         rec = self._data.get(k)
-        if not rec:
+        if not rec or not isinstance(rec, dict):
             return None
         if rec.get("count", 0) < 2:
             return None
         if (time.time() - rec.get("last_ts", 0)) > self.ttl_seconds:
             return None
-        return rec
+        return dict(rec)
 
     def should_fallback_to_user(self) -> bool:
         """Circuit breaker: too many denials → stop auto-denying and ask user."""
         with self._locked():
             self._data = self._read()
             state = self._data.get("_state", {})
-        return (
+        return bool(
             state.get("consecutive", 0) >= self.max_consecutive
             or state.get("total", 0) >= self.max_total
         )
 
-    def state(self) -> dict:
+    def state(self) -> Dict[str, Any]:
         with self._locked():
             self._data = self._read()
         return dict(self._data.get("_state", {}))
