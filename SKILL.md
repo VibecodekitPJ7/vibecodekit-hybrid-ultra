@@ -1,6 +1,6 @@
 ---
 name: vibecodekit-hybrid-ultra
-version: 0.16.2
+version: 0.17.0
 description: >-
   Full Agentic-OS overlay for Claude Code / Devin / Cursor projects with
   the VIBECODE-MASTER methodology layer on top.  Verified by an internal

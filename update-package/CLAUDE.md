@@ -1,6 +1,6 @@
-# Project overlay — VibecodeKit Hybrid Ultra v0.16.2
+# Project overlay — VibecodeKit Hybrid Ultra v0.17.0
 
-This project uses the VibecodeKit **v0.16.2** overlay (canonical version
+This project uses the VibecodeKit **v0.17.0** overlay (canonical version
 file: `VERSION`).  All tool calls pass through the 6-layer permission
 pipeline; see
 `ai-rules/vibecodekit/references/10-permission-classification.md`.
@@ -136,7 +136,7 @@ Mirror surfaces: `update-package/VERSION`, `pyproject.toml`,
 ## Release gate
 
 Before shipping:
-1. `pytest tests/ -q` → 588/588 pass at v0.16.2 (full suite, run từ repo
+1. `pytest tests/ -q` → 588/588 pass at v0.17.0 (full suite, run từ repo
    root; the canonical count is whatever `pytest --collect-only -q | tail`
    reports for the current commit).  Bundled `tests/` trong zip chỉ là
    subset đại diện; đủ để smoke-test sau khi unzip nhưng CI gate là trên
