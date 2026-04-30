@@ -25,7 +25,7 @@ VibecodeKit Hybrid Ultra defends 3 surface:
 | L3 | Rule pattern match (deny patterns: `rm -rf /`, `dd if=/dev/zero of=/dev/sda`, `mkfs`, fork bomb, ...) | deny + audit |
 | L4 | Dangerous-pattern AST check (eval/exec wrapping, command substitution `$(...)`) | deny + audit |
 | L5 | Cf-codepoint Unicode normalization (170 invisible separator) | normalize then re-evaluate |
-| L6 | Denial tracking (rate-cap 60 events/min global, write `~/.vibecodekit/security/attempts.jsonl`) | log + return |
+| L6 | Denial tracking (rate-cap 60 events/min global, write `~/.vibecode/security/attempts.jsonl`) | log + return |
 
 ### Surface 2 — Hook interceptor (env / file write scrubbing)
 Scrub regex `(TOKEN|KEY|SECRET|PASSWORD|PASSWD|PRIVATE|CREDENTIAL)` trên env var name + value patterns. Override: `VIBECODE_HOOK_ALLOW_SECRETS=1`.
@@ -80,7 +80,7 @@ Safe-exception (Layer 4c) cho `rm -rf <target>` nếu target thuộc:
 
 ### Audit log
 
-- **Path:** `~/.vibecodekit/security/attempts.jsonl`
+- **Path:** `~/.vibecode/security/attempts.jsonl`
   (override: env `VIBECODE_AUDIT_LOG_DIR`; fallback `$TMPDIR` khi
   HOME không writable).
 - **Format mỗi dòng:** `{"ts","decision","rule_id","cmd_hash","mode","severity"}`.

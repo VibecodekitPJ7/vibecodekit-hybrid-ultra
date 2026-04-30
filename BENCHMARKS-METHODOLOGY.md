@@ -183,7 +183,7 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
   blocked không khớp Layer 4b.  Audit log dùng
   ``R-DANGEROUS-PATTERN-FALLBACK`` + ``severity=medium``.
 
-### Audit log (``~/.vibecodekit/security/attempts.jsonl``)
+### Audit log (``~/.vibecode/security/attempts.jsonl``)
 
 * JSONL, 1 entry/quyết định deny, ghi qua ``_platform_lock`` (fcntl +
   msvcrt fallback).

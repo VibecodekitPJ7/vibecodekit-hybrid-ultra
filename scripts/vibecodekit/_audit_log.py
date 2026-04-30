@@ -3,7 +3,7 @@
 Ghi entry mỗi lần `permission_engine.decide()` ra quyết định strict-deny
 (9-pattern mới + existing blocked) vào file append-only JSONL:
 
-    ~/.vibecodekit/security/attempts.jsonl
+    ~/.vibecode/security/attempts.jsonl
 
 Format mỗi entry (1 dòng JSON):
 
@@ -58,15 +58,22 @@ _window: Deque[float] = deque()
 
 
 def _audit_dir() -> Path:
-    """Resolve audit directory (respect env override + tempfile fallback)."""
+    """Resolve audit directory (respect env override + tempfile fallback).
+
+    Path alignment: ``~/.vibecode/security/`` (cùng dotdir với
+    ``denial_store.py``, ``memory_hierarchy.py``, ``learnings.py``,
+    ``methodology.py``).  Đồng thuận với CONTRIBUTING.md rule
+    "No mutable global state outside ``~/.vibecode/`` and
+    ``.vibecode/``" — tránh split security state giữa 2 dotdir.
+    """
     override = os.environ.get("VIBECODE_AUDIT_LOG_DIR")
     if override:
         return Path(override)
     home = os.environ.get("HOME") or os.path.expanduser("~")
     if home and home != "~" and os.access(home, os.W_OK):
-        return Path(home) / ".vibecodekit" / "security"
+        return Path(home) / ".vibecode" / "security"
     # Sandbox / CI without writable HOME → tempdir fallback.
-    return Path(tempfile.gettempdir()) / "vibecodekit-security"
+    return Path(tempfile.gettempdir()) / "vibecode-security"
 
 
 def _ensure_dir(path: Path) -> None:
