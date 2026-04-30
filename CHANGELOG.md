@@ -12,6 +12,30 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+### Added (cycle 7)
+- **Coverage Phase 2a** (`pyproject.toml [tool.coverage]` + `.github/workflows/ci.yml`):
+  - `vn_faker.py` 0% → 100% (23 test cases).
+  - `vn_error_translator.py` 0% → 100% (20 test cases, 5 skip nếu PyYAML absent).
+  - `team_mode.py` 41% → 98% (24 test cases bao phủ CLI + atomic write +
+    malformed JSON fallback).
+  - **Global TOTAL floor: 60% → 70%** (đạt 72% sau khi `cli.py` +
+    `deploy_orchestrator.py` được đưa vào `omit` — xem
+    `BENCHMARKS-METHODOLOGY.md` § 4.5 Phase 2a rationale).
+  - Per-module CI gates: `tool_executor`, `team_mode`, `vn_faker`,
+    `vn_error_translator` đều `--fail-under=80`.
+- **PyYAML cài trong CI** (dev-only) để cover YAML loader path của
+  `vn_error_translator`.
+
+### Fixed (cycle 7)
+- **`tool_executor.execute_one` dispatch order**: `run_command` không
+  đăng ký trong `TOOL_IMPL` (cần `bus`/`mode`/`rules` extra params)
+  nên trước fix lookup `TOOL_IMPL.get('run_command')` → None → trả
+  `unknown tool` TRƯỚC special-case branch.  Giờ kiểm tra
+  `tool == 'run_command'` TRƯỚC `TOOL_IMPL.get`, route qua
+  `_tool_run_command` đúng.  2 regression test mới
+  (`test_run_command_allow_dispatch`,
+  `test_run_command_dispatch_via_execute_blocks`).
+
 ### Changed (BREAKING for forks)
 - **Canonical org re-locked** từ `VibecodekitPJ4` (cycle 5) → `VibecodekitPJ6`
   (cycle 6, PERMANENT).  Repo này đã rebrand 8 lần
