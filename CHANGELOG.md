@@ -12,6 +12,80 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.0] — 2026-04-30
+
+Coverage Phase 4 release — phủ test cho 3 module hook + browser còn
+gap lớn ở cycle 9: `hook_interceptor.py` (62 miss, was 33%),
+`auto_commit_hook.py` (59 miss, was 40%), `browser/manager.py` (178
+stmt, was 0%).  Sau cycle 10:
+- `hook_interceptor.py` 33% → **98%** (+65pp).
+- `auto_commit_hook.py` 40% → **99%** (+59pp).
+- `browser/manager.py` 0% → **100%** (+100pp).
+
+Global TOTAL coverage: 76% → **80%** (+4pp).  Floor `fail_under`
+76 → **80** — Phase 4 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 10 PR1)
+- `tests/test_hook_interceptor_and_auto_commit.py` — 68 test phủ 2
+  module hook (191 stmt total).
+  - `hook_interceptor.py`: `_filter_env` (drop secret-like env keys
+    + bypass `VIBECODE_HOOK_ALLOW_SECRETS=1`), `_scrub_str` (AWS /
+    OpenAI / GitHub PAT / Authorization Bearer prefix + bypass),
+    `_scrub_payload` recursive nested dict/list/str + non-string
+    scalar passthrough + bypass, `_hook_cmd` (.py → python3 / .sh
+    → bash), `run_hooks` 7 nhánh (no `.claw/hooks/` / missing event /
+    chmod implicit fallback / JSON decision parse / non-JSON stdout /
+    malformed JSON `{` start / non-zero rc / TimeoutExpired → 124 /
+    expose `$VIBECODE_HOOK_COMMAND`), `is_blocked` 5 case (empty /
+    deny / non-zero rc / allow override / zero rc no decision).
+  - `auto_commit_hook.py`: `is_sensitive` 21 parametrize case (13
+    sensitive + 8 whitelist), `SensitiveFileGuard.check` 6 case
+    (sensitive path / token-in-content AKIA / safe path / safe content
+    / OpenAI sk- / RSA private key block), `_opt_out` 3 case,
+    `_is_git_repo` / `_git_status_files` 5 case (real git init / non-
+    repo / FileNotFoundError / 2 dirty / clean tree), `AutoCommitHook
+    .decide` 7 case (opt-out / not-git / nothing / sensitive blocked /
+    debounced / malformed stamp fallback / ready), `AutoCommitHook
+    .commit` 3 case (refusal propagate / success bumps stamp + git
+    log shows `[vibecode-auto] checkpoint test` / git failure no-stamp).
+
+### Added (cycle 10 PR2)
+- `tests/test_browser_manager.py` — 48 test phủ `browser/manager.py`
+  (178 stmt, was 0%) → **100%**.  Stub `playwright.sync_api` vào
+  `sys.modules` *trước* khi import manager (idempotent — nếu real
+  playwright đã có thì giữ nguyên).  Mock minimal protocol surface
+  qua `_FakePage` / `_FakeContext` / `_FakeBrowser` / `_FakeChromium`
+  / `_FakePlaywright` / `_FakeSyncPlaywrightHandle`.  Phủ
+  `BrowserManager.start` (idempotent + headless flag), `stop` (close
+  contexts/browser/playwright + clear tabs + safe khi chưa start),
+  `_touch` + `last_activity_ts` property, `_open_tab` raises
+  RuntimeError khi browser=None, `_tab` default + auto-create,
+  `run_read_verb` 10 verb (text / html / links / forms / aria + None
+  fallback `{}` / console / network / snapshot / tabs / status /
+  unknown ValueError + tab extra switch), `run_write_verb` 10 verb
+  (goto default + explicit wait_until + assert URL, click selector vs
+  target fallback, fill, select, scroll default `(0, 600)` vs explicit,
+  wait_for, screenshot default `Path.cwd()/vck-screenshot.png` vs
+  explicit + `full_page=False`, set_cookie, new_tab explicit name vs
+  target fallback vs auto `tab-N`, close_tab existing vs missing
+  no-raise, unknown ValueError), `get_manager` / `stop_manager`
+  singleton lifecycle + `run_*_verb` module facades, `_safe` helper
+  `__enter__` returns self.
+
+### Changed (cycle 10 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 76 → **80** (Phase 4).  Lock spec target 80% (defer từ
+  Phase 3 vì cần mở scope `browser/*` 0% domain).  Sau cycle 10 PR1
+  + PR2 phủ thêm 369 stmt mới (191 hook + 178 browser/manager) →
+  TOTAL 76% → **80%** thực tế.
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 (coverage gate): thêm cột
+  **Phase 4 (cycle 10)** vào table phase progression + section
+  rationale cho lock 76 → 80 + roadmap Phase 5 (target ≥85%).
+- `RELEASE_NOTES_v0.19.0.md` — release notes mới highlight Phase 4
+  coverage achievements (3 module +65/+59/+100pp, floor +4pp lock spec
+  target HIT, +116 test).
+
 ## [0.18.0] — 2026-04-30
 
 Coverage Phase 3 release — phủ test cho 3 module 0% còn lại (cycle 8
