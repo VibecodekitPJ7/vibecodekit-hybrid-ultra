@@ -242,3 +242,136 @@ def test_format_index_error_falls_back_to_raw_text(tmp_path: Path) -> None:
     assert h is not None
     # Fallback giữ nguyên template không substitute.
     assert h.summary_vn == "Got {0} and {1}"
+
+
+# ---------------------------------------------------------------------------
+# Phase 2b — graceful degrade khi PyYAML absent (cycle 8 PR2)
+# ---------------------------------------------------------------------------
+
+
+def test_graceful_degrade_when_pyyaml_absent(monkeypatch, tmp_path: Path) -> None:
+    """Khi ``_yaml`` module-level == None (PyYAML không cài), constructor
+    KHÔNG được raise và builtin dict vẫn dùng được.
+
+    Mô phỏng case PyYAML absent: monkeypatch `vn_error_translator._yaml = None`
+    rồi construct + translate.  Branch ``if target_dir.is_dir() and
+    _yaml is not None:`` đánh giá False → bỏ qua YAML load path, trả về
+    translator chỉ với builtin dict.  Verify YAML files trong dict_dir
+    bị bỏ qua (KHÔNG được load) → degrade hoàn toàn graceful.
+    """
+    from vibecodekit import vn_error_translator as mod
+
+    # Tạo 1 YAML file CỐ Ý chứa pattern khác builtin để dễ phân biệt
+    # (nếu YAML được load, custom pattern sẽ match → dấu hiệu của bug).
+    p = tmp_path / "custom.yaml"
+    p.write_text(
+        "- pattern: 'ZZZ_CUSTOM_ONLY:\\s*(.+)'\n"
+        "  summary_vn: 'should NOT load'\n"
+        "  fix_vn: 'should NOT load'\n"
+        "  confidence: 0.99\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(mod, "_yaml", None)
+    tr = mod.VnErrorTranslator(dict_dir=tmp_path)
+
+    # Builtin dict vẫn match được:
+    h_builtin = tr.best("ModuleNotFoundError: No module named 'foo'")
+    assert h_builtin is not None
+    assert "'foo'" in h_builtin.summary_vn
+
+    # YAML custom KHÔNG được load → pattern không match:
+    assert tr.best("ZZZ_CUSTOM_ONLY: anything") is None
+
+
+# ---------------------------------------------------------------------------
+# Phase 2b — multi-YAML override + ranking last-write-wins (cycle 8 PR2)
+# ---------------------------------------------------------------------------
+
+
+def test_multi_yaml_files_loaded_alphabetically_higher_confidence_wins(
+    tmp_path: Path,
+) -> None:
+    """Nhiều YAML file cùng pattern nhưng confidence khác nhau → ranking
+    chọn entry có confidence cao nhất.
+
+    `sorted(target_dir.glob('*.yaml'))` đảm bảo thứ tự load là
+    alphabetical (a.yaml → z.yaml).  Translator KHÔNG dedupe — cả 2
+    entry vào pool.  Khi `translate()` chạy, sort by
+    `(confidence, len(matched_pattern))` reverse → entry cao nhất đứng
+    đầu.  Đây là "last-write-wins" theo nghĩa ranking: confidence cao
+    hơn ghi đè ranking, không phải replace entry trong pool.
+    """
+    pytest.importorskip("yaml")
+    a_yaml = tmp_path / "a.yaml"
+    a_yaml.write_text(
+        "- pattern: 'CustomDuplicateError:\\s*(.+)'\n"
+        "  summary_vn: 'Low conf: {0}'\n"
+        "  fix_vn: 'low'\n"
+        "  confidence: 0.5\n",
+        encoding="utf-8",
+    )
+    z_yaml = tmp_path / "z.yaml"
+    z_yaml.write_text(
+        "- pattern: 'CustomDuplicateError:\\s*(.+)'\n"
+        "  summary_vn: 'High conf: {0}'\n"
+        "  fix_vn: 'high'\n"
+        "  confidence: 0.95\n",
+        encoding="utf-8",
+    )
+    tr = VnErrorTranslator(dict_dir=tmp_path, include_builtins=False)
+    hits = tr.translate("CustomDuplicateError: details", max_results=2)
+    # Cả 2 entry vào pool:
+    assert len(hits) == 2
+    # Confidence cao đứng đầu:
+    assert hits[0].confidence == pytest.approx(0.95)
+    assert hits[0].summary_vn == "High conf: details"
+    # Confidence thấp đứng thứ 2 (KHÔNG bị strip):
+    assert hits[1].confidence == pytest.approx(0.5)
+
+
+# ---------------------------------------------------------------------------
+# Phase 2b — multi-line traceback / exception chain root-cause (cycle 8 PR2)
+# ---------------------------------------------------------------------------
+
+
+def test_nested_traceback_extracts_root_cause_with_higher_confidence() -> None:
+    """Multi-line traceback chứa nhiều exception type → translate phải
+    return tất cả match, ranked by confidence.
+
+    Real-world Python traceback thường có ``During handling of the
+    above exception, another exception occurred:`` chain.  Translator
+    không phân biệt root vs. wrapper — nó chỉ search regex.  Test xác
+    nhận root-cause (e.g. ModuleNotFoundError với confidence 0.95)
+    đứng đầu trên wrapper (e.g. RuntimeError với confidence ~0.5 nếu
+    có entry, hoặc không có entry → chỉ root được trả về).
+    """
+    tr = VnErrorTranslator()
+    # Traceback giả lập — root-cause là ModuleNotFoundError:
+    chained_text = (
+        "Traceback (most recent call last):\n"
+        '  File "app.py", line 10, in <module>\n'
+        "    import requests\n"
+        "ModuleNotFoundError: No module named 'requests'\n"
+        "\n"
+        "During handling of the above exception, another exception "
+        "occurred:\n"
+        "\n"
+        "Traceback (most recent call last):\n"
+        '  File "app.py", line 12, in <module>\n'
+        "    raise RuntimeError('init failed')\n"
+        "PermissionError: [Errno 13] Permission denied: '/etc/init.conf'\n"
+    )
+    hits = tr.translate(chained_text, max_results=5)
+    # ≥ 2 hit (ModuleNotFound + Permission).
+    assert len(hits) >= 2
+    # Root-cause ModuleNotFoundError (confidence 0.95) đứng đầu vì
+    # confidence cao nhất trong pool:
+    top = hits[0]
+    assert "'requests'" in top.summary_vn
+    assert top.confidence >= 0.9
+    # Permission cũng phải có mặt trong hits:
+    assert any(
+        "quyền" in h.summary_vn.lower() or "quyen" in h.summary_vn.lower()
+        for h in hits
+    )
