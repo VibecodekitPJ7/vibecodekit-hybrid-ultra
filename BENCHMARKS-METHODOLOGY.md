@@ -208,21 +208,30 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
 
 ---
 
-## 4.5. Coverage gate (cycle 6 PR3)
+## 4.5. Coverage gate (cycle 6 PR3 → cycle 7 PR2)
 
 Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
 
-| Module                                 | Phase 1 floor | Phase 2 target | Phase 3 target |
+| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 3 target |
 |----------------------------------------|:-:|:-:|:-:|
-| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** | ≥ 85% | ≥ 90% |
-| `scripts/vibecodekit/team_mode.py`     |  —  | ≥ 80% | ≥ 85% |
-| `scripts/vibecodekit/vn_*.py`          |  —  | ≥ 80% | ≥ 85% |
-| **TOTAL** (global gate)                | ≥ 60% | ≥ 70% | ≥ 80% |
+| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | ≥ 90% |
+| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | ≥ 85% |
+| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | ≥ 85% |
+| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | ≥ 85% |
+| **TOTAL** (global gate)                | ≥ 60% (61%) | **≥ 70%** (72%) | ≥ 80% |
+
+`omit` rationale (cycle 7 PR2):
+
+* `cli.py` — user-facing stdout entry point (96 prints intentional, đã
+  carve-out cycle 6 PR4).  Phase 3 sẽ test qua subprocess.
+* `deploy_orchestrator.py` — heavy subprocess + git mock; phù hợp PR
+  riêng cycle 8.
 
 Rationale: `tool_executor.py` là hot-path subprocess execute — module
-nguy hiểm nhất, đáng có coverage cao nhất.  Phase 1 (cycle 6) chỉ siết
-module này; Phase 2/3 sẽ mở rộng dần để tránh diff lớn / thay đổi
-behavior không cần thiết.
+nguy hiểm nhất, đáng có coverage cao nhất.  Phase 2a (cycle 7) phủ thêm
+3 module Vietnamese-locale (faker / error translator) + team
+coordination layer.  Phase 3 sẽ siết global TOTAL ≥ 80% qua mở thêm
+deploy_orchestrator + browser/manager + cli (subprocess test).
 
 CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
 

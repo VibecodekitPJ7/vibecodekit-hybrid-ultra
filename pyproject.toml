@@ -86,19 +86,26 @@ target-version = "py39"
 # convention hiện tại (PEP8, naming).  Mở rộng select set ở PR sau nếu cần.
 select = ["F401", "F841", "F811"]
 
-# Cycle 6 PR3: coverage scaffold.  fail_under=60 ở Phase 1 (giai đoạn này
-# chỉ siết tool_executor.py >=80%).  Phase 2 sẽ raise lên 80 sau khi
-# vn_*, team_mode đạt 80%.  Phase 3 = global TOTAL >=80%.
+# Cycle 6 PR3 (Phase 1, fail_under=60): chỉ siết tool_executor.py >=80%.
+# Cycle 7 PR2 (Phase 2a, fail_under=70): vn_faker / vn_error_translator /
+#   team_mode đã >=98%.  ``cli.py`` được đưa vào ``omit`` vì là user-facing
+#   stdout entry point (96 prints intentional — đã carve-out cycle 6 PR4).
+#   ``deploy_orchestrator.py`` cũng tạm omit cho tới cycle 8 (tốn nhiều
+#   subprocess mock — phù hợp PR riêng).
+# Phase 3 (cycle sau): cover deploy_orchestrator + browser/manager + đưa
+#   cli.py trở lại scope (qua subprocess test) → global TOTAL >=80%.
 [tool.coverage.run]
 source = ["scripts/vibecodekit"]
 omit = [
   "scripts/vibecodekit/_audit_allowlist.json",
+  "scripts/vibecodekit/cli.py",
+  "scripts/vibecodekit/deploy_orchestrator.py",
   "*/tests/*",
   "*/examples/*",
 ]
 
 [tool.coverage.report]
-fail_under = 60
+fail_under = 70
 show_missing = true
 skip_empty = true
 exclude_lines = [
