@@ -12,6 +12,29 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+### Added (cycle 8 PR2)
+- **Coverage Phase 2b** — `tests/test_vn_error_translator.py` thêm 3 test:
+  - `test_graceful_degrade_when_pyyaml_absent`: monkeypatch
+    `vn_error_translator._yaml = None`, verify constructor không raise +
+    builtin dict vẫn dùng được + YAML files trong `dict_dir` bị skip.
+  - `test_multi_yaml_files_loaded_alphabetically_higher_confidence_wins`:
+    2 file YAML cùng pattern, confidence cao đứng đầu trong ranking
+    (validate "last-write-wins" theo nghĩa ranking, không phải replace).
+  - `test_nested_traceback_extracts_root_cause_with_higher_confidence`:
+    multi-line traceback chứa `ModuleNotFoundError` + `PermissionError`,
+    root-cause (confidence 0.95) đứng đầu trên wrapper.
+
+### Changed (cycle 8 PR2)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report] fail_under`
+  70 → 72 (Phase 2b).  Khoá achievement actual sau cycle 7 (TOTAL 72%
+  với PyYAML installed trong CI).  Mục tiêu spec ban đầu (75) yêu cầu
+  mở scope sang `memory_writeback.py` 0% / `manifest_llm.py` 0% /
+  `auto_writeback.py` 0% — phù hợp Phase 3 hơn Phase 2b.  Xem
+  `BENCHMARKS-METHODOLOGY.md` § 4.5 cho table phase progression.
+- `BENCHMARKS-METHODOLOGY.md`: thêm cột **Phase 2b (cycle 8)** vào
+  coverage table + section rationale cho Phase 2b polish + lý do
+  defer 75% target sang Phase 3.
+
 ### Changed (cycle 7 PR3)
 - **mypy --strict expansion 5 → 9 core module.**  4 module trước đây
   `strict = False` trong `mypy.ini` đã được fix:

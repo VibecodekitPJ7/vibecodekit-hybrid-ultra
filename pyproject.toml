@@ -92,6 +92,12 @@ select = ["F401", "F841", "F811"]
 #   stdout entry point (96 prints intentional — đã carve-out cycle 6 PR4).
 #   ``deploy_orchestrator.py`` cũng tạm omit cho tới cycle 8 (tốn nhiều
 #   subprocess mock — phù hợp PR riêng).
+# Cycle 8 PR2 (Phase 2b, fail_under=72): polish vn_error_translator coverage
+#   với 3 test bổ sung (graceful degrade khi PyYAML absent, multi-YAML
+#   ranking, multi-line traceback chain).  Floor +2pp từ 70 → 72 để khoá
+#   actual achievement (72% với toolchain dev hiện tại) sau cycle 7.  Mục
+#   tiêu 75% (spec ban đầu) yêu cầu mở scope sang memory_writeback / 
+#   manifest_llm (đều 0%) — phù hợp Phase 3 hơn Phase 2b.
 # Phase 3 (cycle sau): cover deploy_orchestrator + browser/manager + đưa
 #   cli.py trở lại scope (qua subprocess test) → global TOTAL >=80%.
 [tool.coverage.run]
@@ -105,7 +111,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 72
 show_missing = true
 skip_empty = true
 exclude_lines = [
