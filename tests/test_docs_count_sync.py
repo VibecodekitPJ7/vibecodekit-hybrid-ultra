@@ -243,14 +243,19 @@ def test_no_stale_release_counts(doc: Path, pattern: str) -> None:
 
 
 # --- PR2: drift guard cho version literal forward-facing -------------
-# Mục tiêu: bất kỳ literal version `v0.10.x`–`v0.16.x` nào xuất hiện
-# trong prose forward-facing (ngoài section "Historical" / "Changelog",
-# ngoài fenced code block, ngoài table version-history) đều bị flag.
+# Mục tiêu: bất kỳ literal version `v0.x.y` nào xuất hiện trong prose
+# forward-facing (ngoài section "Historical" / "Changelog", ngoài
+# fenced code block, ngoài table version-history) đều bị flag.
 # Chỉ literal `v<CURRENT_VERSION>` được phép vì nó nói trạng thái hiện tại.
 # Test này khiến lần drift số liệu / version anchor tiếp theo (vd. khi
 # bump v0.16.2 → v0.17.0 mà quên cập nhật prose) bị CI chặn ngay.
-
-_VERSION_LITERAL_PATTERN = re.compile(r"\bv0\.1[0-6]\.\d+\b")
+#
+# Cycle 10 follow-up: regex mở rộng từ ``\bv0\.1[0-6]\.\d+\b`` (chỉ
+# bắt v0.10–v0.16) sang ``\bv0\.\d{1,2}\.\d+\b`` (bắt mọi v0.x.y).
+# Lý do: cycle 9 PR3 (v0.18.0) + cycle 10 PR3 (v0.19.0) miss update
+# update-package/CLAUDE.md / USAGE_GUIDE.md / README.md vì regex cũ
+# KHÔNG bắt v0.17+.  Devin Review trên #10 phát hiện drift sau merge.
+_VERSION_LITERAL_PATTERN = re.compile(r"\bv0\.\d{1,2}\.\d+\b")
 
 
 @pytest.mark.parametrize("doc", [d for d in CURRENT_DOCS if d.exists()])
