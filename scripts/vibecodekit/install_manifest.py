@@ -58,10 +58,17 @@ def plan(dst_root: str | os.PathLike) -> List[Planned]:
         d = dst / "ai-rules" / "vibecodekit" / "scripts" / rel
         action = "skip" if d.exists() and _sha(p) == _sha(d) else ("overwrite" if d.exists() else "create")
         out.append(Planned(str(p), str(d), action))
-    # Reference markdown → ai-rules/vibecodekit/references/
+    # Reference markdown + sample data → ai-rules/vibecodekit/references/
+    # v0.22.0 (cycle 13 PR1 follow-up): pre-baked case study under
+    # ``references/examples/`` ships ``07-rri-t-results.jsonl`` and
+    # ``08-rri-ux-results.jsonl`` cùng các markdown.  Probe #88 re-runs
+    # ``methodology.evaluate_rri_t/ux()`` trên 2 jsonl đó nên cả 2 phải
+    # tới được installed root, không chỉ ``*.md``.
     src_refs = SKILL_ROOT / "references"
     if src_refs.exists():
-        for p in sorted(src_refs.rglob("*.md")):
+        for p in sorted(src_refs.rglob("*")):
+            if not p.is_file() or p.suffix not in (".md", ".jsonl"):
+                continue
             rel = p.relative_to(src_refs)
             d = dst / "ai-rules" / "vibecodekit" / "references" / rel
             action = "skip" if d.exists() and _sha(p) == _sha(d) else ("overwrite" if d.exists() else "create")
