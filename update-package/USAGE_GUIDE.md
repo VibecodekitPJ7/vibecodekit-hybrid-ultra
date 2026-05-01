@@ -1,10 +1,10 @@
-# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.20.0)
+# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.21.0)
 
 Bộ kit đầy đủ để build dự án theo phương pháp **VIBECODE-MASTER** với **Full
-Agentic OS** runtime (87 internal conformance probes at v0.20.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
+Agentic OS** runtime (87 internal conformance probes at v0.21.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
 actionable tests pass từ repo root; bundled `tests/` trong skill zip chứa
 một subset đại diện để user smoke-test sau khi extract — xem §15.10).
-Bản này ứng với **v0.20.0** (hiện hành — xem `CHANGELOG.md` cho
+Bản này ứng với **v0.21.0** (hiện hành — xem `CHANGELOG.md` cho
 lịch sử các bản trước, mỗi entry kèm link PR + finding khoá lại):
 
 - **v0.16.1** — doc coherence + recheck cleanup (PR #16, this release)
@@ -369,7 +369,7 @@ slash command trong `.claude/commands/` sẵn sàng.
 | `/vibe-rri-ui` | Bước 7 — pipeline 4-phase cho UI. |
 | `/vibe-verify` | Đóng báo cáo verify. |
 | `/vibe-complete` | Completion Report. |
-| `/vibe-audit` | Chạy 87 conformance probes (at v0.20.0). |
+| `/vibe-audit` | Chạy 87 conformance probes (at v0.21.0). |
 | `/vibe-doctor` | Chẩn đoán sức khỏe cài đặt. |
 | `/vibe-dashboard` | Dashboard runtime. |
 | `/vibe-permission <cmd>` | Hỏi permission engine có allow lệnh không. |
