@@ -12,6 +12,119 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.21.0] — 2026-04-30
+
+Coverage Phase 6 release — đẩy global TOTAL từ 85% → **90%** (spec
+Phase 6 target HIT — đúng spec, lần thứ hai liên tiếp kể từ Phase 5
+floor lock đúng spec target).  PR1 + PR2 cycle 12 phủ 12 module gap
+lớn nhất sau cycle 11:
+
+- `task_runtime.py` 76% → **97%** (+21pp, 47 test).
+- `module_workflow.py` 67% → **99%** (+32pp, 41 test).
+- `mcp_servers/core.py` 55% → **97%** (+42pp, 15 test).
+- `eval_select.py` 74% → **100%** (+26pp, 13 test).
+- `skill_discovery.py` 71% → **98%** (+27pp, 10 test).
+- `event_bus.py` 73% → **100%** (+27pp, 5 test).
+- `install_manifest.py` 74% → **99%** (+25pp, 3 test).
+- `compaction.py` 82% → **100%** (+18pp, 6 test).
+- `denial_store.py` 84% → **99%** (+15pp, 5 test).
+- `learnings.py` 83% → **97%** (+14pp, 4 test).
+- `intent_router.py` 86% → **98%** (+12pp, 4 test).
+- `browser/state.py` 87% → **97%** (+10pp, 11 test).
+- `cost_ledger.py` 89% → **100%** (+11pp, 4 test).
+- `conformance_audit.py` 82% → **83%** (+1pp, 4 test — `_main` +
+  exception branch trong `audit()`).
+
+Global TOTAL: 85% → **90%** (+5pp).  Floor `fail_under` 85 →
+**90** — Phase 6 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 12 PR1)
+- `tests/test_phase6_task_runtime_module_workflow.py` — 88 test phủ 2
+  module core-runtime:
+  - `task_runtime.py`: `_is_valid_task_id` valid/invalid regex ·
+    `create_task` unknown-kind · `_read_index` missing+malformed ·
+    `list_tasks` filter+sort · `get_task` invalid · `read_task_output`
+    invalid/unknown/missing/window/unicode · `start_local_bash`
+    success/fail/timeout/kill · `kill_task` invalid/unknown/terminal/no-
+    pid · `drain_notifications` invalid/atomic/malformed/no-file ·
+    `check_stalls` producing/quiet/prompt/missing · `start_local_workflow`
+    bash/sleep/write/unknown/path-escape/exception/failure (+on_error
+    continue) · `start_monitor_mcp` success+failure · `start_dream`
+    consolidation · `wait_for` terminal/timeout/unknown.
+  - `module_workflow.py`: 11 detector (`_detect_nextjs` / `_react` /
+    `_prisma` / `_nextauth` / `_tailwind` / `_express` / `_fastapi` /
+    `_django` / `_vite` / `_typescript`) với positive/negative/error
+    case · `probe` non-dir/empty/full-stack · `reuse_inventory`
+    ordering · `module_plan` 5 routing branch + error · `_slug`
+    normalisation · `main` CLI (probe/plan subcommand + exit code).
+
+### Added (cycle 12 PR2)
+- `tests/test_phase6_small_modules_polish.py` — 85 test phủ 10 module
+  medium-small:
+  - `eval_select.py` (13 test): SelectionResult shape, load_map 4 shape
+    variants + error, git_changed_files OK + fallback, _match 4 branch,
+    select_tests empty-changes-fallback / matched+unmapped, _main
+    human+JSON.
+  - `mcp_servers/core.py` (15 test): `_get_root` default+override,
+    `_respond`/`_error` JSON-RPC shape, `_handle` 10 method branch
+    (initialize / notifications-initialized-silent / tools-list /
+    tools-call-ok / unknown-tool / bad-arguments / tool-raises /
+    shutdown / unknown-method / unknown-method-no-id), `_main` stdin
+    4-line mix, direct tool calls.
+  - `install_manifest.py` (3 test): `_sha`, real-copy install +
+    idempotent re-run, `_main` human+JSON.
+  - `learnings.py` (4 test): bad-scope ValueError, properties, append
+    + load-skips-malformed, `_main` 5 subcommand.
+  - `event_bus.py` (5 test): emit+read_all, default session_id,
+    missing-file, malformed-JSONL skipped, fsync OSError swallowed.
+  - `denial_store.py` (5 test): record/denied_before/success/clear,
+    malformed JSON fallback, TTL expiry, `_write` exception cleanup,
+    should_fallback_to_user.
+  - `compaction.py` (6 test): `_collect_events` OSError, `_summarise_line`
+    bad+good JSON, `_load_keeps` OSError, `compact` 5-layer full,
+    `compact` load_keeps happy path.
+  - `intent_router.py` (4 test): empty-prose clarification, no-match
+    clarification, low-confidence-threshold, explain EN+VI.
+  - `browser/state.py` (11 test): from_dict merges extra, read_state
+    missing/bad-JSON/non-dict, clear_state missing, select_port
+    exhausted, is_pid_alive 0/live/ProcessLookupError/PermissionError,
+    is_idle_expired edge, touch_state no-daemon.
+  - `skill_discovery.py` (10 test): _parse_frontmatter no-match +
+    all-key-shapes, discover ignored-dirs, --touched filter, _main,
+    _self_skill_md env, _match_glob 4 variant, activate_for 3 branch.
+  - `cost_ledger.py` (4 test): _approx_tokens empty, summary missing,
+    summary ignores malformed + aggregates, reset wipes.
+  - `conformance_audit.py` (4 test): exception branch (forced-fail
+    probe) + `_main` human+JSON+failing-threshold (sys.exit(1)).
+
+### Changed (cycle 12 PR3, this)
+- `pyproject.toml [tool.coverage.report] fail_under` 85 → **90** —
+  Phase 6 spec target HIT.  Lock toàn bộ +5pp từ 2 PR đầu cycle 12.
+- `BENCHMARKS-METHODOLOGY.md § 4.5` — thêm cột Phase 6 cycle 12, ghi
+  nhận 12 module polish (86→90 TOTAL) + roadmap Phase 7 (cycle 13+)
+  mở scope `cli.py` / `deploy_orchestrator.py` / `conformance_audit`
+  polish 83% → ≥95% (còn 203 miss lớn nhất).
+- `RELEASE_NOTES_v0.21.0.md` — release notes cho v0.21.0.
+- `VERSION` 0.20.0 → **0.21.0**.
+- `benchmarks/intent_router_0.21.0.json` — regen cho version mới.
+- Sync version prose: các file user-facing (`README.md`, `SKILL.md`,
+  `assets/plugin-manifest.json`, `manifest.llm.json`,
+  `update-package/*`) replace `v0.20.0` → `v0.21.0` (qua
+  `tools/sync_version.py`).
+
+### Kết thúc cycle 12
+- 4/4 PR merged: PR1 (#15, task_runtime + module_workflow), PR2 (#16,
+  10 module polish), PR3 (this, release).
+- 1624 passed (was 1451 end of cycle 11; +173 qua 2 PR test).
+- TOTAL 85 → **90%** (+5pp).
+- Conformance 87/87 met=True, ruff F401/F841/F811 clean, mypy strict
+  9 module clean (không thay đổi từ v0.20.0).
+- Scorecard Enterprise readiness không thay đổi từ v0.20.0 (coverage
+  milestone, không đụng runtime/API):
+  - Solo dev: **A+** · Small team: **A+** · Enterprise: **A**
+    (RBAC multi-tenant pending v0.22.0+).
+
 ## [0.20.0] — 2026-04-30
 
 Coverage Phase 5 release — đẩy global TOTAL từ 80% → **85%** (spec

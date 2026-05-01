@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vibecodekit-hybrid-ultra"
-version = "0.20.0"
+version = "0.21.0"
 description = "Defensive, audit-driven runtime + skill bundle for AI-assisted coding workflows. VIBECODE-MASTER methodology + RRI question banks + permission engine + scaffold engine + 67-probe audit + sub-second browser daemon."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -114,9 +114,25 @@ select = ["F401", "F841", "F811"]
 #     ``playwright.sync_api`` vào sys.modules trước khi import (idempotent
 #     với playwright real).  TOTAL 78 → 80.
 #   - PR3 (this) bump fail_under 76 → 80, lock spec target.
-# Phase 5 (future): mở scope đưa cli.py + deploy_orchestrator.py trở lại
-#   (subprocess test), polish mcp_client (62%) + browser/cli_adapter (33%)
-#   → global TOTAL >=85%.  Mypy strict expand từ 9/44 module → 20+/44.
+# Cycle 11 (Phase 5, fail_under=85): spec target 85% HIT:
+#   - PR1 mcp_client.py (62% → 90%, +28pp, 45 test) +
+#     browser/cli_adapter.py (33% → 99%, +66pp, 28 test).  TOTAL 80 → 82.
+#   - PR2 approval_contract.py (66% → 100%, +34pp, 24 test) +
+#     memory_retriever (33% → 98%) + recovery_engine (58% → 98%) +
+#     dashboard (50% → 95%) + selfcheck (23% → 95%) + doctor (68% → 94%).
+#     TOTAL 82 → 85.
+#   - PR3 bump fail_under 80 → 85, lần đầu floor match đúng spec target.
+# Cycle 12 (Phase 6, fail_under=90): spec target 90% HIT:
+#   - PR1 task_runtime.py (76% → 97%, +21pp, 47 test) +
+#     module_workflow.py (67% → 99%, +32pp, 41 test).  TOTAL 85 → 87.
+#   - PR2 polish 10 module medium-small (85 test): compaction/cost_ledger/
+#     event_bus/eval_select 100%, denial_store/install_manifest 99%,
+#     learnings/intent_router/skill_discovery/mcp_servers_core 97-98%,
+#     browser/state 97%, conformance_audit +1pp.  TOTAL 87 → 90.
+#   - PR3 (this) bump fail_under 85 → 90, lock spec target HIT.
+# Phase 7 (future): đưa cli.py + deploy_orchestrator.py trở lại scope
+#   (subprocess test); polish conformance_audit.py 83% → 95% (còn 203 miss
+#   lớn nhất); mypy strict expand từ 9/44 → 25+/44.  Mục tiêu TOTAL ≥ 93%.
 [tool.coverage.run]
 source = ["scripts/vibecodekit"]
 omit = [
@@ -128,7 +144,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 90
 show_missing = true
 skip_empty = true
 exclude_lines = [

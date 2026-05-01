@@ -208,31 +208,44 @@ v0.16.2 + PR4 mở rộng Layer 4 của permission engine thành 3 tầng:
 
 ---
 
-## 4.5. Coverage gate (cycle 6 PR3 → cycle 11 PR3)
+## 4.5. Coverage gate (cycle 6 PR3 → cycle 12 PR3)
 
 Per-module coverage floors (`pyproject.toml` `[tool.coverage]`):
 
-| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 2b (cycle 8) | Phase 3 (cycle 9) | Phase 4 (cycle 10) | Phase 5 (cycle 11) |
-|----------------------------------------|:-:|:-:|:-:|:-:|:-:|:-:|
-| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) |
-| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) |
-| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) |
-| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | **≥ 80%** (100%, +3 test) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) |
-| `scripts/vibecodekit/memory_writeback.py` | 0% | 0% | 0% | **100%** (+40 test) | **100%** | **100%** |
-| `scripts/vibecodekit/manifest_llm.py`  |   0% | 0% | 0% | **100%** (+12 test) | **100%** | **100%** |
-| `scripts/vibecodekit/auto_writeback.py` | 0% | 0% | 0% | **100%** (+20 test) | **100%** | **100%** |
-| `scripts/vibecodekit/hook_interceptor.py` | 33% | 33% | 33% | 33% | **98%** (+31 test) | **98%** |
-| `scripts/vibecodekit/auto_commit_hook.py` | 40% | 40% | 40% | 40% | **99%** (+37 test) | **99%** |
-| `scripts/vibecodekit/browser/manager.py` |   0% | 0% | 0% | 0% | **100%** (+48 test) | **100%** |
-| `scripts/vibecodekit/mcp_client.py`    | 62% | 62% | 62% | 62% | 62% | **90%** (+45 test) |
-| `scripts/vibecodekit/browser/cli_adapter.py` | 33% | 33% | 33% | 33% | 33% | **99%** (+28 test) |
-| `scripts/vibecodekit/approval_contract.py` | 66% | 66% | 66% | 66% | 66% | **100%** (+24 test) |
-| `scripts/vibecodekit/memory_retriever.py` | 33% | 33% | 33% | 33% | 33% | **98%** (+9 test) |
-| `scripts/vibecodekit/recovery_engine.py` | 58% | 58% | 58% | 58% | 58% | **98%** (+7 test) |
-| `scripts/vibecodekit/dashboard.py`     |  50% | 50% | 50% | 50% | 50% | **95%** (+7 test) |
-| `scripts/vibecodekit/mcp_servers/selfcheck.py` | 23% | 23% | 23% | 23% | 23% | **95%** (+13 test) |
-| `scripts/vibecodekit/doctor.py`        |  68% | 68% | 68% | 68% | 68% | **94%** (+8 test) |
-| **TOTAL** (global gate)                | ≥ 60% (61%) | ≥ 70% (72%) | **≥ 72%** (72%) | **≥ 76%** (76%) | **≥ 80%** (80%) | **≥ 85%** (85%) |
+| Module                                 | Phase 1 (cycle 6) | Phase 2a (cycle 7) | Phase 2b (cycle 8) | Phase 3 (cycle 9) | Phase 4 (cycle 10) | Phase 5 (cycle 11) | Phase 6 (cycle 12) |
+|----------------------------------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| `scripts/vibecodekit/tool_executor.py` | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) |
+| `scripts/vibecodekit/team_mode.py`     |  41% | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) | **≥ 80%** (98%) |
+| `scripts/vibecodekit/vn_faker.py`      |   0% | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) |
+| `scripts/vibecodekit/vn_error_translator.py` | 0% | **≥ 80%** (100%) | **≥ 80%** (100%, +3 test) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) | **≥ 80%** (100%) |
+| `scripts/vibecodekit/memory_writeback.py` | 0% | 0% | 0% | **100%** (+40 test) | **100%** | **100%** | **100%** |
+| `scripts/vibecodekit/manifest_llm.py`  |   0% | 0% | 0% | **100%** (+12 test) | **100%** | **100%** | **100%** |
+| `scripts/vibecodekit/auto_writeback.py` | 0% | 0% | 0% | **100%** (+20 test) | **100%** | **100%** | **100%** |
+| `scripts/vibecodekit/hook_interceptor.py` | 33% | 33% | 33% | 33% | **98%** (+31 test) | **98%** | **98%** |
+| `scripts/vibecodekit/auto_commit_hook.py` | 40% | 40% | 40% | 40% | **99%** (+37 test) | **99%** | **99%** |
+| `scripts/vibecodekit/browser/manager.py` |   0% | 0% | 0% | 0% | **100%** (+48 test) | **100%** | **100%** |
+| `scripts/vibecodekit/mcp_client.py`    | 62% | 62% | 62% | 62% | 62% | **90%** (+45 test) | **90%** |
+| `scripts/vibecodekit/browser/cli_adapter.py` | 33% | 33% | 33% | 33% | 33% | **99%** (+28 test) | **99%** |
+| `scripts/vibecodekit/approval_contract.py` | 66% | 66% | 66% | 66% | 66% | **100%** (+24 test) | **100%** |
+| `scripts/vibecodekit/memory_retriever.py` | 33% | 33% | 33% | 33% | 33% | **98%** (+9 test) | **98%** |
+| `scripts/vibecodekit/recovery_engine.py` | 58% | 58% | 58% | 58% | 58% | **98%** (+7 test) | **98%** |
+| `scripts/vibecodekit/dashboard.py`     |  50% | 50% | 50% | 50% | 50% | **95%** (+7 test) | **95%** |
+| `scripts/vibecodekit/mcp_servers/selfcheck.py` | 23% | 23% | 23% | 23% | 23% | **95%** (+13 test) | **95%** |
+| `scripts/vibecodekit/doctor.py`        |  68% | 68% | 68% | 68% | 68% | **94%** (+8 test) | **94%** |
+| `scripts/vibecodekit/task_runtime.py`  | 76% | 76% | 76% | 76% | 76% | 76% | **97%** (+47 test) |
+| `scripts/vibecodekit/module_workflow.py` | 67% | 67% | 67% | 67% | 67% | 67% | **99%** (+41 test) |
+| `scripts/vibecodekit/mcp_servers/core.py` | 55% | 55% | 55% | 55% | 55% | 55% | **97%** (+15 test) |
+| `scripts/vibecodekit/eval_select.py`   | 74% | 74% | 74% | 74% | 74% | 74% | **100%** (+13 test) |
+| `scripts/vibecodekit/skill_discovery.py` | 71% | 71% | 71% | 71% | 71% | 71% | **98%** (+10 test) |
+| `scripts/vibecodekit/event_bus.py`     | 73% | 73% | 73% | 73% | 73% | 73% | **100%** (+5 test) |
+| `scripts/vibecodekit/install_manifest.py` | 74% | 74% | 74% | 74% | 74% | 74% | **99%** (+3 test) |
+| `scripts/vibecodekit/compaction.py`    | 82% | 82% | 82% | 82% | 82% | 82% | **100%** (+6 test) |
+| `scripts/vibecodekit/denial_store.py`  | 84% | 84% | 84% | 84% | 84% | 84% | **99%** (+5 test) |
+| `scripts/vibecodekit/learnings.py`     | 83% | 83% | 83% | 83% | 83% | 83% | **97%** (+4 test) |
+| `scripts/vibecodekit/intent_router.py` | 86% | 86% | 86% | 86% | 86% | 86% | **98%** (+4 test) |
+| `scripts/vibecodekit/browser/state.py` | 87% | 87% | 87% | 87% | 87% | 87% | **97%** (+11 test) |
+| `scripts/vibecodekit/cost_ledger.py`   | 89% | 89% | 89% | 89% | 89% | 89% | **100%** (+4 test) |
+| **TOTAL** (global gate)                | ≥ 60% (61%) | ≥ 70% (72%) | **≥ 72%** (72%) | **≥ 76%** (76%) | **≥ 80%** (80%) | **≥ 85%** (85%) | **≥ 90%** (90%) |
 
 `omit` rationale (cycle 7 PR2):
 
@@ -347,9 +360,42 @@ Phase 5 (cycle 11 PR1 + PR2 + PR3) — đẩy TOTAL từ 80 → 85 lock spec:
   installed-only fail / skill_repo layout / advisory present in root /
   runtime placeholder warns / runtime assets missing warns / `_main`
   smoke + installed-only nonzero exit).  TOTAL 82 → **85**.
-* **PR3** (this): bump `fail_under` 80 → **85** — Phase 5 spec target
-  HIT.  Lock toàn bộ +5pp từ 2 PR đầu.  Lần đầu kể từ Phase 1 floor
-  match đúng spec target — KHÔNG còn pragmatic gap.
+* **PR3** (cycle 11): bump `fail_under` 80 → **85** — Phase 5 spec
+  target HIT.  Lock toàn bộ +5pp từ 2 PR đầu.  Lần đầu kể từ Phase 1
+  floor match đúng spec target — KHÔNG còn pragmatic gap.
+
+Phase 6 (cycle 12 PR1 + PR2 + PR3) — đẩy TOTAL từ 85 → 90 lock spec:
+
+* **PR1**: `tests/test_phase6_task_runtime_module_workflow.py`
+  (+88 test) phủ 2 module core-runtime lớn.  `task_runtime.py`
+  (468 stmt, 76% → **97%**, +21pp, 47 test cover: `_is_valid_task_id`
+  valid/invalid regex · `create_task` unknown-kind · `_read_index`
+  missing+malformed · `list_tasks` filter+sort · `get_task` invalid
+  · `read_task_output` invalid/unknown/missing/window/unicode ·
+  `start_local_bash` success/fail/timeout/kill · `kill_task`
+  invalid/unknown/terminal/no-pid · `drain_notifications`
+  invalid/atomic/malformed/no-file · `check_stalls`
+  producing/quiet/prompt/missing · `start_local_workflow`
+  bash/sleep/write/unknown/path-escape/exception/failure +on_error
+  continue · `start_monitor_mcp` success+failure · `start_dream`
+  consolidation · `wait_for` terminal/timeout/unknown).
+  `module_workflow.py` (239 stmt, 67% → **99%**, +32pp, 41 test cover
+  Pattern F workflow 11 detector + probe 3 case + reuse_inventory
+  ordering + module_plan 5 routing branch với error + _slug + main CLI
+  probe/plan subcommand).  TOTAL 85 → 87.
+* **PR2**: `tests/test_phase6_small_modules_polish.py` (+85 test) phủ
+  10 module medium-small (xem CHANGELOG v0.21.0 chi tiết từng module).
+  Đặc biệt: `mcp_servers/core.py` (111 stmt, 55% → **97%**, +42pp) qua
+  15 test cover MCP stdio JSON-RPC 2.0 protocol dispatch; `eval_select`
+  / `event_bus` / `compaction` / `cost_ledger` đều 100%; `denial_store`
+  / `install_manifest` 99%; `learnings` / `intent_router` /
+  `skill_discovery` / `browser/state` 97-98%.  `conformance_audit.py`
+  (1214 stmt, 82% → **83%**, +1pp) qua 4 test cover `_main` human+JSON+
+  failing-threshold + exception branch inside `audit()` loop
+  (monkeypatch forced-fail probe).  TOTAL 87 → **90**.
+* **PR3** (this): bump `fail_under` 85 → **90** — Phase 6 spec target
+  HIT.  Lock toàn bộ +5pp từ 2 PR đầu.  Lần thứ hai liên tiếp kể từ
+  Phase 5 floor match đúng spec target — KHÔNG pragmatic gap.
 
 Rationale: `tool_executor.py` là hot-path subprocess execute — module
 nguy hiểm nhất, đáng có coverage cao nhất.  Phase 2a (cycle 7) phủ thêm
@@ -365,12 +411,15 @@ mở scope `browser/manager.py` (178 stmt 0% → 100%) +
 85% qua mở scope `mcp_client.py` (62% → 90%) + `browser/cli_adapter.py`
 (33% → 99%) + `approval_contract.py` (66% → 100%) + 5 module polish
 (`memory_retriever` / `recovery_engine` / `dashboard` / `selfcheck` /
-`doctor`).  Tổng 141 test mới qua 2 PR + 1 release PR.  Phase 6 (future
-cycle 12+) sẽ mở scope `conformance_audit.py` (217 miss) +
-`task_runtime.py` (114 miss) + `module_workflow.py` (80 miss) +
-`browser/server.py` (0%) + `cli.py` / `deploy_orchestrator.py` qua
-subprocess test — mục tiêu global TOTAL ≥ 90%.  Mypy strict expand từ
-9/44 module → 20+/44.  Optional RBAC multi-tenant nếu user demand.
+`doctor`).  Tổng 141 test mới qua 2 PR + 1 release PR.  Phase 6
+(cycle 12) hoàn tất spec target 90% qua `task_runtime.py` (76 → 97)
++ `module_workflow.py` (67 → 99) + 10 module medium-small (55-89%
+→ 97-100%).  Tổng 173 test mới qua 2 PR + 1 release PR.  Phase 7
+(future cycle 13+) sẽ polish `conformance_audit.py` 83% → ≥95% (còn
+203 miss lớn nhất, 87 probe function với exception-path coverage thiếu)
++ đưa `cli.py` / `deploy_orchestrator.py` trở lại scope qua subprocess
+test — mục tiêu global TOTAL ≥ 93%.  Mypy strict expand từ 9/44 module
+→ 25+/44.  Optional RBAC multi-tenant nếu user demand.
 
 CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
 
