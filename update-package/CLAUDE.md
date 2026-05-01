@@ -1,6 +1,6 @@
-# Project overlay — VibecodeKit Hybrid Ultra v0.21.0
+# Project overlay — VibecodeKit Hybrid Ultra v0.22.0
 
-This project uses the VibecodeKit **v0.21.0** overlay (canonical version
+This project uses the VibecodeKit **v0.22.0** overlay (canonical version
 file: `VERSION`).  All tool calls pass through the 6-layer permission
 pipeline; see
 `ai-rules/vibecodekit/references/10-permission-classification.md`.
@@ -136,12 +136,12 @@ Mirror surfaces: `update-package/VERSION`, `pyproject.toml`,
 ## Release gate
 
 Before shipping:
-1. `pytest tests/ -q` → 1624/1624 pass at v0.21.0 (full suite, run từ repo
+1. `pytest tests/ -q` → 1624/1624 pass at v0.22.0 (full suite, run từ repo
    root; the canonical count is whatever `pytest --collect-only -q | tail`
    reports for the current commit).  Bundled `tests/` trong zip chỉ là
    subset đại diện; đủ để smoke-test sau khi unzip nhưng CI gate là trên
    full suite.
-2. `/vibe-audit` → 87/87 internal regression probes (self-test, not external benchmark)
+2. `/vibe-audit` → 91/91 internal regression probes (self-test, not external benchmark)
 3. `/vibe-rri-t` → all 7 dims ≥ 70 %, ≥ 5/7 @ ≥ 85 %, 0 P0 FAIL
 4. `/vibe-rri-ux` → same structure on Flow Physics
 5. `/vibe-vn-check` → gate PASS (12/12) if VN scope

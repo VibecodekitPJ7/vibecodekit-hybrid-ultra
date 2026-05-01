@@ -54,7 +54,7 @@ export PYTHONPATH=~/.vibecode/vibecodekit-hybrid-ultra/scripts
 
 # 3. Test thử một lệnh
 python -m vibecodekit.cli audit
-# → kỳ vọng: 87/87 probes pass (internal self-test, not external benchmark)
+# → kỳ vọng: 87/91 probes pass (internal self-test, not external benchmark)
 ```
 
 Dùng `vibe rri-t reports/testing.jsonl` sau mỗi sprint để kiểm tra cổng
@@ -96,7 +96,7 @@ pytest tests/ -q        # → all actionable tests pass
 
 # 2. Conformance self-test (internal regression guard — see BENCHMARKS-METHODOLOGY.md)
 PYTHONPATH=scripts python -m vibecodekit.conformance_audit
-# → 87/87 probes pass (internal self-test)
+# → 87/91 probes pass (internal self-test)
 
 # 3. Permission engine (phải chặn lệnh nguy hiểm)
 PYTHONPATH=scripts python -m vibecodekit.cli permission "rm -rf /"

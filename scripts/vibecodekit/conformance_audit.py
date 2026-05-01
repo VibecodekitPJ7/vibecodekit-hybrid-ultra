@@ -2026,6 +2026,78 @@ def _probe_anti_patterns_gallery_complete(tmp: Path) -> Tuple[bool, str]:
     return True, f"12/12 AP entries ok (viz+recipe+detector); api in sync"
 
 
+def _probe_color_psychology_appendix(tmp: Path) -> Tuple[bool, str]:
+    """#90 — Cycle 13 PR3: ``references/37-color-psychology.md`` ship
+    7 industry palette + WCAG section + Vietnamese cultural section
+    + color-blind safety + dark-mode mapping.
+
+    Behaviour-based check: not just file-exists, but also that
+    the canonical 7 industry names + WCAG keyword + Vietnamese
+    cultural cue all appear in the body.  Drift in any one of those
+    sections triggers a probe FAIL so the file cannot silently rot.
+    """
+    here = Path(__file__).resolve().parents[2]
+    ref = here / "references" / "37-color-psychology.md"
+    if not ref.exists():
+        return False, "missing references/37-color-psychology.md"
+    body = ref.read_text(encoding="utf-8")
+    industries = (
+        "Finance", "Healthcare", "E-commerce", "Education",
+        "SaaS B2B", "Government", "Logistics",
+    )
+    missing_industries = [ind for ind in industries if ind not in body]
+    if missing_industries:
+        return False, f"missing industries: {missing_industries}"
+    if "WCAG" not in body:
+        return False, "WCAG section missing"
+    has_vn_cultural = ("Tết" in body or "Vietnamese cultural" in body
+                       or "Đỏ" in body)
+    if not has_vn_cultural:
+        return False, "Vietnamese cultural section missing"
+    if "Color-blind" not in body and "color-blind" not in body:
+        return False, "color-blind safety section missing"
+    if "Dark mode" not in body and "dark mode" not in body.lower():
+        return False, "dark-mode mapping section missing"
+    return True, f"7 industries + WCAG + VN + CVD + dark-mode all present"
+
+
+def _probe_font_pairing_appendix(tmp: Path) -> Tuple[bool, str]:
+    """#91 — Cycle 13 PR3: ``references/38-font-pairing.md`` ship 5
+    canonical pairs + Vietnamese subset requirement + type-scale +
+    loading-strategy + fallback-stack.
+
+    Behaviour-based: assert presence of the 5 use-case names, the
+    Vietnamese subset smoke-test cue, and the canonical type-scale
+    keyword 'line height'.
+    """
+    here = Path(__file__).resolve().parents[2]
+    ref = here / "references" / "38-font-pairing.md"
+    if not ref.exists():
+        return False, "missing references/38-font-pairing.md"
+    body = ref.read_text(encoding="utf-8")
+    fonts = ("Inter", "Plus Jakarta Sans", "Be Vietnam Pro", "DM Sans")
+    missing_fonts = [f for f in fonts if f not in body]
+    if missing_fonts:
+        return False, f"missing fonts: {missing_fonts}"
+    pairs = (
+        "Modern SaaS", "Corporate", "Editorial",
+        "Tech-forward", "Friendly consumer",
+    )
+    missing_pairs = [p for p in pairs if p not in body]
+    if missing_pairs:
+        return False, f"missing use-case pair(s): {missing_pairs}"
+    has_vn = ("Vietnamese subset" in body
+              or "Ứng dụng quản lý" in body)
+    if not has_vn:
+        return False, "Vietnamese subset section missing"
+    has_scale = ("Type scale" in body or "line height" in body.lower())
+    if not has_scale:
+        return False, "type-scale section missing"
+    if "fallback" not in body.lower():
+        return False, "fallback-stack section missing"
+    return True, "5 pairs + 4 fonts + VN subset + scale + fallback all present"
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -2132,6 +2204,8 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     # v0.22.0 (cycle 13) — documentation expansion probes
     ("88_case_study_otb_budget",        _probe_case_study_otb_budget),
     ("89_anti_patterns_gallery",        _probe_anti_patterns_gallery_complete),
+    ("90_color_psychology_appendix",    _probe_color_psychology_appendix),
+    ("91_font_pairing_appendix",        _probe_font_pairing_appendix),
 ]
 
 

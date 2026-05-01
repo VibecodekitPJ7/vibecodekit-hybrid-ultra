@@ -415,11 +415,21 @@ mở scope `browser/manager.py` (178 stmt 0% → 100%) +
 (cycle 12) hoàn tất spec target 90% qua `task_runtime.py` (76 → 97)
 + `module_workflow.py` (67 → 99) + 10 module medium-small (55-89%
 → 97-100%).  Tổng 173 test mới qua 2 PR + 1 release PR.  Phase 7
-(future cycle 13+) sẽ polish `conformance_audit.py` 83% → ≥95% (còn
-203 miss lớn nhất, 87 probe function với exception-path coverage thiếu)
-+ đưa `cli.py` / `deploy_orchestrator.py` trở lại scope qua subprocess
-test — mục tiêu global TOTAL ≥ 93%.  Mypy strict expand từ 9/44 module
-→ 25+/44.  Optional RBAC multi-tenant nếu user demand.
+(cycle 13) là **documentation expansion** thuần — KHÔNG đổi runtime,
+KHÔNG đổi `fail_under` (giữ 90).  PR1 thêm pre-baked case study
+`references/examples/01-otb-budget-module/` (11 file, OTB Budget cho
+Vietnamese retail finance), PR2 thêm `references/anti-patterns-gallery.md`
+(12 AP-XX với BAD/GOOD viz + Fix recipe + Detector), PR3 thêm
+`references/37-color-psychology.md` (7 industry palette + WCAG + VN
+cultural) + `references/38-font-pairing.md` (5 use-case stack + VN
+subset support).  Conformance probe count 87 → **91**, tests 1615 →
+**1695** (+80 từ 4 test file mới), public API surface 100 % stable.
+Phase 8 (future cycle 14+) sẽ polish `conformance_audit.py` 83% →
+≥95% (còn 203 miss lớn nhất, 91 probe function với exception-path
+coverage thiếu) + đưa `cli.py` / `deploy_orchestrator.py` trở lại
+scope qua subprocess test — mục tiêu global TOTAL ≥ 93%.  Mypy
+strict expand từ 9/44 module → 25+/44.  Optional RBAC multi-tenant
+nếu user demand.
 
 CI gate (xem `.github/workflows/ci.yml` step "pytest with coverage"):
 
