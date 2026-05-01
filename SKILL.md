@@ -19,8 +19,8 @@ description: >-
   / Fly / Render), F3 auto-commit hook + sensitive-file pre-write
   guard, F4 single-prompt /vibe router (14 tier-1 intents, VN+EN), F5
   VN error translator + VN faker, F6 CLAUDE.md auto-maintain (5
-  sections).  Ships on top of v0.7.1's 18 Claude-Code runtime patterns
-  and v0.10.x security hardening (11+3 permission bypass classes
+  sections).  Ships on top of the original 18 Claude-Code runtime
+  patterns + earlier security hardening (11+3 permission bypass classes
   closed, Unicode normalisation, sensitive-file guard).
 when_to_use: >-
   Activate at the start of any non-trivial engineering session: system design,
