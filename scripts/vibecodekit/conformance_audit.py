@@ -1945,6 +1945,49 @@ def _probe_vck_cso_classifier_wired(tmp: Path) -> Tuple[bool, str]:
     return False, "no vck-cso.md found in any candidate root"
 
 
+def _probe_case_study_otb_budget(tmp: Path) -> Tuple[bool, str]:
+    """#88 — Cycle 13 PR1: pre-baked case study `references/examples/
+    01-otb-budget-module/` exists with 11 expected files, and both
+    RRI-T + RRI-UX jsonl gates PASS through ``methodology.evaluate_*``.
+
+    File-existence alone is not sufficient — the probe re-runs both
+    runners on the shipped jsonl artefacts so a typo / drift in the
+    sample data is caught here rather than at downstream onboarding.
+    """
+    here = Path(__file__).resolve().parents[2]
+    cs = here / "references" / "examples" / "01-otb-budget-module"
+    required = [
+        "README.md",
+        "00-scan-report.md",
+        "01-rri-requirements.md",
+        "02-vision.md",
+        "03-blueprint.md",
+        "04-task-graph.md",
+        "07-rri-t-results.jsonl",
+        "08-rri-ux-results.jsonl",
+        "09-coverage-matrix.md",
+        "10-verify-report.md",
+    ]
+    missing = [f for f in required if not (cs / f).exists()]
+    if missing:
+        return False, f"missing: {missing}"
+    if not (cs / "05-tips").is_dir() or not any((cs / "05-tips").iterdir()):
+        return False, "missing 05-tips/ contents"
+    if (not (cs / "06-completion-reports").is_dir()
+            or not any((cs / "06-completion-reports").iterdir())):
+        return False, "missing 06-completion-reports/ contents"
+    try:
+        rt = methodology.evaluate_rri_t(cs / "07-rri-t-results.jsonl")
+        ru = methodology.evaluate_rri_ux(cs / "08-rri-ux-results.jsonl")
+    except Exception as exc:  # pragma: no cover — defensive
+        return False, f"evaluator raised: {type(exc).__name__}: {exc}"
+    if rt["gate"] != "PASS" or ru["gate"] != "PASS":
+        return False, (f"rri_t={rt['gate']} ({rt['reasons']}) "
+                       f"rri_ux={ru['gate']} ({ru['reasons']})")
+    return True, (f"rri_t=PASS ({rt['summary']['pass']}/{rt['summary']['total']}) "
+                  f"rri_ux=PASS ({ru['summary']['flow']}/{ru['summary']['total']})")
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -2048,6 +2091,8 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     # v0.15.2 — invariant guards for T4-completion (Bug #2 + #3)
     ("86_vck_review_classifier_wired",  _probe_vck_review_classifier_wired),
     ("87_vck_cso_classifier_wired",     _probe_vck_cso_classifier_wired),
+    # v0.22.0 (cycle 13) — documentation expansion probes
+    ("88_case_study_otb_budget",        _probe_case_study_otb_budget),
 ]
 
 
