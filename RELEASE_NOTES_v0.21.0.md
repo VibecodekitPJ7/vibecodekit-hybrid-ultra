@@ -12,7 +12,7 @@ Lần thứ hai liên tiếp kể từ Phase 5, floor `fail_under` lock đúng
 
 * Global TOTAL coverage: 85% → **90%** (+5pp).
 * `pyproject.toml [tool.coverage.report] fail_under` 85 → **90**.
-* 12 module gap lớn nhất sau cycle 11 đều ≥ 97%:
+* 13 module gap lớn nhất sau cycle 11 đều ≥ 97%:
 
 | Module | Trước | Sau |
 |--------|------:|----:|
