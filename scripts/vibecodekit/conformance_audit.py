@@ -1988,6 +1988,44 @@ def _probe_case_study_otb_budget(tmp: Path) -> Tuple[bool, str]:
                   f"rri_ux=PASS ({ru['summary']['flow']}/{ru['summary']['total']})")
 
 
+def _probe_anti_patterns_gallery_complete(tmp: Path) -> Tuple[bool, str]:
+    """#89 — Cycle 13 PR2: anti-pattern gallery có entry cho cả 12
+    canonical AP-XX với BAD/GOOD visualization + Fix recipe + Detector.
+
+    Cross-checks `methodology.anti_patterns_canonical()` so the gallery
+    cannot drift away from the API source-of-truth (every canonical AP
+    name must appear verbatim in the gallery body).
+    """
+    here = Path(__file__).resolve().parents[2]
+    gallery = here / "references" / "anti-patterns-gallery.md"
+    if not gallery.exists():
+        return False, "missing references/anti-patterns-gallery.md"
+    body = gallery.read_text(encoding="utf-8")
+    expected_ids = [f"AP-{i:02d}" for i in range(1, 13)]
+    missing_ids = [ap for ap in expected_ids if f"## {ap}" not in body]
+    if missing_ids:
+        return False, f"missing AP heading(s): {missing_ids}"
+    if body.count("BAD:") < 12 or body.count("GOOD:") < 12:
+        return False, (f"viz incomplete: BAD={body.count('BAD:')} "
+                       f"GOOD={body.count('GOOD:')}")
+    if body.count("Fix recipe") < 12:
+        return False, f"Fix recipe count={body.count('Fix recipe')} < 12"
+    if body.count("Detector") < 12:
+        return False, f"Detector count={body.count('Detector')} < 12"
+    canonical = methodology.anti_patterns_canonical()
+    canonical_ids = {entry["id"] for entry in canonical}
+    if canonical_ids != set(expected_ids):
+        return False, (f"canonical IDs drift: api={sorted(canonical_ids)} "
+                       f"vs gallery={expected_ids}")
+    name_drift = [
+        entry for entry in canonical
+        if entry["name"] not in body
+    ]
+    if name_drift:
+        return False, f"AP name drift (api → gallery): {[e['id'] for e in name_drift]}"
+    return True, f"12/12 AP entries ok (viz+recipe+detector); api in sync"
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -2093,6 +2131,7 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("87_vck_cso_classifier_wired",     _probe_vck_cso_classifier_wired),
     # v0.22.0 (cycle 13) — documentation expansion probes
     ("88_case_study_otb_budget",        _probe_case_study_otb_budget),
+    ("89_anti_patterns_gallery",        _probe_anti_patterns_gallery_complete),
 ]
 
 
