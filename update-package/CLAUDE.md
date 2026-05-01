@@ -136,7 +136,7 @@ Mirror surfaces: `update-package/VERSION`, `pyproject.toml`,
 ## Release gate
 
 Before shipping:
-1. `pytest tests/ -q` → 588/588 pass at v0.21.0 (full suite, run từ repo
+1. `pytest tests/ -q` → 1624/1624 pass at v0.21.0 (full suite, run từ repo
    root; the canonical count is whatever `pytest --collect-only -q | tail`
    reports for the current commit).  Bundled `tests/` trong zip chỉ là
    subset đại diện; đủ để smoke-test sau khi unzip nhưng CI gate là trên
