@@ -3,6 +3,13 @@
 > **Permission engine + scaffold + MCP server for AI coding agents — pure Python stdlib runtime.**
 > Use when an AI agent needs to audit shell commands through a 6-layer pipeline, scaffold a project from a preset, expose tools via Model Context Protocol, or run RRI / RRI-T / RRI-UX methodology gates.
 > Start at [`QUICKSTART.md`](QUICKSTART.md) or run `PYTHONPATH=./scripts python -m vibecodekit.cli demo` for an offline 2-second tour.
+>
+> 🇻🇳 **Người mới / không phải dev?** Đọc
+> [`docs/GUIDE_NONTECH_BEGINNER.md`](docs/GUIDE_NONTECH_BEGINNER.md) —
+> hướng dẫn step-by-step bằng tiếng Việt: chỉ cần mô tả dự án, tool tự
+> đi qua 8 bước (scan → RRI → vision → blueprint → task → code →
+> verify → ship) và sinh ra sản phẩm chạy được.  ~20 phút đọc, có
+> worked example "App quản lý chi tiêu gia đình" A→Z.
 
 > **Current release:** v0.22.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 91 conformance probes, …).
 >

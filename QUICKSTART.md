@@ -4,6 +4,12 @@
 > CLI lập trình (ChatGPT, Claude Code / Claw Code, Codex, Cursor) giúp biến
 > một dự án "mơ hồ" thành một pipeline 8 bước đo được.  Bản này cho bạn
 > khởi động trong 5 phút, không cần đọc hết 960 dòng `USAGE_GUIDE.md`.
+>
+> 🇻🇳 **Hoàn toàn mới và không phải dev?** Đọc
+> [`docs/GUIDE_NONTECH_BEGINNER.md`](docs/GUIDE_NONTECH_BEGINNER.md)
+> trước — bản tiếng Việt step-by-step, có worked example A→Z cho user
+> chỉ cần mô tả dự án, tool tự sinh code.  Quay lại quickstart này khi
+> bạn cần tham chiếu nhanh.
 
 ---
 
