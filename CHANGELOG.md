@@ -12,6 +12,71 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.22.0] — 2026-05-01
+
+Cycle 13 documentation expansion release — 100 % docs-only, không
+touch core runtime, không bump major.  Đáp ứng 3 follow-up gap được
+ghi nhận sau cycle 12 release.
+
+### Added
+
+- `references/examples/01-otb-budget-module/` — pre-baked case study
+  end-to-end (11 file: README, scan, RRI requirements, vision,
+  blueprint, task graph, 3 TIPs, 3 completion reports, RRI-T jsonl,
+  RRI-UX jsonl, coverage matrix, verify report).  Domain: OTB Budget
+  Module — Vietnamese retail finance, multi-store RBAC, Tết freeze.
+  Probe #88 cross-checks file presence + RRI-T/UX gate PASS qua
+  `methodology.evaluate_rri_t/ux()`.  PR #1.
+- `references/anti-patterns-gallery.md` — 12 AP-01..AP-12 visual
+  catalog với BAD/GOOD ASCII visualization + Fix recipe + Detector
+  snippet (504 dòng).  Probe #89 cross-checks gallery 1:1 với
+  `methodology.anti_patterns_canonical()` để bắt drift.  PR #2.
+- `references/37-color-psychology.md` — 7 industry-tuned palettes
+  (Finance / Healthcare / E-commerce / Education / SaaS B2B /
+  Government / Logistics) với WCAG contrast pair, Vietnamese
+  cultural color associations, color-blind safety, dark-mode mapping.
+  Probe #90.  PR #3.
+- `references/38-font-pairing.md` — 5 use-case font stacks
+  (Modern SaaS / Corporate / Editorial / Tech-forward / Friendly
+  consumer) với Vietnamese subset support, type scale, loading
+  strategy, fallback chain, 5 anti-patterns AP-VNF-01..05.
+  Probe #91.  PR #3.
+- 4 test file mới (~80 test): `test_case_study_otb_budget.py` (16),
+  `test_anti_patterns_gallery.py` (40), `test_color_psychology_appendix.py`
+  (~12), `test_font_pairing_appendix.py` (~12).
+
+### Changed
+
+- Conformance probe count 87 → **91** (+4 doc probes — 1 per artifact).
+- `VERSION` 0.21.0 → 0.22.0 (minor bump, non-breaking).
+
+### Unchanged
+
+- Public API surface (`methodology.__all__`) — 100 % stable.
+- Tất cả runtime module trong `scripts/vibecodekit/` (chỉ
+  `conformance_audit.py` thêm 3 probe entry).
+- Coverage floor 90 % giữ nguyên (docs-only, không impact runtime).
+- Ruff F401/F841/F811 clean, mypy strict 9 module 0 errors.
+- Demo speed ≤ 1.5 s baseline.
+
+### Files
+
+```
++ references/37-color-psychology.md
++ references/38-font-pairing.md
++ references/anti-patterns-gallery.md
++ references/examples/01-otb-budget-module/   (11 file)
++ tests/test_case_study_otb_budget.py
++ tests/test_anti_patterns_gallery.py
++ tests/test_color_psychology_appendix.py
++ tests/test_font_pairing_appendix.py
++ RELEASE_NOTES_v0.22.0.md
+M scripts/vibecodekit/conformance_audit.py    (+4 probe entries)
+M VERSION                                     (0.21.0 → 0.22.0)
+M CHANGELOG.md                                (this entry)
+M BENCHMARKS-METHODOLOGY.md                    (+Phase 7 entry)
+```
+
 ## [0.21.0] — 2026-04-30
 
 Coverage Phase 6 release — đẩy global TOTAL từ 85% → **90%** (spec

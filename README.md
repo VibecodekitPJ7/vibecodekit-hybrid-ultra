@@ -4,7 +4,7 @@
 > Use when an AI agent needs to audit shell commands through a 6-layer pipeline, scaffold a project from a preset, expose tools via Model Context Protocol, or run RRI / RRI-T / RRI-UX methodology gates.
 > Start at [`QUICKSTART.md`](QUICKSTART.md) or run `PYTHONPATH=./scripts python -m vibecodekit.cli demo` for an offline 2-second tour.
 
-> **Current release:** v0.21.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 87 conformance probes, …).
+> **Current release:** v0.22.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 91 conformance probes, …).
 >
 > **License:** MIT — see [`LICENSE`](LICENSE) and the third-party
 > attribution manifest [`LICENSE-third-party.md`](LICENSE-third-party.md).
@@ -18,7 +18,7 @@ PYTHONPATH=./scripts python -m vibecodekit.cli demo
 ```
 
 Runs 6 steps offline: doctor health-check, permission engine (classify 5
-commands), conformance audit (87 probes), scaffold preview, intent router,
+commands), conformance audit (91 probes), scaffold preview, intent router,
 and MCP selfcheck.  See [`examples/`](examples/) for standalone scripts.
 
 ## Skills inspired by gstack
@@ -81,7 +81,7 @@ Full walkthrough: [`USAGE_GUIDE.md` §18](USAGE_GUIDE.md#18-activation-cheat-she
 
 ## Layout
 
-**Surface inventory (v0.21.0)** — moved here from the opening to keep
+**Surface inventory (v0.22.0)** — moved here from the opening to keep
 the front matter focused on what the kit *does* rather than how many
 buttons it has:
 
@@ -102,7 +102,7 @@ buttons it has:
   hybrid lexical + embedding (default `hash-256`, offline).
 - **MCP integration** — stdio + inproc adapters; bundled selfcheck
   server (`vibecodekit.mcp_servers.selfcheck`).
-- **87 internal conformance probes** — see
+- **91 internal conformance probes** — see
   [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what
   these measure and what they explicitly do **not** claim (no
   HumanEval / MBPP / SWE-bench, no external benchmark, no API key
@@ -204,11 +204,11 @@ tham khảo dưới đây ứng với commit hiện tại trên nhánh `main` (x
 
 ```
 pytest                            : <N> passed                # at current main (see CHANGELOG.md)
-audit (×any)                      : 87/87 met=True[^bench]    # at current main (internal self-test)
+audit (×any)                      : 91/91 met=True[^bench]    # at current main (internal self-test)
 validate_release_matrix (default) : PASS
 ```
 
-[^bench]: Internal regression gate — see [BENCHMARKS-METHODOLOGY.md](BENCHMARKS-METHODOLOGY.md) for what the 87/87 number actually measures (architectural invariants only, not external code-quality benchmarks).
+[^bench]: Internal regression gate — see [BENCHMARKS-METHODOLOGY.md](BENCHMARKS-METHODOLOGY.md) for what the 91/91 number actually measures (architectural invariants only, not external code-quality benchmarks).
 
 Để lấy số chính xác cho bản đang ở local, chạy:
 
@@ -217,7 +217,7 @@ cat VERSION                                                  # ví dụ: 0.16.2
 VIBECODE_UPDATE_PACKAGE="$(pwd)/update-package" \
   PYTHONPATH=./scripts python3 -m pytest tests -q | tail -1  # số case pytest
 PYTHONPATH=./scripts python3 -m vibecodekit.conformance_audit \
-    --threshold 1.0 | head -1                                # ví dụ: parity: 100.00% (87/87, threshold 100%)
+    --threshold 1.0 | head -1                                # ví dụ: parity: 100.00% (91/91, threshold 100%)
 ```
 
 (Under `root`, the `test_install_into_readonly_dir` test is intentionally
@@ -275,12 +275,12 @@ Số ca pytest và số probe lớn dần theo từng release; bảng dưới đ
 phản ánh trạng thái **tại nhánh `main` hiện tại** (xem
 [`CHANGELOG.md`](CHANGELOG.md) cho lịch sử số liệu theo từng version,
 và [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) để biết
-"87/87" thực sự đo cái gì — không phải benchmark chất lượng ngoài).
+"91/91" thực sự đo cái gì — không phải benchmark chất lượng ngoài).
 
 | Gate | Result | What it measures |
 |---|---|---|
 | pytest (xem `pytest --collect-only -q \| tail`) | PASS | Unit + integration correctness |
-| conformance self-test | 87/87 met=True[^bench] | Internal regression invariants ([details](BENCHMARKS-METHODOLOGY.md)) |
+| conformance self-test | 91/91 met=True[^bench] | Internal regression invariants ([details](BENCHMARKS-METHODOLOGY.md)) |
 | validate_release_matrix (default) | PASS | Layout integrity across 3 deploy modes |
 | All 170 Cf codepoints × `rm -rf /` bypass | blocked | Permission engine coverage |
 
