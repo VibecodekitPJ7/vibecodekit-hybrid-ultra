@@ -114,8 +114,8 @@ chỉ test code + floor bump + docs.  Backward-compatible.
   `tools/sync_version.py`).
 
 ### Kết thúc cycle 12
-- 4/4 PR merged: PR1 (#15, task_runtime + module_workflow), PR2 (#16,
-  10 module polish), PR3 (this, release).
+- 3/3 PR merged: PR1 (#15, task_runtime + module_workflow), PR2 (#16,
+  12 module polish), PR3 (this, release).
 - 1624 passed (was 1451 end of cycle 11; +173 qua 2 PR test).
 - TOTAL 85 → **90%** (+5pp).
 - Conformance 87/87 met=True, ruff F401/F841/F811 clean, mypy strict
