@@ -12,6 +12,105 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.0] — 2026-04-30
+
+Coverage Phase 5 release — đẩy global TOTAL từ 80% → **85%** (spec
+Phase 5 target HIT lần đầu kể từ Phase 1).  PR1 + PR2 cycle 11 phủ
+8 module gap lớn nhất sau cycle 10:
+
+- `mcp_client.py` 62% → **90%** (+28pp).
+- `browser/cli_adapter.py` 33% → **99%** (+66pp).
+- `approval_contract.py` 66% → **100%** (+34pp).
+- `memory_retriever.py` 33% → **98%** (+65pp).
+- `recovery_engine.py` 58% → **98%** (+40pp).
+- `dashboard.py` 50% → **95%** (+45pp).
+- `mcp_servers/selfcheck.py` 23% → **95%** (+72pp).
+- `doctor.py` 68% → **94%** (+26pp).
+
+Global TOTAL: 80% → **85%** (+5pp).  Floor `fail_under` 80 →
+**85** — Phase 5 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 11 PR1)
+- `tests/test_mcp_client_and_cli_adapter.py` — 73 test phủ 2 module:
+  - `mcp_client.py`: manifest helpers (`load_manifest` / `save_manifest`
+    / `register_server` / `disable_server`), `_call_inproc` (5 case),
+    `_call_stdio_oneshot` (7 case), `_call_stdio_handshake` + dispatcher
+    (5 case), `_resolve` / `list_tools` / `call_tool` (12 case),
+    `StdioSession` (12 case: open idempotent / send-recv request / log-
+    noise skip / timeout / server exit / send-after-close / BrokenPipe
+    / initialize success+error / list_tools success+error / call_tool /
+    public request+notify / context manager / stderr_tail).  Strategy
+    mới: real `os.pipe()` fd cho selectors register (BytesIO fake bị
+    EPERM trong CI sandbox); monkeypatch `DefaultSelector.select` luôn
+    return synthetic ready event.
+  - `browser/cli_adapter.py`: `DaemonClient` (12 case: DaemonNotRunning
+    state missing/dead PID / state alive / `is_daemon_alive` /
+    health+command+shutdown HTTP roundtrip / shutdown URL fallback to
+    `clear_state` / `_send` URLError + empty body + invalid JSON), `main`
+    CLI (7 case: no args usage / health+shutdown+verb dispatch / k=v
+    extras parsing / DaemonNotRunning rc=3 / DaemonHttpError rc=4 /
+    default argv).  Monkeypatch `urllib.request.urlopen` qua
+    `_FakeUrlopen` context manager — không bind real socket.
+
+### Added (cycle 11 PR2)
+- `tests/test_phase5_module_polish.py` — 68 test phủ 6 module:
+  - `approval_contract.py` 24 test: `_validate_appr_id` reject path
+    traversal / non-string / short / accept canonical; `create` unknown
+    kind / unknown risk / default options / custom options + preview +
+    deadline / suggested fallback; `list_pending` filter resolved + skip
+    malformed; `get` invalid id → None / missing → None / merges
+    response / skips malformed response; `respond` invalid id / unknown
+    id / invalid choice / persists; `wait` invalid id / existing
+    response / timeout auto-deny / malformed response retry /
+    deadline_exceeded; `clear_resolved`.
+  - `memory_retriever.py` 9 test: `_strip_diacritics` (Tiếng Việt →
+    Tieng Viet), `tokenize` NFC + casefold + empty, `load_memories`
+    skip missing / split by markdown header / OSError swallowed;
+    `retrieve` rank by overlap + zero overlap → empty + respect limit.
+  - `recovery_engine.py` 7 test: `permission_denied` jump to
+    `surface_user_decision` (idempotent) / `context_overflow` +
+    `prompt_too_large` jump to `compact_then_retry` / full ladder walk
+    (LEVELS) / terminal_error after exhausted / reset / to_dict /
+    `_main` CLI smoke.
+  - `dashboard.py` 7 test: `summarise` empty / with events / malformed
+    jsonl / `denials.json` read + corrupted swallowed; `_main` smoke +
+    `--json` mode.
+  - `mcp_servers/selfcheck.py` 13 test: `ping` / `echo` / `now`;
+    `_handle` initialize / initialized notification / tools.list /
+    tools.call ok+unknown+bad-args+runtime-error / shutdown / unknown
+    method / unknown notification silent; `_main` loop với parse-error
+    envelope rid=None.
+  - `doctor.py` 8 test: empty dir / installed-only fail nonzero /
+    skill_repo layout detected via `update-package/` / advisory present
+    trong root / runtime placeholder warns / runtime assets missing
+    warns / `_main` smoke + installed-only nonzero exit.
+
+### Changed (cycle 11 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 80 → **85** (Phase 5).  Lock spec Phase 5 target 85%.
+  Sau cycle 11 PR1 + PR2 phủ thêm 141 stmt mới (32 mcp_client + 62
+  cli_adapter + 42 approval_contract + 35 memory_retriever + 18
+  recovery_engine + 30 dashboard + 48 selfcheck + 16 doctor) → TOTAL
+  82 → **85%**.  Floor lock spec target — KHÔNG còn pragmatic gap.
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 cập nhật Coverage gate Phase 5:
+  Phase 1 (cycle 6 PR3): tool_executor ≥80% + floor 60.
+  Phase 2a (cycle 7 PR2): vn_faker / vn_error_translator / team_mode
+  ≥80% + floor 70.
+  Phase 2b (cycle 8 PR2): vn_error_translator polish 76 → 80% + floor
+  72 (pragmatic).
+  Phase 3 (cycle 9): memory_writeback / manifest_llm / auto_writeback
+  0% → 100% + floor 76 (pragmatic).
+  Phase 4 (cycle 10): hook_interceptor 33→98 + auto_commit_hook 40→99
+  + browser/manager 0→100 + floor 80 (spec HIT).
+  **Phase 5 (cycle 11)**: mcp_client 62→90 + cli_adapter 33→99 +
+  approval_contract 66→100 + 5 module polish + floor 85 (spec HIT).
+- `RELEASE_NOTES_v0.20.0.md` (file mới): tóm tắt Phase 5, upgrade
+  guide, deprecations (`permission_engine.decide()` dict-return shape
+  vẫn nguyên trạng), known limitations (TOTAL còn ~15% chưa cover —
+  chủ yếu `conformance_audit.py` 217 miss + `task_runtime.py` 114 miss
+  + `module_workflow.py` 80 miss + browser/server 0%; defer Phase 6).
+
 ## [0.19.0] — 2026-04-30
 
 Coverage Phase 4 release — phủ test cho 3 module hook + browser còn
