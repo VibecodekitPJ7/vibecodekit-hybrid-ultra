@@ -1,15 +1,15 @@
 ---
-description: Single-prompt master router — type free-form prose to dispatch to the right /vibe-* command
-version: 0.11.3
+description: Single-prompt master router — type free-form prose to dispatch to the right /vibe-* command (LLM-primary, Python fallback)
+version: 0.23.0
 allowed-tools: [Bash, Read]
 ---
 
 # /vibe
 
 The friendly entrypoint.  Type a free-form prose request in **Vietnamese
-or English** and the router will resolve it to one (or more) of the 25
-flat `/vibe-*` commands.  All flat commands stay 100 % backward-compatible
-— power users can keep using them directly.
+or English** and the host LLM (you) will resolve it to one (or more) of
+the 25 flat `/vibe-*` commands.  All flat commands stay 100 %
+backward-compatible — power users can keep using them directly.
 
 ## Usage
 
@@ -30,23 +30,80 @@ flat `/vibe-*` commands.  All flat commands stay 100 % backward-compatible
 /vibe tư vấn kiến trúc microservices
 ```
 
-## How it routes
+## How it routes — LLM-primary, Python fallback
 
-The router applies a **hybrid** strategy:
+This command runs **on the host LLM (you)** — keep that in mind.  You
+have full NLP capability, so you classify the prose **directly** rather
+than delegating to a brittle keyword matcher.  The Python keyword router
+remains as a deterministic **fallback** for cases where you are unsure
+or want a stable golden-set check.
 
-1. **Pipeline triggers** — high-level goals like `"shop online"`,
-   `"landing page"`, `"ra mắt sản phẩm"` expand to the canonical
-   pipeline `SCAN → VISION → RRI → BUILD → VERIFY`.
-2. **Tier-1 keyword scoring** — 14 intents (SCAN / VISION / RRI / RRI-T
-   / RRI-UX / RRI-UI / BUILD / VERIFY / SHIP / MAINTAIN / ADVISOR /
-   MEMORY / DOCTOR / DASHBOARD), each with VN + EN trigger phrases
-   including diacritics-stripped variants (`loi roi fix giup`).
-3. **Multi-intent expansion** — multiple intents above the high-conf
-   threshold fan out to a sequence of commands in canonical order.
-4. **Clarification fallback** — under the low-conf threshold the router
-   asks 1 clarifying question (VN + EN) with 4 suggested intents.
+### Step 1 — Classify the prose (you, the LLM, do this)
 
-## Programmatic API
+Map the user's prose to one or more of the **14 intents** (canonical
+order = pipeline order):
+
+| #  | Intent      | Slash command       | When to pick                                                  |
+|:---|:------------|:--------------------|:--------------------------------------------------------------|
+| 1  | `SCAN`      | `/vibe-scan`        | repo exploration, security scan, needs-discovery              |
+| 2  | `VISION`    | `/vibe-vision`      | brand, design vision, concept, định hướng                     |
+| 3  | `RRI`       | `/vibe-rri`         | reverse-interview requirements, verify yêu cầu                |
+| 4  | `RRI-T`     | `/vibe-rri-t`       | testing matrix, stress axes, ma trận test                     |
+| 5  | `RRI-UX`    | `/vibe-rri-ux`      | UX flow, flow-physics, luồng người dùng                       |
+| 6  | `RRI-UI`    | `/vibe-rri-ui`      | UI design system, design tokens, thiết kế UI                  |
+| 7  | `BUILD`     | `/vibe-scaffold`    | scaffold project, build app, tạo dự án                        |
+| 8  | `VERIFY`    | `/vibe-verify`      | adversarial QA gate, audit chất lượng, kiểm tra code          |
+| 9  | `SHIP`      | `/vibe-ship`        | deploy, release, lên production, ra mắt                       |
+| 10 | `MAINTAIN`  | `/vibe-task`        | upgrade dependency, refactor, nâng cấp, fix lỗi               |
+| 11 | `ADVISOR`   | `/vibe-tip`         | architecture advice, tư vấn kiến trúc, hỏi best practice      |
+| 12 | `MEMORY`    | `/vibe-memory`      | update CLAUDE.md, ghi nhớ, retrieve memory                    |
+| 13 | `DOCTOR`    | `/vibe-doctor`      | health check, chẩn đoán môi trường, overlay sanity            |
+| 14 | `DASHBOARD` | `/vibe-dashboard`   | runtime event summary, xem dashboard                          |
+
+**Pipeline expansion** — if the prose describes a holistic build goal
+("shop online", "landing page", "ra mắt sản phẩm", "build me an MVP"),
+expand to the canonical pipeline:
+
+```
+SCAN → VISION → RRI → BUILD → VERIFY
+```
+
+### Step 2 — Dispatch in canonical order
+
+Output the slash commands in pipeline order (the table above), one per
+line, prefixed with `/vibe-` or `/vibe-rri-*` etc.
+
+### Step 3 — Fallback when unsure
+
+If you cannot confidently classify (the prose is ambiguous, contains
+unfamiliar synonyms, or you want a deterministic check before
+dispatching), run the Python keyword router as fallback:
+
+```bash
+python -m vibecodekit.cli intent route "<original prose>"
+```
+
+It returns the slash-command list in JSON form (deterministic, fast,
+offline).  You can either accept its output or ask the user a
+clarifying question if the router emits a `Clarification`.
+
+### Why LLM-primary?
+
+- **Semantic understanding** — you handle synonyms, context, and
+  free-form Vietnamese natively.  The Python router is limited to
+  ~140 enumerated trigger phrases.
+- **Context-aware** — you remember the recent conversation; the
+  Python router is stateless.
+- **Multi-language native** — you speak both VN and EN fluently
+  without a hand-curated phrase table.
+- **No reinvention** — the Python keyword router stays as a fast
+  deterministic shortcut for CLI / CI / MCP clients that don't have an
+  LLM available.
+
+## Programmatic API (unchanged, for CLI / CI / MCP)
+
+The Python `IntentRouter` class is **back-compat 100 %** for non-LLM
+contexts:
 
 ```bash
 python -m vibecodekit.cli intent classify "làm shop online"
@@ -61,22 +118,34 @@ print(r.route(match))   # ['/vibe-scan', '/vibe-vision', '/vibe-rri', '/vibe-sca
 print(r.explain(match)) # 'Đã hiểu ý bạn (95% chắc chắn). Sẽ chạy: …'
 ```
 
-## Examples
+Use this when:
+- Running outside an LLM context (CLI scripts, batch jobs, CI).
+- Serving an MCP client that does its own dispatch.
+- Writing golden tests that need deterministic output.
+- Privacy-sensitive contexts where prose must stay local.
 
-| Prose | Routed to |
-|---|---|
-| `phân tích nhu cầu` | `/vibe-scan` |
-| `xem tầm nhìn` | `/vibe-vision` |
-| `audit chất lượng code` | `/vibe-verify` |
-| `deploy lên production` | `/vibe-ship` |
-| `scaffold landing page` | `/vibe-scaffold` |
-| `nâng cấp Next.js 15` | `/vibe-task` |
-| `tư vấn kiến trúc` | `/vibe-tip` |
-| `update CLAUDE.md` | `/vibe-memory` |
-| `chẩn đoán môi trường` | `/vibe-doctor` |
-| `xem dashboard` | `/vibe-dashboard` |
+## Examples (LLM classification)
 
-See `USAGE_GUIDE.md` §16.1 for the full keyword table and `IntentRouter` Python API.
+| Prose                                       | Routed to                                                          |
+|---------------------------------------------|--------------------------------------------------------------------|
+| `phân tích nhu cầu`                         | `/vibe-scan`                                                       |
+| `xem tầm nhìn`                              | `/vibe-vision`                                                     |
+| `audit chất lượng code`                     | `/vibe-verify`                                                     |
+| `deploy lên production`                     | `/vibe-ship`                                                       |
+| `scaffold landing page`                     | `/vibe-scaffold`                                                   |
+| `nâng cấp Next.js 15`                       | `/vibe-task`                                                       |
+| `tư vấn kiến trúc`                          | `/vibe-tip`                                                        |
+| `update CLAUDE.md`                          | `/vibe-memory`                                                     |
+| `chẩn đoán môi trường`                      | `/vibe-doctor`                                                     |
+| `xem dashboard`                             | `/vibe-dashboard`                                                  |
+| `làm shop online bán cà phê`                | `/vibe-scan` → `/vibe-vision` → `/vibe-rri` → `/vibe-scaffold` → `/vibe-verify` |
+| `ra mắt sản phẩm landing page mới`          | `/vibe-scan` → `/vibe-vision` → `/vibe-rri` → `/vibe-scaffold` → `/vibe-verify` |
+| `tinh chỉnh và đẩy lên production`          | `/vibe-refine` → `/vibe-ship`                                      |
+| `kiểm tra bảo mật và review code`           | `/vibe-scan` → `/vck-review`                                       |
+| `doctor selfcheck rồi tinh chỉnh polish nhẹ`| `/vibe-doctor` → `/vibe-refine`                                    |
+
+See `references/39-intent-routing-llm-primary.md` for the full design
+and decision log.
 
 ## Verb front-door (PR5+, song ngữ)
 
@@ -96,7 +165,7 @@ EN: In addition to free-form prose, type `/vibe <verb>` for one of
 | `review` | `/vck-review`       | adversarial 7-specialist review       | adversarial multi-specialist    |
 | `qa`     | `/vck-qa`           | real-browser QA checklist + fix loop  | real-browser QA + fix loop      |
 | `ship`   | `/vck-ship`         | test → review → commit → push → PR    | test → review → commit → push → PR |
-| `audit`  | `/vibe-audit`       | 87-probe internal self-test           | 87-probe internal regression    |
+| `audit`  | `/vibe-audit`       | 91-probe internal self-test           | 91-probe internal regression    |
 | `doctor` | `/vibe-doctor`      | kiểm tra overlay cài đúng             | overlay health check            |
 
 ```bash
@@ -116,3 +185,4 @@ Verb không hợp lệ (vd. `vibe verb bogus`) trả exit code 2 + thông báo
 
 - `ai-rules/vibecodekit/references/00-overview.md`
 - `ai-rules/vibecodekit/references/30-vibecode-master.md`
+- `ai-rules/vibecodekit/references/39-intent-routing-llm-primary.md` (new — design log)
