@@ -1,35 +1,64 @@
-"""Single-prompt intent router (v0.11.0, Phase β — F4).
+"""Single-prompt intent router (introduced v0.11.0, Phase β — F4;
+docstring last verified against impl in v0.23.0).
 
-Implements the ``/vibe <prose>`` master command — a friendly entrypoint
-that takes free-form Vietnamese OR English prose and resolves it to one
-(or more) of the existing 25 ``/vibe-*`` slash commands.  The 25 flat
-commands stay 100 % backward-compatible; ``/vibe`` is an *additive*
-shortcut for non-power users.
+Implements the **fallback** branch of the ``/vibe <prose>`` master
+command — a deterministic keyword router that resolves free-form
+Vietnamese OR English prose to one (or more) of the ``/vibe-*`` slash
+commands.
 
-Inspired by taw-kit's ``/taw`` two-tier router, extended with:
+Since v0.23.0 the **primary** classification path runs on the host LLM
+(Claude Code, Cursor, Codex) — see ``.claude/commands/vibe.md`` and
+``references/39-intent-routing-llm-primary.md``.  This Python class
+remains the canonical fallback for non-LLM contexts:
 
-- **Hybrid match:** keyword first (deterministic, fast); cosine
-  similarity on `HashEmbeddingBackend` as a tie-breaker.
-- **Confidence threshold + clarifying-question fallback** — if no
-  intent crosses the threshold, the router emits a structured
-  ``Clarification`` instead of guessing.
-- **Multi-intent expansion** — "scan + vision + build" fans out to a
-  pipeline of slash commands in the right order.
-- **Vietnamese-first** trigger phrases (taw pattern), with English
-  parallel triggers for kit's existing user base.
+- **CLI / batch jobs** — ``python -m vibecodekit.cli intent route …``.
+- **CI / golden-test stability** — deterministic output across runs.
+- **MCP clients** — ``mcp_servers/core.py`` exposes the router.
+- **Privacy** — prose never leaves the local process.
+
+Strategy
+========
+
+The router is a **pure keyword matcher** with a small confidence
+heuristic.  No machine learning, no embeddings, no LLM calls.
+
+1. **Pipeline triggers** — high-level phrases (e.g. ``"shop online"``,
+   ``"landing page"``, ``"ra mắt sản phẩm"``) expand to the canonical
+   build pipeline ``SCAN → VISION → RRI → BUILD → VERIFY``.
+2. **Tier-1 keyword scoring** — for each intent, count how many trigger
+   phrases appear in the normalised text (lowercased + diacritics
+   stripped).  Score = ``min(1.0, 0.4 + 0.05·#matched + 0.01·longest)``.
+3. **Multi-intent expansion** — if more than one intent crosses the
+   ``HIGH_CONF`` threshold (default 0.55), keep them all in the
+   canonical pipeline order.
+4. **Clarification fallback** — if the top score is below the
+   ``LOW_CONF`` threshold (default 0.30), or if the prose contains a
+   help-seeking marker ("không biết", "kiểu nào"), the router emits a
+   structured ``Clarification`` (VN + EN question) instead of guessing.
+
+Inspired by taw-kit's ``/taw`` two-tier router; the diacritics-aware
+Vietnamese trigger table is the main extension.
+
+.. note::
+   The original docstring claimed a ``HashEmbeddingBackend`` cosine
+   similarity tie-breaker, but no such code path was ever implemented.
+   The drift was removed in v0.23.0 (PR α-2 of the LLM-primary intent
+   routing migration).  A contract test
+   (``tests/test_intent_router_docstring_contract.py``) now asserts
+   this docstring matches the implementation.
 
 Public API::
 
     >>> r = IntentRouter()
     >>> match = r.classify("làm cho tôi shop online bán cà phê")
     >>> match.intents
-    ['SCAN', 'VISION', 'RRI', 'BUILD']
+    ('SCAN', 'VISION', 'RRI', 'BUILD', 'VERIFY')
     >>> r.route(match)
-    ['/vibe-scan', '/vibe-vision', '/vibe-rri', '/vibe-build']
+    ['/vibe-scan', '/vibe-vision', '/vibe-rri', '/vibe-scaffold', '/vibe-verify']
 
 The router is **stateless**.  It does not invoke commands itself; it
-returns the ordered slash-command sequence so the caller (Claude Code
-hook, CLI) can dispatch.
+returns the ordered slash-command sequence so the caller (host LLM,
+CLI, MCP server, hook) can dispatch.
 """
 from __future__ import annotations
 
