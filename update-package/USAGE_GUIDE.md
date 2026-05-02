@@ -1,10 +1,10 @@
-# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.22.0)
+# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.23.0)
 
 Bộ kit đầy đủ để build dự án theo phương pháp **VIBECODE-MASTER** với **Full
-Agentic OS** runtime (91 internal conformance probes at v0.22.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
+Agentic OS** runtime (92 internal conformance probes at v0.23.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
 actionable tests pass từ repo root; bundled `tests/` trong skill zip chứa
 một subset đại diện để user smoke-test sau khi extract — xem §15.10).
-Bản này ứng với **v0.22.0** (hiện hành — xem `CHANGELOG.md` cho
+Bản này ứng với **v0.23.0** (hiện hành — xem `CHANGELOG.md` cho
 lịch sử các bản trước, mỗi entry kèm link PR + finding khoá lại):
 
 - **v0.16.1** — doc coherence + recheck cleanup (PR #16, this release)
@@ -369,7 +369,7 @@ slash command trong `.claude/commands/` sẵn sàng.
 | `/vibe-rri-ui` | Bước 7 — pipeline 4-phase cho UI. |
 | `/vibe-verify` | Đóng báo cáo verify. |
 | `/vibe-complete` | Completion Report. |
-| `/vibe-audit` | Chạy 91 conformance probes (at v0.22.0). |
+| `/vibe-audit` | Chạy 92 conformance probes (at v0.23.0). |
 | `/vibe-doctor` | Chẩn đoán sức khỏe cài đặt. |
 | `/vibe-dashboard` | Dashboard runtime. |
 | `/vibe-permission <cmd>` | Hỏi permission engine có allow lệnh không. |
@@ -1224,7 +1224,7 @@ vibe dashboard
 
 #### 19.3 `vibe audit`
 
-Chạy 91 conformance probe.  Default threshold = 0.85; release gate
+Chạy 92 conformance probe.  Default threshold = 0.85; release gate
 ở 1.0 (xem §25).
 
 ```bash
@@ -1488,7 +1488,7 @@ vibe manifest emit > manifest.json     # ghi file
 ```
 
 Manifest gồm metadata: 42 slash commands, 7 agents, 33 hook events,
-91 probes, version, build hash.
+92 probes, version, build hash.
 
 #### 19.20 `vibe refine`
 

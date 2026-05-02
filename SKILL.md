@@ -1,6 +1,6 @@
 ---
 name: vibecodekit-hybrid-ultra
-version: 0.22.0
+version: 0.23.0
 description: >-
   Full Agentic-OS overlay for Claude Code / Devin / Cursor projects with
   the VIBECODE-MASTER methodology layer on top.  Verified by an internal
@@ -198,14 +198,14 @@ Closes the structural wiring gaps surfaced by the v0.11.2 deep-dive:
   Exposed via `methodology.COPY_PATTERNS` (9) + `COPY_PATTERNS_VN` (8).
 * Conformance audit at that time expanded to **50 probes** at 100 %
   threshold (probes #48/#49/#50 added).  Current release runs the
-  87-probe internal self-test — see `CHANGELOG.md` for the per-version
+  92-probe internal self-test — see `CHANGELOG.md` for the per-version
   delta and `BENCHMARKS-METHODOLOGY.md` for what the self-test measures
   (and does not measure).
 
 > 📌 The table and prose below describe **how the kit evolved** — each row
 > lists the version a subsystem was *originally introduced*, not the version
 > it currently runs.  The shipping runtime is whatever [`VERSION`](VERSION) reports at current main (xem [`CHANGELOG.md`](CHANGELOG.md)); every subsystem
-> below is active, hardened, and covered by the 87-probe internal
+> below is active, hardened, and covered by the 92-probe internal
 > conformance self-test plus supporting tests (note: this is an internal
 > regression guard, not an external quality benchmark — see
 > [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md)).
@@ -237,7 +237,7 @@ release:
 | L | Structured notifications (lock) |      v0.9 | `task_runtime.py`     | 30    |
 
 The conformance audit (`python -m vibecodekit.cli audit`) now runs
-**87 internal regression probes** at current main (30 OS + methodology +
+**92 internal regression probes** at current main (30 OS + methodology +
 packaging/wiring + integration invariants) — an internal self-test
 that verifies the runtime has not regressed against its own
 specification (see [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md)

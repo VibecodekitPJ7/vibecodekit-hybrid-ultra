@@ -841,9 +841,16 @@ def _probe_intent_routing_llm_primary_doc(tmp: Path) -> Tuple[bool, str]:
         return False, f"design log missing concepts: {missing_concepts}"
 
     # 2. vibe.md slash-command spec instructs the LLM to classify.
-    vibe_md = here / "update-package" / ".claude" / "commands" / "vibe.md"
-    if not vibe_md.exists():
-        return False, "missing update-package/.claude/commands/vibe.md"
+    # Two layouts to support:
+    #   L1 (source repo):    here / update-package / .claude / commands / vibe.md
+    #   L3 (installed proj): here / .. / .. / .claude / commands / vibe.md   (update-package was extracted into proj root)
+    vibe_md_candidates = (
+        here / "update-package" / ".claude" / "commands" / "vibe.md",
+        here.parent.parent / ".claude" / "commands" / "vibe.md",
+    )
+    vibe_md = next((p for p in vibe_md_candidates if p.exists()), None)
+    if vibe_md is None:
+        return False, "missing .claude/commands/vibe.md"
     vibe_body = vibe_md.read_text(encoding="utf-8")
     vibe_required = (
         "LLM-primary",
