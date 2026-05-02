@@ -35,6 +35,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Tuple
 
+from ._registry import probe
+
 from ._helpers import find_slash_command as _find_slash_command
 
 
@@ -44,6 +46,7 @@ _VCK_COMMANDS = (
 )
 
 
+@probe("51_command_context_wiring", group="assets")
 def _probe_command_context_wiring(tmp: Path) -> Tuple[bool, str]:
     """v0.11.3 / Patch A — slash commands have wired references that load."""
     from .. import methodology as m
@@ -68,6 +71,7 @@ def _probe_command_context_wiring(tmp: Path) -> Tuple[bool, str]:
     return True, f"render_command_context OK ({len(wired)} wired commands, ref+dynamic)"
 
 
+@probe("52_command_agent_binding", group="assets")
 def _probe_command_agent_binding(tmp: Path) -> Tuple[bool, str]:
     """v0.11.3 / Patch B — slash commands resolve to a default agent."""
     from .. import subagent_runtime
@@ -99,6 +103,7 @@ def _probe_command_agent_binding(tmp: Path) -> Tuple[bool, str]:
     return True, f"{len(expected)} bindings + frontmatter override + spawn OK"
 
 
+@probe("53_skill_paths_activation", group="assets")
 def _probe_skill_paths_activation(tmp: Path) -> Tuple[bool, str]:
     """v0.11.3 / Patch C — SKILL.md paths: globs activate skill on touched files.
 
@@ -129,6 +134,7 @@ def _probe_skill_paths_activation(tmp: Path) -> Tuple[bool, str]:
     return True, f"{len(cases)}/{len(cases)} path activations correct"
 
 
+@probe("54_browser_state_atomic", group="assets")
 def _probe_browser_state_atomic(tmp: Path) -> Tuple[bool, str]:
     """#54 — state file is written atomically at 0o600."""
     import os
@@ -146,6 +152,7 @@ def _probe_browser_state_atomic(tmp: Path) -> Tuple[bool, str]:
     return True, "atomic 0o600 write confirmed"
 
 
+@probe("55_browser_idle_timeout_default", group="assets")
 def _probe_browser_idle_timeout_default(tmp: Path) -> Tuple[bool, str]:
     """#55 — idle-timeout default is exactly 30 minutes."""
     from .. import browser
@@ -155,6 +162,7 @@ def _probe_browser_idle_timeout_default(tmp: Path) -> Tuple[bool, str]:
     return True, "idle-timeout default = 30 min"
 
 
+@probe("56_browser_port_selection", group="assets")
 def _probe_browser_port_selection(tmp: Path) -> Tuple[bool, str]:
     """#56 — port selection picks a free port in the documented range."""
     from .. import browser
@@ -165,6 +173,7 @@ def _probe_browser_port_selection(tmp: Path) -> Tuple[bool, str]:
     return True, f"selected free port {port} in [{low}, {high})"
 
 
+@probe("57_browser_cookie_path", group="assets")
 def _probe_browser_cookie_path(tmp: Path) -> Tuple[bool, str]:
     """#57 — cookie path round-trips through state.json."""
     import os
@@ -180,6 +189,7 @@ def _probe_browser_cookie_path(tmp: Path) -> Tuple[bool, str]:
     return True, "cookie path persists across read/write"
 
 
+@probe("58_browser_permission_routed", group="assets")
 def _probe_browser_permission_routed(tmp: Path) -> Tuple[bool, str]:
     """#58 — every browser command routes through permission_engine.classify_cmd."""
     from .. import browser
@@ -191,6 +201,7 @@ def _probe_browser_permission_routed(tmp: Path) -> Tuple[bool, str]:
     return True, f"permission classified browser:goto → {klass}"
 
 
+@probe("59_browser_envelope_wrap", group="assets")
 def _probe_browser_envelope_wrap(tmp: Path) -> Tuple[bool, str]:
     """#59 — untrusted snapshot content is envelope-wrapped."""
     from .. import browser
@@ -203,6 +214,7 @@ def _probe_browser_envelope_wrap(tmp: Path) -> Tuple[bool, str]:
     return True, "untrusted envelope wrap + idempotent"
 
 
+@probe("60_browser_hidden_strip", group="assets")
 def _probe_browser_hidden_strip(tmp: Path) -> Tuple[bool, str]:
     """#60 — aria-hidden / display:none subtrees are stripped."""
     from .. import browser
@@ -220,6 +232,7 @@ def _probe_browser_hidden_strip(tmp: Path) -> Tuple[bool, str]:
     return True, "aria-hidden subtree stripped"
 
 
+@probe("61_browser_bidi_sanitisation", group="assets")
 def _probe_browser_bidi_sanitisation(tmp: Path) -> Tuple[bool, str]:
     """#61 — RTL overrides / zero-width joiners are removed from page text."""
     from .. import browser
@@ -229,6 +242,7 @@ def _probe_browser_bidi_sanitisation(tmp: Path) -> Tuple[bool, str]:
     return True, "bidi/zwj characters stripped"
 
 
+@probe("62_browser_url_blocklist", group="assets")
 def _probe_browser_url_blocklist(tmp: Path) -> Tuple[bool, str]:
     """#62 — URL blocklist refuses IMDS / file:/ / javascript: etc."""
     from .. import browser
@@ -248,6 +262,7 @@ def _probe_browser_url_blocklist(tmp: Path) -> Tuple[bool, str]:
     return True, f"blocklist rejected {len(bad)} dangerous URLs; loopback allowed"
 
 
+@probe("63_vck_commands_present", group="assets")
 def _probe_vck_commands_present(tmp: Path) -> Tuple[bool, str]:
     """#63 — all 7 /vck-* slash commands ship as markdown files."""
     here = Path(__file__).resolve()
@@ -264,6 +279,7 @@ def _probe_vck_commands_present(tmp: Path) -> Tuple[bool, str]:
     return True, f"all {len(found)} /vck-* commands locatable"
 
 
+@probe("64_vck_frontmatter_attribution", group="assets")
 def _probe_vck_command_frontmatter_attribution(tmp: Path) -> Tuple[bool, str]:
     """#64 — every /vck-* command carries the gstack attribution frontmatter."""
     here = Path(__file__).resolve()
@@ -282,6 +298,7 @@ def _probe_vck_command_frontmatter_attribution(tmp: Path) -> Tuple[bool, str]:
     return True, f"attribution frontmatter present on all {checked} /vck-* commands"
 
 
+@probe("65_vck_agents_registered", group="assets")
 def _probe_vck_agents_registered(tmp: Path) -> Tuple[bool, str]:
     """#65 — reviewer + qa-lead agents are in subagent_runtime PROFILES."""
     from .. import subagent_runtime as sr
@@ -295,6 +312,7 @@ def _probe_vck_agents_registered(tmp: Path) -> Tuple[bool, str]:
     return True, "reviewer + qa-lead profiles registered read-only"
 
 
+@probe("66_vck_command_agent_binding", group="assets")
 def _probe_vck_command_agent_binding(tmp: Path) -> Tuple[bool, str]:
     """#66 — /vck-* commands bind to the right agent roles."""
     from .. import subagent_runtime as sr
@@ -313,6 +331,7 @@ def _probe_vck_command_agent_binding(tmp: Path) -> Tuple[bool, str]:
     return True, f"/vck-* commands bind correctly ({len(want)} checked)"
 
 
+@probe("67_vck_license_attribution", group="assets")
 def _probe_vck_license_attribution(tmp: Path) -> Tuple[bool, str]:
     """#67 — LICENSE + LICENSE-third-party.md exist and attribute gstack.
 
@@ -358,6 +377,7 @@ def _probe_vck_license_attribution(tmp: Path) -> Tuple[bool, str]:
     )
 
 
+@probe("68_classifier_ensemble_contract", group="assets")
 def _probe_classifier_ensemble_contract(tmp: Path) -> Tuple[bool, str]:
     """#68 — ensemble never returns a non {allow, deny} verdict and always
     renders a synthetic permission-engine command so classifier decisions
@@ -375,6 +395,7 @@ def _probe_classifier_ensemble_contract(tmp: Path) -> Tuple[bool, str]:
     return True, f"verdict={res.verdict.decision}, class={klass}"
 
 
+@probe("69_classifier_regex_rule_bank", group="assets")
 def _probe_classifier_regex_rule_bank(tmp: Path) -> Tuple[bool, str]:
     """#69 — rule bank contains at least one rule in each kind
     (prompt_injection, secret_leak, exfil) and every rule has a unique id."""
@@ -389,6 +410,7 @@ def _probe_classifier_regex_rule_bank(tmp: Path) -> Tuple[bool, str]:
     return True, f"{len(ids)} rules across {len(kinds)} kinds"
 
 
+@probe("70_classifier_blocks_prompt_injection", group="assets")
 def _probe_classifier_blocks_prompt_injection(tmp: Path) -> Tuple[bool, str]:
     """#70 — classic prompt-injection strings trigger ``deny``."""
     from .. import security_classifier

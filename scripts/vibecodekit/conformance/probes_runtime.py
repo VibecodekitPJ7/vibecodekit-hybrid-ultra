@@ -46,6 +46,8 @@ import json
 from pathlib import Path
 from typing import Tuple
 
+from ._registry import probe
+
 from .. import (
     approval_contract,
     compaction,
@@ -67,12 +69,14 @@ from .. import (
 
 
 # Each probe returns (ok: bool, detail: str)
+@probe("01_async_generator_loop", group="runtime")
 def _probe_async_generator(tmp: Path) -> Tuple[bool, str]:
     plan = {"turns": [{"tool_uses": [{"tool": "list_files", "input": {"path": "."}}]}]}
     out = query_loop.run_plan(plan, root=str(tmp))
     return (out["stop_reason"] == "plan_exhausted", f"stop={out['stop_reason']}")
 
 
+@probe("02_derived_needs_follow_up", group="runtime")
 def _probe_derived_follow_up(tmp: Path) -> Tuple[bool, str]:
     plan = {"turns": [
         {"tool_uses": [{"tool": "read_file", "input": {"path": "does_not_exist.txt"}}]},
@@ -86,6 +90,7 @@ def _probe_derived_follow_up(tmp: Path) -> Tuple[bool, str]:
             f"follow_ups={follow_ups}")
 
 
+@probe("03_escalating_recovery", group="runtime")
 def _probe_escalating_recovery(tmp: Path) -> Tuple[bool, str]:
     ledger = recovery_engine.RecoveryLedger()
     actions = [ledger.escalate("tool_failed")["action"] for _ in range(len(recovery_engine.LEVELS))]
@@ -93,6 +98,7 @@ def _probe_escalating_recovery(tmp: Path) -> Tuple[bool, str]:
             f"ladder={actions}")
 
 
+@probe("04_concurrency_partitioning", group="runtime")
 def _probe_concurrency_partition(tmp: Path) -> Tuple[bool, str]:
     blocks = [
         {"tool": "read_file", "input": {"path": "a"}},
@@ -106,6 +112,7 @@ def _probe_concurrency_partition(tmp: Path) -> Tuple[bool, str]:
     return (ok, f"batches={[(b['safe'], len(b['blocks'])) for b in batches]}")
 
 
+@probe("05_streaming_tool_execution", group="runtime")
 def _probe_streaming_execution(tmp: Path) -> Tuple[bool, str]:
     for n in ("a.txt", "b.txt"):
         (tmp / n).write_text("hi", encoding="utf-8")
@@ -117,6 +124,7 @@ def _probe_streaming_execution(tmp: Path) -> Tuple[bool, str]:
             f"{len(out['results'])} results")
 
 
+@probe("06_context_modifier_chain", group="runtime")
 def _probe_context_modifier(tmp: Path) -> Tuple[bool, str]:
     ctx, applied = context_modifier_chain.apply_modifiers(tmp, {}, [
         {"kind": "file_changed", "path": "x"}, {"kind": "memory_fact", "text": "y"}])
@@ -124,6 +132,7 @@ def _probe_context_modifier(tmp: Path) -> Tuple[bool, str]:
             f"applied={len(applied)}")
 
 
+@probe("07_coordinator_restriction", group="runtime")
 def _probe_coordinator_restriction(tmp: Path) -> Tuple[bool, str]:
     state = subagent_runtime.spawn(tmp, "coordinator", "plan X")
     out = subagent_runtime.run(tmp, state["agent_id"], [
@@ -132,6 +141,7 @@ def _probe_coordinator_restriction(tmp: Path) -> Tuple[bool, str]:
     return (out.get("rejected") is True, f"rejected={out.get('rejected')}")
 
 
+@probe("08_fork_isolation_worktree", group="runtime")
 def _probe_fork_isolation(tmp: Path) -> Tuple[bool, str]:
     import subprocess
     # Initialise a throwaway git repo so worktree is possible.
@@ -147,6 +157,7 @@ def _probe_fork_isolation(tmp: Path) -> Tuple[bool, str]:
     return (ok, f"rc={res['returncode']}")
 
 
+@probe("09_five_layer_context_defense", group="runtime")
 def _probe_five_layer_defense(tmp: Path) -> Tuple[bool, str]:
     # Seed an event log so layers have something to process.
     bus = event_bus.EventBus(tmp)
@@ -158,6 +169,7 @@ def _probe_five_layer_defense(tmp: Path) -> Tuple[bool, str]:
             f"layers={layers}")
 
 
+@probe("10_permission_classification", group="runtime")
 def _probe_permission_pipeline(tmp: Path) -> Tuple[bool, str]:
     # Dangerous patterns must be blocked even under bypass without --unsafe.
     # Use a fresh root per case so one case's denials don't trigger the circuit breaker for the next.
@@ -177,6 +189,7 @@ def _probe_permission_pipeline(tmp: Path) -> Tuple[bool, str]:
     return True, "5/5 cases"
 
 
+@probe("11_conditional_skill_activation", group="runtime")
 def _probe_conditional_skill(tmp: Path) -> Tuple[bool, str]:
     # Ensure skill frontmatter schema is at least self-consistent.
     skill_md = Path(__file__).parent.parent.parent.parent / "SKILL.md"
@@ -187,6 +200,7 @@ def _probe_conditional_skill(tmp: Path) -> Tuple[bool, str]:
     return all(r in text for r in required), "frontmatter fields present"
 
 
+@probe("12_shell_in_prompt", group="runtime")
 def _probe_shell_in_prompt(tmp: Path) -> Tuple[bool, str]:
     # We don't execute shell-in-prompt in v0.7 (security choice), but we ship
     # a lint that rejects MCP-sourced skills from including it.  Audit passes
@@ -195,6 +209,7 @@ def _probe_shell_in_prompt(tmp: Path) -> Tuple[bool, str]:
     return ref.exists(), str(ref.relative_to(ref.parent.parent.parent))
 
 
+@probe("13_dynamic_skill_discovery", group="runtime")
 def _probe_dynamic_skill_discovery(tmp: Path) -> Tuple[bool, str]:
     # Placeholder: SKILL.md must declare a `paths:` glob (conditional activation).
     skill_md = Path(__file__).parent.parent.parent.parent / "SKILL.md"
@@ -202,6 +217,7 @@ def _probe_dynamic_skill_discovery(tmp: Path) -> Tuple[bool, str]:
     return ("paths:" in text, "paths declared")
 
 
+@probe("14_plugin_extension", group="runtime")
 def _probe_plugin_extension(tmp: Path) -> Tuple[bool, str]:
     # Search both the skill-bundle layout (assets/…) and the installed layout
     # (ai-rules/vibecodekit/assets/…).  The installer copies the manifest so
@@ -219,6 +235,7 @@ def _probe_plugin_extension(tmp: Path) -> Tuple[bool, str]:
             f"keys={list(data)}")
 
 
+@probe("15_plugin_sandbox", group="runtime")
 def _probe_plugin_sandbox(tmp: Path) -> Tuple[bool, str]:
     # Hooks receive a filtered env by default — check the implementation.
     env = hook_interceptor._filter_env({"GITHUB_TOKEN": "x", "OK": "1"})
@@ -226,6 +243,7 @@ def _probe_plugin_sandbox(tmp: Path) -> Tuple[bool, str]:
             f"filtered={sorted(env)}")
 
 
+@probe("16_reconciliation_install", group="runtime")
 def _probe_reconciliation_install(tmp: Path) -> Tuple[bool, str]:
     from .. import install_manifest
     dst = tmp / "fake_project"
@@ -246,6 +264,7 @@ def _probe_reconciliation_install(tmp: Path) -> Tuple[bool, str]:
             f"total={res['total']} create={res['planned_creates']} overwrite={res['planned_copies']} +bank+docs")
 
 
+@probe("17_pure_ts_native_replacement", group="runtime")
 def _probe_ts_replacement(tmp: Path) -> Tuple[bool, str]:
     # Pure TS native replacement only exists in Claude Code itself; we
     # document it in the reference and the audit just checks the doc.
@@ -253,12 +272,14 @@ def _probe_ts_replacement(tmp: Path) -> Tuple[bool, str]:
     return ref.exists(), f"doc={ref.name}"
 
 
+@probe("18_terminal_ui_as_browser", group="runtime")
 def _probe_terminal_ui(tmp: Path) -> Tuple[bool, str]:
     ref = Path(__file__).parent.parent.parent.parent / "references" / "18-terminal-ui.md"
     return ref.exists(), f"doc={ref.name}"
 
 
 # v0.8 — Full Agentic-OS probes (new subsystems from PDF Ch 7, 10, 12)
+@probe("19_background_tasks", group="runtime")
 def _probe_background_tasks(tmp: Path) -> Tuple[bool, str]:
     """Ch 7.2 — 7 task types; Ch 7.3 — 5 lifecycle states; Ch 7.4 — disk
     output with offset.  We verify a local_bash task runs, produces
@@ -272,6 +293,7 @@ def _probe_background_tasks(tmp: Path) -> Tuple[bool, str]:
     return ok, f"types={len(task_runtime.TASK_TYPES)} states={len(task_runtime.TASK_STATES)} offset_ok={ok}"
 
 
+@probe("20_mcp_adapter", group="runtime")
 def _probe_mcp_adapter(tmp: Path) -> Tuple[bool, str]:
     """Ch 2.8 / Ch 10 — MCP as extension point.  Register an in-process
     server and call a stdlib function through it."""
@@ -282,6 +304,7 @@ def _probe_mcp_adapter(tmp: Path) -> Tuple[bool, str]:
             f"call={out}")
 
 
+@probe("21_cost_accounting_ledger", group="runtime")
 def _probe_cost_ledger(tmp: Path) -> Tuple[bool, str]:
     """Ch 12.4 — telemetry/cost accounting.  Record a turn + tool, verify
     the summary produces nonzero tokens and cost."""
@@ -294,6 +317,7 @@ def _probe_cost_ledger(tmp: Path) -> Tuple[bool, str]:
     return ok, f"turns={s['turns']} tools={s['tool_calls']} cost=${s['cost_usd']:.6f}"
 
 
+@probe("22_26_hook_events", group="runtime")
 def _probe_26_hook_events(tmp: Path) -> Tuple[bool, str]:
     """Ch 10.3 — 26 lifecycle hook events."""
     pdf_26 = {
@@ -311,6 +335,7 @@ def _probe_26_hook_events(tmp: Path) -> Tuple[bool, str]:
     return (not missing, f"covered={len(pdf_26 - missing)}/{len(pdf_26)}")
 
 
+@probe("23_follow_up_reexecute", group="runtime")
 def _probe_follow_up_reexecute(tmp: Path) -> Tuple[bool, str]:
     """Ch 3.6 / Pattern #2 — derived needs_follow_up should now actually
     re-execute the turn when recovery asks for retry."""
@@ -324,6 +349,7 @@ def _probe_follow_up_reexecute(tmp: Path) -> Tuple[bool, str]:
     return (follow_ups >= 1, f"follow_ups={follow_ups}")
 
 
+@probe("24_denial_concurrency_safe", group="runtime")
 def _probe_denial_concurrency(tmp: Path) -> Tuple[bool, str]:
     """v0.8 — fcntl-locked DenialStore."""
     import threading
@@ -345,6 +371,7 @@ def _probe_denial_concurrency(tmp: Path) -> Tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # v0.9 — Full Agentic OS completion probes
 # ---------------------------------------------------------------------------
+@probe("25_memory_hierarchy_3tier", group="runtime")
 def _probe_memory_hierarchy(tmp: Path) -> Tuple[bool, str]:
     """Ch 11 — 3-tier memory (User/Project/Team) with diacritic-insensitive
     retrieval and project-tier precedence."""
@@ -371,6 +398,7 @@ def _probe_memory_hierarchy(tmp: Path) -> Tuple[bool, str]:
         _os.environ.pop("VIBECODE_TEAM_DIR", None)
 
 
+@probe("26_approval_contract_ui", group="runtime")
 def _probe_approval_contract(tmp: Path) -> Tuple[bool, str]:
     """Ch 10.4 — structured approval/elicitation with persisted JSON schema
     and human choice recording."""
@@ -392,6 +420,7 @@ def _probe_approval_contract(tmp: Path) -> Tuple[bool, str]:
             f"resolved; choice={resp.get('choice')}")
 
 
+@probe("27_all_seven_task_kinds", group="runtime")
 def _probe_all_task_kinds(tmp: Path) -> Tuple[bool, str]:
     """Ch 7.2 — all 7 task kinds are wired.  Exercise the new
     v0.9 kinds: local_agent, local_workflow, monitor_mcp, dream."""
@@ -434,6 +463,7 @@ def _probe_all_task_kinds(tmp: Path) -> Tuple[bool, str]:
     return ok_kinds, f"kinds registered: {sorted(kinds)}"
 
 
+@probe("28_dream_four_phase", group="runtime")
 def _probe_dream_four_phase(tmp: Path) -> Tuple[bool, str]:
     """§11.5 — dream task implements orient→gather→consolidate→prune
     with embedding-based dedup."""
@@ -462,6 +492,7 @@ def _probe_dream_four_phase(tmp: Path) -> Tuple[bool, str]:
             f"pruned {prune['entries_before']}→{prune['entries_after']}")
 
 
+@probe("29_mcp_stdio_roundtrip", group="runtime")
 def _probe_mcp_stdio_roundtrip(tmp: Path) -> Tuple[bool, str]:
     """§2.8 / Ch 10 — MCP over real stdio subprocess."""
     import sys as _sys, textwrap as _tw, stat as _stat
@@ -481,6 +512,7 @@ def _probe_mcp_stdio_roundtrip(tmp: Path) -> Tuple[bool, str]:
     return ok, f"resp={r}"
 
 
+@probe("30_structured_notifications", group="runtime")
 def _probe_structured_notifications(tmp: Path) -> Tuple[bool, str]:
     """Ch 10.4 — structured notifications persisted per task id,
     drainable idempotently without data loss."""
