@@ -49,7 +49,13 @@ def audit(threshold: float = 0.85, *,
     ``met``, and ``probes`` (a list of per-probe rows).
     """
     if probes is None:
-        # Imported lazily to avoid circular-import at module-load time.
+        # PR β-6: source of truth is the ``@probe`` decorator-based
+        # registry, but we read it via ``vibecodekit.conformance_audit
+        # .PROBES`` so test code that monkey-patches that attribute
+        # (e.g. ``monkeypatch.setattr(ca, "PROBES", custom)``) still
+        # influences the runner.  Importing the audit shim is what
+        # populates the registry as a side effect — each ``@probe``
+        # decorator runs at module-load time.
         from vibecodekit.conformance_audit import PROBES as _DEFAULT_PROBES
         probes = _DEFAULT_PROBES
 

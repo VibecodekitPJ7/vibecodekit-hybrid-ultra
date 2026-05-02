@@ -1,10 +1,10 @@
 """Decorator-based probe registry.
 
-Empty-by-design in β-1.  The current 92 probes still live in
-``vibecodekit.conformance_audit`` and are wired through the manual
-``PROBES`` list defined there.  PRs β-2 → β-5 will move probes into
-sibling modules (still using the manual list).  PR β-6 will switch the
-manual list out for ``@probe`` decorators on each probe function.
+Source of truth for the 92 conformance probes since cycle 14 PR β-6.
+Each ``probes_*.py`` module decorates its functions with ``@probe(id,
+group=...)``; the decorator appends them to the module-global
+``_REGISTRY`` list at import time.  ``conformance_audit.PROBES``
+exposes a sorted snapshot for back-compat.
 
 Public API
 ==========
@@ -15,11 +15,18 @@ Public API
 
 ``collect_registered() -> list[(id, fn)]``
     Snapshot the registry in registration order.  Used by the runner
-    once β-6 is shipped.
+    via ``conformance_audit.PROBES`` (which sorts the snapshot by
+    probe-id so the audit output preserves v0.22.x ordering).
 
-Until β-6 the registry stays empty.  External callers should still go
-through ``vibecodekit.conformance_audit.PROBES`` for the canonical
-probe list, which the runner (`_runner.audit`) consumes by default.
+Adding a new probe
+==================
+
+1. Pick the probes_*.py module that matches the probe's behavioural
+   group (runtime / methodology / assets / governance).
+2. Define ``def _probe_<canonical_name>(tmp: Path) -> tuple[bool, str]``
+   and decorate with ``@probe("<NN>_<canonical_name>", group="<group>")``.
+3. That's it — the runner picks it up automatically; no manual
+   ``PROBES`` list edit is required.
 """
 from __future__ import annotations
 

@@ -49,6 +49,8 @@ import re
 from pathlib import Path
 from typing import Tuple
 
+from ._registry import probe
+
 from .. import methodology
 
 
@@ -69,6 +71,7 @@ def _candidate_repo_roots(tmp: Path) -> list[Path]:
     return cands
 
 
+@probe("71_classifier_blocks_secret_leak", group="governance")
 def _probe_classifier_blocks_secret_leak(tmp: Path) -> Tuple[bool, str]:
     """#71 — well-known secret formats trigger ``deny``."""
     from .. import security_classifier
@@ -84,6 +87,7 @@ def _probe_classifier_blocks_secret_leak(tmp: Path) -> Tuple[bool, str]:
     return True, f"{len(samples)} secret samples denied"
 
 
+@probe("72_classifier_optional_layers", group="governance")
 def _probe_classifier_optional_layers(tmp: Path) -> Tuple[bool, str]:
     """#72 — OnnxLayer + HaikuLayer self-disable (abstain) without deps/keys."""
     from .. import security_classifier
@@ -98,6 +102,7 @@ def _probe_classifier_optional_layers(tmp: Path) -> Tuple[bool, str]:
     return True, "onnx + haiku abstain without deps/keys"
 
 
+@probe("73_eval_select_diff_based", group="governance")
 def _probe_eval_select_diff_based(tmp: Path) -> Tuple[bool, str]:
     """#73 — diff-based selector honours glob + always_run + unmapped report."""
     from .. import eval_select
@@ -117,6 +122,7 @@ def _probe_eval_select_diff_based(tmp: Path) -> Tuple[bool, str]:
     return True, "select + always_run + unmapped all wired"
 
 
+@probe("74_learnings_store_jsonl", group="governance")
 def _probe_learnings_jsonl(tmp: Path) -> Tuple[bool, str]:
     """#74 — learnings JSONL round-trip at the three standard scopes."""
     from .. import learnings
@@ -136,6 +142,7 @@ def _probe_learnings_jsonl(tmp: Path) -> Tuple[bool, str]:
     return True, "project + team + user JSONL round-trip ok"
 
 
+@probe("75_team_mode_required_gates", group="governance")
 def _probe_team_mode_required_gates(tmp: Path) -> Tuple[bool, str]:
     """#75 — team.json + required-gate enforcement raises/clears correctly."""
     from .. import team_mode
@@ -160,6 +167,7 @@ def _probe_team_mode_required_gates(tmp: Path) -> Tuple[bool, str]:
     return True, "team mode write + enforce + clear ok"
 
 
+@probe("76_github_actions_ci", group="governance")
 def _probe_github_actions_ci(tmp: Path) -> Tuple[bool, str]:
     """#76 — .github/workflows/ci.yml exists and declares pytest + audit gate."""
     for base in _candidate_repo_roots(tmp):
@@ -174,6 +182,7 @@ def _probe_github_actions_ci(tmp: Path) -> Tuple[bool, str]:
     return False, "no .github/workflows/ci.yml found in any candidate root"
 
 
+@probe("77_contributing_and_usage_guide", group="governance")
 def _probe_contributing_and_usage_guide(tmp: Path) -> Tuple[bool, str]:
     """#77 — CONTRIBUTING.md + USAGE_GUIDE.md §17 browser section."""
     for base in _candidate_repo_roots(tmp):
@@ -190,6 +199,7 @@ def _probe_contributing_and_usage_guide(tmp: Path) -> Tuple[bool, str]:
     return False, "no CONTRIBUTING.md found in any candidate root"
 
 
+@probe("78_vck_ship_team_mode_wired", group="governance")
 def _probe_vck_ship_team_mode_wired(tmp: Path) -> Tuple[bool, str]:
     """#78 — /vck-ship Bước 0 calls team_mode check + clears the ledger.
 
@@ -214,6 +224,7 @@ def _probe_vck_ship_team_mode_wired(tmp: Path) -> Tuple[bool, str]:
     return False, "no update-package/.claude/commands/vck-ship.md found"
 
 
+@probe("79_eval_select_wired", group="governance")
 def _probe_eval_select_wired_into_ci_and_ship(tmp: Path) -> Tuple[bool, str]:
     """#79 — eval_select is invoked from /vck-ship Bước 2 + GitHub Actions CI."""
     for base in _candidate_repo_roots(tmp):
@@ -238,6 +249,7 @@ def _probe_eval_select_wired_into_ci_and_ship(tmp: Path) -> Tuple[bool, str]:
     return False, "no vck-ship.md found in any candidate root"
 
 
+@probe("80_session_ledger_module", group="governance")
 def _probe_session_ledger_module(tmp: Path) -> Tuple[bool, str]:
     """#80 — session_ledger record/read/clear behaves correctly."""
     from .. import session_ledger
@@ -253,6 +265,7 @@ def _probe_session_ledger_module(tmp: Path) -> Tuple[bool, str]:
     return True, "session_ledger record + read + clear ok"
 
 
+@probe("81_classifier_auto_on_default", group="governance")
 def _probe_classifier_auto_on_default(tmp: Path) -> Tuple[bool, str]:
     """#81 — pre_tool_use hook runs the security classifier by default
     (auto-on per v0.15.0-alpha PR-B / T4) and only opts out when
@@ -285,6 +298,7 @@ def _probe_classifier_auto_on_default(tmp: Path) -> Tuple[bool, str]:
     return False, "no pre_tool_use.py found in any candidate root"
 
 
+@probe("82_session_start_learnings_inject", group="governance")
 def _probe_session_start_learnings_inject(tmp: Path) -> Tuple[bool, str]:
     """#82 — session_start hook auto-injects most-recent learnings into
     its JSON output (v0.15.0-alpha PR-B / T3).  Verifies the hook
@@ -322,6 +336,7 @@ def _probe_session_start_learnings_inject(tmp: Path) -> Tuple[bool, str]:
     return False, "no session_start.py found in any candidate root"
 
 
+@probe("83_scaffold_seeds_vibecode_dir", group="governance")
 def _probe_scaffold_seeds_vibecode_dir(tmp: Path) -> Tuple[bool, str]:
     """#83 — ScaffoldEngine.apply() seeds .vibecode/ runtime files
     (v0.15.0-alpha PR-C / T5).
@@ -348,6 +363,7 @@ def _probe_scaffold_seeds_vibecode_dir(tmp: Path) -> Tuple[bool, str]:
     return True, f"scaffold seeded {len(seeded)} .vibecode files"
 
 
+@probe("84_vck_pipeline_command", group="governance")
 def _probe_vck_pipeline_command(tmp: Path) -> Tuple[bool, str]:
     """#84 — /vck-pipeline command exists, is wired into manifest +
     intent_router, and the runtime dispatches all 3 pipelines
@@ -409,6 +425,7 @@ def _probe_vck_pipeline_command(tmp: Path) -> Tuple[bool, str]:
     return True, "vck-pipeline skill + manifest + 3-bucket dispatcher OK"
 
 
+@probe("85_no_orphan_module", group="governance")
 def _probe_no_orphan_module(tmp: Path) -> Tuple[bool, str]:
     """#85 — every ``scripts/vibecodekit/*.py`` module must have at
     least one production call site OR be explicitly allowlisted in
@@ -552,6 +569,7 @@ def _probe_no_orphan_module(tmp: Path) -> Tuple[bool, str]:
     return True, f"all {n} modules wired (+ {len(allowlist)} allowlisted)"
 
 
+@probe("86_vck_review_classifier_wired", group="governance")
 def _probe_vck_review_classifier_wired(tmp: Path) -> Tuple[bool, str]:
     """#86 — ``/vck-review`` Security perspective references
     ``security_classifier --scan-diff`` (v0.15.2 / Bug #2 invariant guard).
@@ -584,6 +602,7 @@ def _probe_vck_review_classifier_wired(tmp: Path) -> Tuple[bool, str]:
     return False, "no vck-review.md found in any candidate root"
 
 
+@probe("87_vck_cso_classifier_wired", group="governance")
 def _probe_vck_cso_classifier_wired(tmp: Path) -> Tuple[bool, str]:
     """#87 — ``/vck-cso`` regex pre-scan references
     ``security_classifier --scan-paths`` (v0.15.2 / Bug #3 invariant guard).
@@ -615,6 +634,7 @@ def _probe_vck_cso_classifier_wired(tmp: Path) -> Tuple[bool, str]:
     return False, "no vck-cso.md found in any candidate root"
 
 
+@probe("88_case_study_otb_budget", group="governance")
 def _probe_case_study_otb_budget(tmp: Path) -> Tuple[bool, str]:
     """#88 — Cycle 13 PR1: pre-baked case study `references/examples/
     01-otb-budget-module/` exists with 11 expected files, and both
@@ -658,6 +678,7 @@ def _probe_case_study_otb_budget(tmp: Path) -> Tuple[bool, str]:
                   f"rri_ux=PASS ({ru['summary']['flow']}/{ru['summary']['total']})")
 
 
+@probe("89_anti_patterns_gallery", group="governance")
 def _probe_anti_patterns_gallery_complete(tmp: Path) -> Tuple[bool, str]:
     """#89 — Cycle 13 PR2: anti-pattern gallery có entry cho cả 12
     canonical AP-XX với BAD/GOOD visualization + Fix recipe + Detector.
@@ -696,6 +717,7 @@ def _probe_anti_patterns_gallery_complete(tmp: Path) -> Tuple[bool, str]:
     return True, f"12/12 AP entries ok (viz+recipe+detector); api in sync"
 
 
+@probe("90_color_psychology_appendix", group="governance")
 def _probe_color_psychology_appendix(tmp: Path) -> Tuple[bool, str]:
     """#90 — Cycle 13 PR3: ``references/37-color-psychology.md`` ship
     7 industry palette + WCAG section + Vietnamese cultural section
@@ -731,6 +753,7 @@ def _probe_color_psychology_appendix(tmp: Path) -> Tuple[bool, str]:
     return True, f"7 industries + WCAG + VN + CVD + dark-mode all present"
 
 
+@probe("91_font_pairing_appendix", group="governance")
 def _probe_font_pairing_appendix(tmp: Path) -> Tuple[bool, str]:
     """#91 — Cycle 13 PR3: ``references/38-font-pairing.md`` ship 5
     canonical pairs + Vietnamese subset requirement + type-scale +
@@ -768,6 +791,7 @@ def _probe_font_pairing_appendix(tmp: Path) -> Tuple[bool, str]:
     return True, "5 pairs + 4 fonts + VN subset + scale + fallback all present"
 
 
+@probe("92_intent_routing_llm_primary_doc", group="governance")
 def _probe_intent_routing_llm_primary_doc(tmp: Path) -> Tuple[bool, str]:
     """Probe #92 — LLM-primary intent routing design log (v0.23.0).
 

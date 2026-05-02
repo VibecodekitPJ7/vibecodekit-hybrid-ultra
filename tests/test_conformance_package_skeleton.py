@@ -1,11 +1,10 @@
-"""Cycle 14 PR β-1 — back-compat + structural tests for the new conformance package.
+"""Cycle 14 PRs β-1..β-6 — back-compat + structural tests for the conformance package.
 
-The 2 246-line ``conformance_audit.py`` is being broken into a package
+The 2 246-line ``conformance_audit.py`` was broken into a package
 ``vibecodekit.conformance`` over PRs β-1..β-6.  This test pins the
-back-compat contract that PRs β-2..β-5 (probe relocations) must
-preserve before β-6 finally drops the manual ``PROBES`` list.
+back-compat contract that survived every step of that refactor.
 
-Contract checks (cycle 14 β-1):
+Contract checks:
 
   1. ``vibecodekit.conformance_audit.audit`` is importable and is the
      same callable as ``vibecodekit.conformance._runner.audit``.
@@ -14,13 +13,16 @@ Contract checks (cycle 14 β-1):
   3. ``vibecodekit.conformance_audit._find_slash_command`` is importable
      and is the same callable as
      ``vibecodekit.conformance._helpers.find_slash_command``.
-  4. ``vibecodekit.conformance_audit.PROBES`` is non-empty and every
-     entry is a ``(str, callable)`` tuple.
-  5. ``vibecodekit.conformance.collect_registered()`` is empty in β-1
-     (the registry only populates in β-6).
+  4. ``vibecodekit.conformance_audit.PROBES`` is non-empty, sorted by
+     probe-id, and every entry is a ``(str, callable)`` tuple with a
+     unique id.
+  5. After PR β-6, ``vibecodekit.conformance.collect_registered()``
+     returns the same 92 entries as ``conformance_audit.PROBES``
+     (registry is the source of truth; ``PROBES`` is its sorted view).
   6. ``vibecodekit.conformance.probe`` decorator round-trip works:
      decorating a function appends to the registry; calling
-     ``collect_registered()`` after returns the new entry.
+     ``collect_registered()`` after returns the new entry.  The
+     surrounding production registry is preserved across the test.
   7. The runner is *probe-source agnostic* — calling
      ``audit(probes=[...custom...])`` honours the explicit list and
      does NOT fall through to the manual ``PROBES``.
@@ -79,46 +81,63 @@ def test_probes_list_well_formed() -> None:
         assert probe_id not in seen_ids, f"duplicate probe id: {probe_id}"
         seen_ids.add(probe_id)
         assert callable(fn)
+    # β-6: ``PROBES`` must be sorted by probe-id so ``"01_…"`` is first
+    # and ``"92_…"`` is last (matches v0.22.x output ordering).
+    ids = [pid for pid, _fn in PROBES]
+    assert ids == sorted(ids), "PROBES is not sorted by probe-id"
 
 
-def test_registry_is_empty_in_beta_1() -> None:
-    """β-6 will populate this; until then it must stay empty so the
-    runner's default behaviour (use ``PROBES``) remains correct."""
+def test_probes_list_matches_registry_after_beta_6() -> None:
+    """After β-6, ``PROBES`` is a sorted snapshot of the registry —
+    same 92 entries, just in canonical id order rather than registration
+    order."""
     from vibecodekit.conformance import collect_registered
+    from vibecodekit.conformance_audit import PROBES
 
-    assert collect_registered() == []
+    registry = collect_registered()
+    assert len(registry) == len(PROBES)
+    assert sorted(registry, key=lambda r: r[0]) == PROBES
 
 
 def test_probe_decorator_round_trip() -> None:
+    """Decorating a function appends to the registry without disturbing
+    the 92 production probes registered at module-import time."""
     from vibecodekit.conformance import _registry, collect_registered, probe
 
-    _registry._reset_for_tests()
+    snapshot = list(_registry._REGISTRY)
     try:
         @probe("test_dummy_probe", group="test", since="v0.23.0")
         def fn(_tmp: Path) -> Tuple[bool, str]:
             return True, "ok"
 
-        assert collect_registered() == [("test_dummy_probe", fn)]
+        after = collect_registered()
+        # Production probes preserved + dummy appended at the end.
+        assert after[-1] == ("test_dummy_probe", fn)
+        assert after[:-1] == snapshot
     finally:
-        _registry._reset_for_tests()
+        _registry._REGISTRY[:] = snapshot
 
 
 def test_probe_decorator_rejects_duplicate_id() -> None:
+    """Re-registering an existing probe-id raises ``ValueError`` so two
+    probes can never accidentally share a row in the audit output."""
     from vibecodekit.conformance import _registry, probe
 
-    _registry._reset_for_tests()
+    snapshot = list(_registry._REGISTRY)
     try:
-        @probe("dup_id")
+        @probe("dup_id_skeleton_test")
         def first(_tmp: Path) -> Tuple[bool, str]:
             return True, "first"
 
         import pytest
-        with pytest.raises(ValueError, match="probe id collision: 'dup_id'"):
-            @probe("dup_id")
+        with pytest.raises(
+            ValueError, match="probe id collision: 'dup_id_skeleton_test'",
+        ):
+            @probe("dup_id_skeleton_test")
             def second(_tmp: Path) -> Tuple[bool, str]:
                 return True, "second"
     finally:
-        _registry._reset_for_tests()
+        _registry._REGISTRY[:] = snapshot
 
 
 def test_runner_honours_explicit_probes_argument() -> None:

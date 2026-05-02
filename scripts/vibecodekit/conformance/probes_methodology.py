@@ -39,10 +39,13 @@ import re
 from pathlib import Path
 from typing import Tuple
 
+from ._registry import probe
+
 from .. import memory_hierarchy, methodology
 from ._helpers import find_slash_command as _find_slash_command
 
 
+@probe("31_rri_reverse_interview", group="methodology")
 def _probe_rri_reverse_interview(tmp: Path) -> Tuple[bool, str]:
     """RRI (Reverse Requirements Interview) methodology assets present."""
     here = Path(__file__).resolve().parents[3]
@@ -60,6 +63,7 @@ def _probe_rri_reverse_interview(tmp: Path) -> Tuple[bool, str]:
     return (not misses, "personas ok" if not misses else f"missing personas: {misses}")
 
 
+@probe("32_rri_t_testing_methodology", group="methodology")
 def _probe_rri_t_testing(tmp: Path) -> Tuple[bool, str]:
     """RRI-T testing methodology: 5 personas × 7 dimensions × 8 stress axes."""
     here = Path(__file__).resolve().parents[3]
@@ -79,6 +83,7 @@ def _probe_rri_t_testing(tmp: Path) -> Tuple[bool, str]:
             f"dims={dm} stress={sm} qarpt={fmt}")
 
 
+@probe("33_rri_ux_critique_methodology", group="methodology")
 def _probe_rri_ux_critique(tmp: Path) -> Tuple[bool, str]:
     """RRI-UX: 5 UX personas × 7 dims × 8 Flow Physics; S→V→P→F→I template."""
     here = Path(__file__).resolve().parents[3]
@@ -99,6 +104,7 @@ def _probe_rri_ux_critique(tmp: Path) -> Tuple[bool, str]:
             f"personas={pm} axes={am} svpfi={fmt}")
 
 
+@probe("35_vibecode_master_workflow", group="methodology")
 def _probe_vibecode_master_workflow(tmp: Path) -> Tuple[bool, str]:
     """VIBECODE-MASTER 8-step workflow + 3 actors are documented."""
     here = Path(__file__).resolve().parents[3]
@@ -115,6 +121,7 @@ def _probe_vibecode_master_workflow(tmp: Path) -> Tuple[bool, str]:
     return (sm and am, f"steps={sm} actors={am}")
 
 
+@probe("34_rri_ui_design_pipeline", group="methodology")
 def _probe_rri_ui_combined(tmp: Path) -> Tuple[bool, str]:
     """RRI-UI: four-phase pipeline combining RRI-UX + RRI-T for design."""
     here = Path(__file__).resolve().parents[3]
@@ -129,6 +136,7 @@ def _probe_rri_ui_combined(tmp: Path) -> Tuple[bool, str]:
     return (pm and gm, f"phases={pm} gate={gm}")
 
 
+@probe("37_methodology_runners", group="methodology")
 def _probe_methodology_runners(tmp: Path) -> Tuple[bool, str]:
     """v0.10.1: RRI-T, RRI-UX, and VN-checklist evaluators are executable."""
     import json as _json
@@ -164,6 +172,7 @@ def _probe_methodology_runners(tmp: Path) -> Tuple[bool, str]:
             f"rri_t={rri_t_ok} ux={ux_ok} vn={vn_ok}")
 
 
+@probe("39_mcp_stdio_full_handshake", group="methodology")
 def _probe_mcp_stdio_handshake(tmp: Path) -> Tuple[bool, str]:
     """v0.10.1: real MCP initialize + tools/list + tools/call handshake
     against the bundled selfcheck server."""
@@ -191,6 +200,7 @@ def _probe_mcp_stdio_handshake(tmp: Path) -> Tuple[bool, str]:
         return False, f"{type(e).__name__}: {e}"
 
 
+@probe("38_config_persistence", group="methodology")
 def _probe_config_persistence(tmp: Path) -> Tuple[bool, str]:
     """v0.10.1: embedding backend persists via ~/.vibecode/config.json.
 
@@ -213,6 +223,7 @@ def _probe_config_persistence(tmp: Path) -> Tuple[bool, str]:
             os.environ["VIBECODE_CONFIG_HOME"] = prev
 
 
+@probe("40_refine_boundary_step8", group="methodology")
 def _probe_refine_boundary(tmp: Path) -> Tuple[bool, str]:
     """v5 BƯỚC 8/8 — `/vibe-refine` command + classifier wired together."""
     from .. import refine_boundary
@@ -238,6 +249,7 @@ def _probe_refine_boundary(tmp: Path) -> Tuple[bool, str]:
     return True, "command + template + classifier OK"
 
 
+@probe("41_verify_req_coverage", group="methodology")
 def _probe_verify_coverage(tmp: Path) -> Tuple[bool, str]:
     """v5 BƯỚC 7 — REQ-* traceability evaluator + template sections."""
     here = Path(__file__).resolve().parents[3]
@@ -277,6 +289,7 @@ def _probe_verify_coverage(tmp: Path) -> Tuple[bool, str]:
     return True, "templates + evaluator OK"
 
 
+@probe("42_saas_anti_patterns_12", group="methodology")
 def _probe_anti_patterns(tmp: Path) -> Tuple[bool, str]:
     """RRI-UX § 10 — 12 SaaS anti-patterns enumerated + checklist evaluator."""
     here = Path(__file__).resolve().parents[3]
@@ -299,6 +312,7 @@ def _probe_anti_patterns(tmp: Path) -> Tuple[bool, str]:
     return True, "12/12 enumerated + evaluator OK"
 
 
+@probe("43_portfolio_saas_scaffolds", group="methodology")
 def _probe_portfolio_saas_scaffolds(tmp: Path) -> Tuple[bool, str]:
     """v5 Pattern E + Pattern B — portfolio + saas scaffold presets."""
     from .. import scaffold_engine
@@ -322,6 +336,7 @@ def _probe_portfolio_saas_scaffolds(tmp: Path) -> Tuple[bool, str]:
     return True, f"presets={sorted(names)}"
 
 
+@probe("44_enterprise_module_workflow", group="methodology")
 def _probe_enterprise_module(tmp: Path) -> Tuple[bool, str]:
     """v5 Pattern F — `/vibe-module` workflow + probe + plan + refusal."""
     from .. import module_workflow
@@ -362,6 +377,7 @@ def _probe_enterprise_module(tmp: Path) -> Tuple[bool, str]:
     return True, "probe + plan + refusal OK"
 
 
+@probe("36_methodology_slash_commands", group="methodology")
 def _probe_methodology_commands(tmp: Path) -> Tuple[bool, str]:
     """All 6 new VIBECODE-MASTER slash commands are declared in the manifest."""
     here = Path(__file__).resolve().parents[3]
@@ -376,6 +392,7 @@ def _probe_methodology_commands(tmp: Path) -> Tuple[bool, str]:
     return (not missing, f"missing: {missing}" if missing else f"present={sorted(need)}")
 
 
+@probe("45_docs_scaffold_pattern_d", group="methodology")
 def _probe_docs_scaffold(tmp: Path) -> Tuple[bool, str]:
     """v0.11.1 / Pattern D — `docs` scaffold preset is registered + bootable."""
     from .. import scaffold_engine
@@ -393,6 +410,7 @@ def _probe_docs_scaffold(tmp: Path) -> Tuple[bool, str]:
     return True, f"docs preset OK ({len(plan.files)} files)"
 
 
+@probe("46_style_tokens_canonical", group="methodology")
 def _probe_style_tokens(tmp: Path) -> Tuple[bool, str]:
     """v0.11.2 / FIX-004 — references/34-style-tokens.md + FP/CP/VN sync."""
     from .. import methodology
@@ -420,6 +438,7 @@ def _probe_style_tokens(tmp: Path) -> Tuple[bool, str]:
     return True, "ref-34 + methodology in sync (FP=6, CP=6, VN=12)"
 
 
+@probe("47_rri_question_bank", group="methodology")
 def _probe_question_bank(tmp: Path) -> Tuple[bool, str]:
     """v0.11.2 / FIX-003 — bank meets thresholds × all personas × all modes."""
     from .. import methodology
@@ -458,6 +477,7 @@ def _probe_question_bank(tmp: Path) -> Tuple[bool, str]:
                   f"dev/GUIDED={len(saas_dev_guided)} q, all personas+modes valid)")
 
 
+@probe("48_copy_patterns_canonical", group="methodology")
 def _probe_copy_patterns(tmp: Path) -> Tuple[bool, str]:
     """v0.11.2 / FIX-005 — references/36-copy-patterns.md + COPY_PATTERNS sync."""
     from .. import methodology
@@ -484,6 +504,7 @@ def _probe_copy_patterns(tmp: Path) -> Tuple[bool, str]:
     return True, "ref-36 + methodology in sync (CF=9, CF-VN=8)"
 
 
+@probe("49_stack_recommendations", group="methodology")
 def _probe_stack_recommendations(tmp: Path) -> Tuple[bool, str]:
     """v0.11.2 / FIX-002 — methodology.PROJECT_STACK_RECOMMENDATIONS coverage."""
     from .. import methodology
@@ -507,6 +528,7 @@ def _probe_stack_recommendations(tmp: Path) -> Tuple[bool, str]:
     return True, f"recommend_stack OK ({len(have)} canonical types + alias + safe fallback)"
 
 
+@probe("50_docs_intent_routing", group="methodology")
 def _probe_docs_intent_routing(tmp: Path) -> Tuple[bool, str]:
     """v0.11.2 / FIX-001 — intent_router classifies docs prose to BUILD."""
     from .. import intent_router
