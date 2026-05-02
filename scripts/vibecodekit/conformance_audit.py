@@ -2098,6 +2098,103 @@ def _probe_font_pairing_appendix(tmp: Path) -> Tuple[bool, str]:
     return True, "5 pairs + 4 fonts + VN subset + scale + fallback all present"
 
 
+def _probe_intent_routing_llm_primary_doc(tmp: Path) -> Tuple[bool, str]:
+    """Probe #92 — LLM-primary intent routing design log (v0.23.0).
+
+    Verifies that the cycle-14 architectural shift (from Python-keyword-only
+    routing to LLM-primary with Python keyword-fallback) is documented in
+    three places that must stay in sync:
+
+      1. ``references/39-intent-routing-llm-primary.md`` exists and covers
+         the four required design topics (problem, design, fallback
+         use-cases, decision log).
+      2. ``update-package/.claude/commands/vibe.md`` instructs the host LLM
+         to classify directly (not delegate to the keyword router) and
+         points at the design log.
+      3. ``scripts/vibecodekit/intent_router.py`` docstring describes the
+         router as the *fallback* path, not the primary.
+
+    This is a behavioural conformance probe, not a self-test of the audit
+    module: it inspects three external files (one new reference, one
+    slash-command spec, one production module).
+    """
+    here = Path(__file__).resolve().parents[2]
+
+    # 1. Design log exists and covers the required topics.
+    design = here / "references" / "39-intent-routing-llm-primary.md"
+    if not design.exists():
+        return False, "missing references/39-intent-routing-llm-primary.md"
+    design_body = design.read_text(encoding="utf-8")
+    required_sections = (
+        "## 1 · Problem",
+        "## 2 · Design",
+        "## 4 · Migration notes",
+        "## 5 · Decision log",
+    )
+    missing_sections = [s for s in required_sections if s not in design_body]
+    if missing_sections:
+        return False, f"design log missing sections: {missing_sections}"
+    required_concepts = (
+        "LLM-primary",
+        "fallback",
+        "keyword",
+        "deterministic",
+        "back-compat",
+    )
+    missing_concepts = [c for c in required_concepts
+                        if c.lower() not in design_body.lower()]
+    if missing_concepts:
+        return False, f"design log missing concepts: {missing_concepts}"
+
+    # 2. vibe.md slash-command spec instructs the LLM to classify.
+    vibe_md = here / "update-package" / ".claude" / "commands" / "vibe.md"
+    if not vibe_md.exists():
+        return False, "missing update-package/.claude/commands/vibe.md"
+    vibe_body = vibe_md.read_text(encoding="utf-8")
+    vibe_required = (
+        "LLM-primary",
+        "Step 1 — Classify the prose",
+        "fallback",
+        "intent route",
+    )
+    missing_vibe = [v for v in vibe_required if v not in vibe_body]
+    if missing_vibe:
+        return False, f"vibe.md missing LLM-primary cues: {missing_vibe}"
+
+    # 3. intent_router.py docstring describes the router as the fallback.
+    router = here / "scripts" / "vibecodekit" / "intent_router.py"
+    if not router.exists():
+        return False, "missing scripts/vibecodekit/intent_router.py"
+    router_src = router.read_text(encoding="utf-8")
+    # Pull only the leading docstring (between the first pair of triple
+    # quotes) — we don't want to match phrases that may appear in code
+    # comments or docstrings of helper functions further down.
+    if not router_src.startswith('"""'):
+        return False, "intent_router.py does not start with a module docstring"
+    end = router_src.find('"""', 3)
+    if end < 0:
+        return False, "intent_router.py module docstring is unterminated"
+    docstring = router_src[3:end]
+    docstring_required = (
+        "fallback",
+        "host LLM",
+        "non-LLM contexts",
+        "keyword",
+    )
+    missing_doc = [d for d in docstring_required
+                   if d.lower() not in docstring.lower()]
+    if missing_doc:
+        return False, f"intent_router docstring missing: {missing_doc}"
+    # Negative check — the false 'cosine similarity / HashEmbeddingBackend'
+    # claim must not have come back as a positive claim (the historical
+    # disclaimer note IS allowed under '.. note::').
+    if "HashEmbeddingBackend" in docstring and ".. note::" not in docstring:
+        return False, "intent_router docstring re-introduced HashEmbeddingBackend"
+
+    return (True, "design log + vibe.md + router docstring all in sync "
+            "(LLM-primary, keyword-fallback)")
+
+
 PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("01_async_generator_loop",         _probe_async_generator),
     ("02_derived_needs_follow_up",      _probe_derived_follow_up),
@@ -2206,6 +2303,8 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
     ("89_anti_patterns_gallery",        _probe_anti_patterns_gallery_complete),
     ("90_color_psychology_appendix",    _probe_color_psychology_appendix),
     ("91_font_pairing_appendix",        _probe_font_pairing_appendix),
+    # v0.23.0 — LLM-primary intent routing (cycle 14, Plan A)
+    ("92_intent_routing_llm_primary_doc", _probe_intent_routing_llm_primary_doc),
 ]
 
 
