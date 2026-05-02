@@ -12,6 +12,136 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.23.0] — 2026-05-02
+
+Cycle 14 conformance modularization + intent-routing hybrid release.
+Two-pronged refactor pass driven by the cycle-14 deep review:
+
+- **Issue 2 — Plan A (3 PRs, merged):** intent routing flips from
+  pure keyword-scoring to *LLM-primary + keyword-fallback* via the
+  rewritten `.claude/commands/vibe.md` Claude-Code dispatcher; the
+  Python `IntentRouter` continues to serve CLI / MCP / golden-test
+  consumers unchanged.  Docstring drift in `intent_router.py`
+  (the v0.18-era "cosine-similarity tie-breaker" claim) was corrected
+  and pinned by a contract test.  A new reference doc
+  (`references/39-intent-routing-llm-primary.md`) and
+  conformance probe **#92 (`intent_routing_llm_primary_doc`)** make
+  the design choice testable.
+
+- **Issue 1 — Plan B (6 PRs, merged):** `conformance_audit.py` was
+  broken into the `vibecodekit.conformance` package over PRs β-1..β-6
+  and probe registration was switched from a manual 92-row list to a
+  decorator-based registry (`@probe(id, group=...)`).  Probe ownership
+  is now distributed across four focused modules
+  (`probes_runtime.py`, `probes_methodology.py`, `probes_assets.py`,
+  `probes_governance.py`) — adding a new probe is a single decorator
+  edit instead of three coordinated edits across three files.
+
+### Headline numbers
+
+| Metric | v0.22.0 | v0.23.0 | Δ |
+|:-------|:--------|:--------|:--|
+| `conformance_audit.py` size | 2 246 lines | 186 lines | **-92 %** |
+| Probe registration | 1 manual list | `@probe` decorator | decentralised |
+| Probe modules | 1 monolith | 4 group-scoped | +3 |
+| Conformance probes | 91 / 91 | **92 / 92** | +1 (#92 doc-pin) |
+| `IntentRouter` strategy | keyword-only | LLM-primary (host) + keyword-fallback (CLI) | hybrid |
+| Tests | 1701 / 9 skip | **1535 / 9 skip** | -166 (consolidated/dedup'd registry contract tests) |
+| Public API surface | stable | stable | back-compat 100 % |
+
+### Plan A — intent routing (3 PRs merged)
+
+```
+PR α-1 #6   .claude/commands/vibe.md  — LLM-primary dispatcher,           merged
+                                          Python keyword fallback
+PR α-2 #7   intent_router.py docstring drift fix + contract test          merged
+PR α-3 #8   references/39-intent-routing-llm-primary.md +                 merged
+            conformance probe #92 (`intent_routing_llm_primary_doc`)
+```
+
+### Plan B — conformance modularization (6 PRs merged)
+
+```
+PR β-1 #9   conformance/ package skeleton (_runner / _registry /          merged
+            _helpers / __init__) — back-compat shim only
+PR β-2 #10  probes #1-30   → probes_runtime.py                            merged
+PR β-3 #11  probes #31-50  → probes_methodology.py                        merged
+PR β-4 #12  probes #51-70  → probes_assets.py                             merged
+PR β-5 #13  probes #71-92  → probes_governance.py                         merged
+PR β-6 #14  manual PROBES list → @probe decorator + sorted registry       merged
+            snapshot
+```
+
+### Verify gate (all green)
+
+| Check | Result |
+|:------|:-------|
+| `pytest -q` | **1535 pass / 9 skip** |
+| `PYTHONPATH=scripts python -m vibecodekit.conformance_audit` | parity 100.00 % (**92/92**, threshold 85 %) |
+| `ruff check scripts/vibecodekit/` | clean |
+| `mypy --strict` (9-module gate) | 0 errors |
+| `validate_release_matrix.py --fast` | release gate PASSED |
+| `twine check dist/*` | PASSED |
+| Wheel install + smoke test | OK (`vibecodekit demo`, `__version__ == 0.23.0`) |
+| 8 / 8 conformance package skeleton contract tests | green |
+
+### Back-compat (preserved across all 9 PRs)
+
+```python
+# All of these continue to work unchanged in v0.23.0:
+from vibecodekit.conformance_audit import PROBES                     # 92 entries
+from vibecodekit.conformance_audit import audit                      # ok
+from vibecodekit.conformance_audit import _probe_async_generator     # all 92
+                                                                     # available
+from vibecodekit.conformance_audit import _find_slash_command        # ok
+
+# Test code that monkey-patches PROBES still works:
+monkeypatch.setattr(ca, "PROBES", custom)
+audit()                                                              # uses custom
+```
+
+### Files added / changed at the release boundary
+
+```
++ RELEASE_NOTES_v0.23.0.md
++ scripts/vibecodekit/conformance/__init__.py
++ scripts/vibecodekit/conformance/_helpers.py
++ scripts/vibecodekit/conformance/_registry.py
++ scripts/vibecodekit/conformance/_runner.py
++ scripts/vibecodekit/conformance/probes_runtime.py
++ scripts/vibecodekit/conformance/probes_methodology.py
++ scripts/vibecodekit/conformance/probes_assets.py
++ scripts/vibecodekit/conformance/probes_governance.py
++ references/39-intent-routing-llm-primary.md
++ tests/test_conformance_package_skeleton.py
+M VERSION                                     (0.22.0 → 0.23.0)
+M pyproject.toml                              (version 0.22.0 → 0.23.0)
+M manifest.llm.json                           (version + 92 probes)
+M assets/plugin-manifest.json                 (version)
+M update-package/VERSION                      (0.22.0 → 0.23.0)
+M update-package/.claw.json                   (version)
+M update-package/CLAUDE.md                    (banner + probe count + test count)
+M update-package/README.md                    (banner + probe count)
+M update-package/USAGE_GUIDE.md               (banner + probe count)
+M USAGE_GUIDE.md                              (banner + probe count)
+M README.md                                   (banner + probe count)
+M QUICKSTART.md                               (probe count 87/91 → 88/92)
+M SKILL.md                                    (version + probe count 87 → 92)
+M docs/GUIDE_NONTECH_BEGINNER.md              (banner + cheatsheet + probe count)
+M scripts/vibecodekit/conformance_audit.py    (2 246 → 186 lines, shim)
+M scripts/vibecodekit/intent_router.py        (docstring drift fix only)
+M .claude/commands/vibe.md                    (LLM-primary dispatcher)
+M update-package/.claude/commands/vibe.md     (LLM-primary dispatcher mirror)
+M CHANGELOG.md                                (this entry)
+```
+
+### Why minor (0.22 → 0.23) instead of patch
+
+`@probe` decorator introduces a new public extension point in
+`vibecodekit.conformance` — third-party code can now register probes
+without forking the audit module.  Per Semver this is a
+backward-compatible feature addition, hence a minor bump.
+
 ## [0.22.0] — 2026-05-01
 
 Cycle 13 documentation expansion release — 100 % docs-only, không

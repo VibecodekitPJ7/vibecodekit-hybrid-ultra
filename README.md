@@ -11,7 +11,7 @@
 > verify → ship) và sinh ra sản phẩm chạy được.  ~20 phút đọc, có
 > worked example "App quản lý chi tiêu gia đình" A→Z.
 
-> **Current release:** v0.22.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 91 conformance probes, …).
+> **Current release:** v0.23.0 ([CHANGELOG](CHANGELOG.md)) — see [Layout](#layout) below for the surface inventory (42 slash commands, 7 sub-agent roles, 33 hook events, 92 conformance probes, …).
 >
 > **License:** MIT — see [`LICENSE`](LICENSE) and the third-party
 > attribution manifest [`LICENSE-third-party.md`](LICENSE-third-party.md).
@@ -25,7 +25,7 @@ PYTHONPATH=./scripts python -m vibecodekit.cli demo
 ```
 
 Runs 6 steps offline: doctor health-check, permission engine (classify 5
-commands), conformance audit (91 probes), scaffold preview, intent router,
+commands), conformance audit (92 probes), scaffold preview, intent router,
 and MCP selfcheck.  See [`examples/`](examples/) for standalone scripts.
 
 ## Skills inspired by gstack
@@ -35,7 +35,7 @@ with attribution — from
 [gstack](https://github.com/garrytan/gstack) (© Garry Tan, MIT,
 commit `675717e3`).  Per-version evolution (which release introduced
 which subset, audit probe count growth, etc.) is tracked in
-[`CHANGELOG.md`](CHANGELOG.md); the kit currently ships **87** internal
+[`CHANGELOG.md`](CHANGELOG.md); the kit currently ships **92** internal
 conformance probes — see
 [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what that
 number measures and what it does **not** claim.
@@ -88,7 +88,7 @@ Full walkthrough: [`USAGE_GUIDE.md` §18](USAGE_GUIDE.md#18-activation-cheat-she
 
 ## Layout
 
-**Surface inventory (v0.22.0)** — moved here from the opening to keep
+**Surface inventory (v0.23.0)** — moved here from the opening to keep
 the front matter focused on what the kit *does* rather than how many
 buttons it has:
 
@@ -109,7 +109,7 @@ buttons it has:
   hybrid lexical + embedding (default `hash-256`, offline).
 - **MCP integration** — stdio + inproc adapters; bundled selfcheck
   server (`vibecodekit.mcp_servers.selfcheck`).
-- **91 internal conformance probes** — see
+- **92 internal conformance probes** — see
   [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what
   these measure and what they explicitly do **not** claim (no
   HumanEval / MBPP / SWE-bench, no external benchmark, no API key
