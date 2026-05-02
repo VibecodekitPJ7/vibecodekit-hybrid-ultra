@@ -12,14 +12,11 @@ Exit code is 0 iff the parity score ≥ ``--threshold`` (default 0.85).
 """
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import re
-import sys
-import tempfile
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 from . import (
     approval_contract, compaction, context_modifier_chain, cost_ledger,
@@ -37,60 +34,11 @@ from . import memory_retriever   # noqa: F401  (warm-load for probe #85)
 from . import tool_use_parser    # noqa: F401  (warm-load for probe #85)
 
 
-def _find_slash_command(here: Path, name: str) -> Path | None:
-    """Locate a `.claude/commands/<name>` shipped alongside the skill bundle.
-
-    v0.15.3 fix (Bug #1 from the v0.15.0 deep-dive audit): probes #40 and
-    #44 used to call this with ``here = repo_root`` and the loop walked
-    ``here.parents[level]`` which never inspects ``here`` itself.  Since
-    the canonical source-tree layout has ``update-package/`` as a *child*
-    of the repo root (not a sibling of any ancestor), the lookup
-    silently returned ``None`` whenever ``VIBECODE_UPDATE_PACKAGE`` was
-    not exported — which is the typical local-dev case.  The function
-    now walks ``here`` first, then its parents, so both layouts work.
-
-    Resolution order:
-
-      1) honour ``$VIBECODE_UPDATE_PACKAGE`` if set;
-      2) walk ``here`` itself, then up to 4 levels of parents, checking
-         ``base/.claude/commands/<name>`` and any *child* of ``base``
-         whose name matches a known update-package label (claw-code-pack,
-         update-package, kit*, vibecodekit-update*);
-      3) fall back to ``cwd``.
-    """
-    env = os.environ.get("VIBECODE_UPDATE_PACKAGE")
-    if env:
-        cand = Path(env) / ".claude" / "commands" / name
-        if cand.exists():
-            return cand
-    KNOWN_PACKAGE_DIRS = ("claw-code-pack", "update-package")
-    KNOWN_PREFIXES = ("kit", "vibecodekit-update")
-    bases: List[Path] = [here]
-    for level in range(0, 5):
-        try:
-            bases.append(here.parents[level])
-        except IndexError:
-            break
-    for base in bases:
-        # Direct .claude under this base
-        cand = base / ".claude" / "commands" / name
-        if cand.exists():
-            return cand
-        # Any child of base matching known update-package labels
-        if base.is_dir():
-            for sib in base.iterdir():
-                if not sib.is_dir():
-                    continue
-                if (sib.name in KNOWN_PACKAGE_DIRS
-                        or any(sib.name.startswith(p) for p in KNOWN_PREFIXES)):
-                    cand = sib / ".claude" / "commands" / name
-                    if cand.exists():
-                        return cand
-    # Last resort: cwd
-    cand = Path.cwd() / ".claude" / "commands" / name
-    if cand.exists():
-        return cand
-    return None
+# `_find_slash_command` is the canonical helper for resolving `.claude/commands/<name>`
+# under one of several supported layout roots.  Its body was extracted to the new
+# `vibecodekit.conformance` package in cycle 14 PR β-1.  Re-exported here under the
+# leading-underscore name for unchanged behaviour at every existing call site.
+from .conformance._helpers import find_slash_command as _find_slash_command  # noqa: E402
 
 
 # Each probe returns (ok: bool, detail: str)
@@ -2308,37 +2256,16 @@ PROBES: List[Tuple[str, Callable[[Path], Tuple[bool, str]]]] = [
 ]
 
 
-def audit(threshold: float = 0.85) -> Dict[str, Any]:
-    rows: List[Dict[str, Any]] = []
-    with tempfile.TemporaryDirectory() as td:
-        for name, probe in PROBES:
-            sub = Path(td) / name
-            sub.mkdir(parents=True, exist_ok=True)
-            try:
-                ok, detail = probe(sub)
-                rows.append({"pattern": name, "pass": bool(ok), "detail": detail})
-            except Exception as e:
-                rows.append({"pattern": name, "pass": False, "detail": f"exception: {type(e).__name__}: {e}"})
-    passed = sum(1 for r in rows if r["pass"])
-    parity = passed / len(rows)
-    return {"threshold": threshold, "passed": passed, "total": len(rows),
-            "parity": round(parity, 4), "met": parity >= threshold, "probes": rows}
-
-
-def _main() -> None:
-    ap = argparse.ArgumentParser(description="Run behaviour-based conformance audit.")
-    ap.add_argument("--threshold", type=float, default=0.85)
-    ap.add_argument("--json", action="store_true")
-    args = ap.parse_args()
-    out = audit(args.threshold)
-    if args.json:
-        print(json.dumps(out, ensure_ascii=False, indent=2))
-    else:
-        print(f"parity: {out['parity']:.2%}   ({out['passed']}/{out['total']}, threshold {out['threshold']:.0%})")
-        for r in out["probes"]:
-            mark = "PASS" if r["pass"] else "FAIL"
-            print(f"  [{mark}] {r['pattern']:<36} {r['detail']}")
-    sys.exit(0 if out["met"] else 1)
+# `audit()` and `_main()` were extracted to `vibecodekit.conformance._runner` in
+# cycle 14 PR β-1.  Re-export them here so existing callers
+# (`from vibecodekit.conformance_audit import audit`,
+# `python -m vibecodekit.conformance_audit`) keep working unchanged.
+#
+# The runner picks up this module's ``PROBES`` list lazily by default, so the
+# 92 probes still defined above are exercised exactly as before.  Subsequent
+# β-2..β-5 PRs will move probes into sibling modules
+# (``conformance/probes_*.py``); β-6 will switch to a ``@probe`` decorator.
+from .conformance._runner import audit, main as _main  # noqa: E402, F401
 
 
 if __name__ == "__main__":
