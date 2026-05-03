@@ -60,6 +60,31 @@ _CP_TOKEN_NAMES: Mapping[str, str] = {
 }
 
 
+# Known serif heading fonts in :data:`vibecodekit.methodology.FONT_PAIRINGS`
+# — FP-03 "Creative" (Playfair Display) and FP-05 "Elegant"
+# (Cormorant Garamond).  When either is selected we must terminate the
+# fallback chain with the generic ``serif`` family so a missing web font
+# does not collapse to a sans face and lose the design intent.  All
+# other FP-XX heading + body fonts in the methodology are sans-serif.
+_KNOWN_SERIF_FAMILIES: frozenset[str] = frozenset({
+    "Playfair Display",
+    "Cormorant Garamond",
+})
+
+
+def _generic_family(family: str) -> str:
+    """Return the CSS generic family (``"serif"`` or ``"sans-serif"``).
+
+    Looks the family up against :data:`_KNOWN_SERIF_FAMILIES`; defaults
+    to ``"sans-serif"`` so any unclassified family stays safe (the
+    methodology FONT_PAIRINGS body fonts are all sans-serif as of
+    cycle 15).
+    """
+    if family in _KNOWN_SERIF_FAMILIES:
+        return "serif"
+    return "sans-serif"
+
+
 # Dark-mode CP twin (locked cycle 15 PR-D4).  Each entry is the HEX value
 # the ``--vck-*`` variable flips to inside
 # ``@media (prefers-color-scheme: dark)``.  Rationale per row:
@@ -121,8 +146,8 @@ def tailwind_font_family(pairing_id: str = "FP-01") -> dict[str, list[str]]:
         )
     heading, body, _mood = m.FONT_PAIRINGS[pairing_id]
     return {
-        "heading": [heading, "system-ui", "sans-serif"],
-        "body": [body, "system-ui", "sans-serif"],
+        "heading": [heading, "system-ui", _generic_family(heading)],
+        "body": [body, "system-ui", _generic_family(body)],
     }
 
 
@@ -171,11 +196,19 @@ def to_json_dict(
         "typography": {
             "heading": {
                 "fp_id": pairing_id,
-                "stack": [heading_family, "system-ui", "sans-serif"],
+                "stack": [
+                    heading_family,
+                    "system-ui",
+                    _generic_family(heading_family),
+                ],
             },
             "body": {
                 "fp_id": pairing_id,
-                "stack": [body_family, "system-ui", "sans-serif"],
+                "stack": [
+                    body_family,
+                    "system-ui",
+                    _generic_family(body_family),
+                ],
             },
         },
         "vn_typography": dict(_VN_TYPOGRAPHY),
@@ -188,9 +221,13 @@ def dark_mode_colors() -> dict[str, str]:
     Same key shape (``vck-*``) and same ordering as the light map so a
     pure key-zip is enough to compare the two; only the HEX values
     differ.  Used by :func:`to_css_variables` to emit the
-    ``@media (prefers-color-scheme: dark)`` block, and by
-    :func:`to_json_dict` to populate the ``dark_colors`` section of
-    schema v1.
+    ``@media (prefers-color-scheme: dark)`` block.
+
+    The schema-v1 :func:`to_json_dict` does **not** currently emit a
+    ``dark_colors`` section — dark-mode lives only in the CSS layer
+    via the ``@media`` block.  Surface here is the canonical Python
+    entry point if a downstream tool (e.g. Figma plugin) needs the
+    dark map without going through CSS.
     """
     return {
         _token_name(cp_id): _DARK_MODE_CP_TWIN[cp_id]

@@ -82,6 +82,29 @@ def test_tailwind_font_family_invalid_id_raises() -> None:
         tailwind_font_family("FP-99")
 
 
+def test_tailwind_font_family_serif_pairings_use_serif_fallback() -> None:
+    """Serif heading pairings (FP-03 Playfair, FP-05 Cormorant) end the
+    fallback chain with the generic ``serif`` family so a missing web font
+    does not silently collapse to a sans face and lose design intent.
+
+    Body fonts in FP-03 (Lato) and FP-05 (Montserrat) are sans-serif so
+    their stacks should still terminate with ``"sans-serif"``.
+    """
+    from vibecodekit.design_tokens_export import tailwind_font_family
+
+    fp03 = tailwind_font_family("FP-03")
+    assert fp03["heading"][0] == "Playfair Display"
+    assert fp03["heading"][-1] == "serif", (
+        "Serif heading must terminate with generic 'serif', not 'sans-serif'"
+    )
+    assert fp03["body"][-1] == "sans-serif"
+
+    fp05 = tailwind_font_family("FP-05")
+    assert fp05["heading"][0] == "Cormorant Garamond"
+    assert fp05["heading"][-1] == "serif"
+    assert fp05["body"][-1] == "sans-serif"
+
+
 def test_six_nextjs_scaffolds_wire_vck_tokens() -> None:
     """Each shipped Next.js scaffold pre-wires ≥3 ``vck-*`` Tailwind tokens.
 
