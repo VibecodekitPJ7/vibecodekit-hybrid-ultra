@@ -2223,7 +2223,7 @@ PYTHONPATH=./scripts pytest tests
 
 ```bash
 PYTHONPATH=./scripts python -m vibecodekit.conformance_audit --threshold 1.0
-# → parity: 100.00%   (91/91, threshold 100%)
+# → parity: 100.00%   (95/95, threshold 100%)
 ```
 
 ### 25.3 Gate 3 — release matrix L1+L2+L3

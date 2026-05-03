@@ -25,7 +25,7 @@ PYTHONPATH=./scripts python -m vibecodekit.cli demo
 ```
 
 Runs 6 steps offline: doctor health-check, permission engine (classify 5
-commands), conformance audit (92 probes), scaffold preview, intent router,
+commands), conformance audit (95 probes), scaffold preview, intent router,
 and MCP selfcheck.  See [`examples/`](examples/) for standalone scripts.
 
 ## Skills inspired by gstack
@@ -35,7 +35,7 @@ with attribution — from
 [gstack](https://github.com/garrytan/gstack) (© Garry Tan, MIT,
 commit `675717e3`).  Per-version evolution (which release introduced
 which subset, audit probe count growth, etc.) is tracked in
-[`CHANGELOG.md`](CHANGELOG.md); the kit currently ships **92** internal
+[`CHANGELOG.md`](CHANGELOG.md); the kit currently ships **95** internal
 conformance probes — see
 [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what that
 number measures and what it does **not** claim.
@@ -109,7 +109,7 @@ buttons it has:
   hybrid lexical + embedding (default `hash-256`, offline).
 - **MCP integration** — stdio + inproc adapters; bundled selfcheck
   server (`vibecodekit.mcp_servers.selfcheck`).
-- **92 internal conformance probes** — see
+- **95 internal conformance probes** — see
   [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for what
   these measure and what they explicitly do **not** claim (no
   HumanEval / MBPP / SWE-bench, no external benchmark, no API key
@@ -211,11 +211,11 @@ tham khảo dưới đây ứng với commit hiện tại trên nhánh `main` (x
 
 ```
 pytest                            : <N> passed                # at current main (see CHANGELOG.md)
-audit (×any)                      : 91/91 met=True[^bench]    # at current main (internal self-test)
+audit (×any)                      : 95/95 met=True[^bench]    # at current main (internal self-test)
 validate_release_matrix (default) : PASS
 ```
 
-[^bench]: Internal regression gate — see [BENCHMARKS-METHODOLOGY.md](BENCHMARKS-METHODOLOGY.md) for what the 91/91 number actually measures (architectural invariants only, not external code-quality benchmarks).
+[^bench]: Internal regression gate — see [BENCHMARKS-METHODOLOGY.md](BENCHMARKS-METHODOLOGY.md) for what the 95/95 number actually measures (architectural invariants only, not external code-quality benchmarks).
 
 Để lấy số chính xác cho bản đang ở local, chạy:
 
@@ -224,7 +224,7 @@ cat VERSION                                                  # ví dụ: 0.16.2
 VIBECODE_UPDATE_PACKAGE="$(pwd)/update-package" \
   PYTHONPATH=./scripts python3 -m pytest tests -q | tail -1  # số case pytest
 PYTHONPATH=./scripts python3 -m vibecodekit.conformance_audit \
-    --threshold 1.0 | head -1                                # ví dụ: parity: 100.00% (91/91, threshold 100%)
+    --threshold 1.0 | head -1                                # ví dụ: parity: 100.00% (95/95, threshold 100%)
 ```
 
 (Under `root`, the `test_install_into_readonly_dir` test is intentionally
@@ -282,12 +282,12 @@ Số ca pytest và số probe lớn dần theo từng release; bảng dưới đ
 phản ánh trạng thái **tại nhánh `main` hiện tại** (xem
 [`CHANGELOG.md`](CHANGELOG.md) cho lịch sử số liệu theo từng version,
 và [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) để biết
-"91/91" thực sự đo cái gì — không phải benchmark chất lượng ngoài).
+"95/95" thực sự đo cái gì — không phải benchmark chất lượng ngoài).
 
 | Gate | Result | What it measures |
 |---|---|---|
 | pytest (xem `pytest --collect-only -q \| tail`) | PASS | Unit + integration correctness |
-| conformance self-test | 91/91 met=True[^bench] | Internal regression invariants ([details](BENCHMARKS-METHODOLOGY.md)) |
+| conformance self-test | 95/95 met=True[^bench] | Internal regression invariants ([details](BENCHMARKS-METHODOLOGY.md)) |
 | validate_release_matrix (default) | PASS | Layout integrity across 3 deploy modes |
 | All 170 Cf codepoints × `rm -rf /` bypass | blocked | Permission engine coverage |
 

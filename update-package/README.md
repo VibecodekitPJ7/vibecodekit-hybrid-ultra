@@ -51,11 +51,11 @@ ca pytest tăng theo thời gian — chạy `pytest --collect-only -q | tail`
 để xem con số chính xác cho commit của bạn):
 
 - **pytest**: all actionable tests pass (số case tăng theo release; xem `CHANGELOG.md`)
-- **conformance self-test**: 92 / 92 internal regression probes pass[^bench] (self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`)
-- **fresh-extract self-test**: 88 / 92 probes pass
+- **conformance self-test**: 95 / 95 internal regression probes pass[^bench] (self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`)
+- **fresh-extract self-test**: 91 / 95 probes pass
 - **integration tests**: 8 e2e + 3 UX + 6 version-sync
 
-[^bench]: Internal regression gate — chi tiết "91/91" đo cái gì xem `BENCHMARKS-METHODOLOGY.md` (architectural invariants only, không phải benchmark code-quality ngoài như HumanEval / SWE-bench).
+[^bench]: Internal regression gate — chi tiết "95/95" đo cái gì xem `BENCHMARKS-METHODOLOGY.md` (architectural invariants only, không phải benchmark code-quality ngoài như HumanEval / SWE-bench).
 
 Lịch sử các milestone (v0.11.x / v0.15.x / v0.16.x) được giữ trong `CHANGELOG.md`.
 
