@@ -207,7 +207,7 @@ _TOOLS = {
     },
     "scaffold_list": {
         "fn": scaffold_list,
-        "description": "List available scaffold presets (10 presets x 3 stacks)",
+        "description": "List available scaffold presets (11 presets x 3 stacks)",
         "inputSchema": {"type": "object", "properties": {}},
     },
     "scaffold_preview": {

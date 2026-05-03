@@ -1,9 +1,9 @@
-# claw-code-pack (VibecodeKit Hybrid Ultra v0.24.0)
+# claw-code-pack (VibecodeKit Hybrid Ultra v0.25.0)
 
 Drop-in overlay for projects that use `claw-code` / Claude Code / Codex.
 After extracting into your project root you'll have:
 
-- `.claude/commands/` — **42 slash commands** at v0.24.0: 25 `/vibe-*` + 1 master `/vibe`
+- `.claude/commands/` — **42 slash commands** at v0.25.0: 25 `/vibe-*` + 1 master `/vibe`
   (`/vibe`, `/vibe-scaffold`, `/vibe-ship`, `/vibe-run`, `/vibe-doctor`,
   `/vibe-subagent`, `/vibe-memory`, `/vibe-approval`, `/vibe-task`,
   `/vibe-scan`, `/vibe-vision`, `/vibe-rri`, `/vibe-rri-t`, `/vibe-rri-ux`,
@@ -51,11 +51,11 @@ ca pytest tăng theo thời gian — chạy `pytest --collect-only -q | tail`
 để xem con số chính xác cho commit của bạn):
 
 - **pytest**: all actionable tests pass (số case tăng theo release; xem `CHANGELOG.md`)
-- **conformance self-test**: 95 / 95 internal regression probes pass[^bench] (self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`)
-- **fresh-extract self-test**: 91 / 95 probes pass
+- **conformance self-test**: 96 / 96 internal regression probes pass[^bench] (self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`)
+- **fresh-extract self-test**: 92 / 96 probes pass
 - **integration tests**: 8 e2e + 3 UX + 6 version-sync
 
-[^bench]: Internal regression gate — chi tiết "95/95" đo cái gì xem `BENCHMARKS-METHODOLOGY.md` (architectural invariants only, không phải benchmark code-quality ngoài như HumanEval / SWE-bench).
+[^bench]: Internal regression gate — chi tiết "96/96" đo cái gì xem `BENCHMARKS-METHODOLOGY.md` (architectural invariants only, không phải benchmark code-quality ngoài như HumanEval / SWE-bench).
 
 Lịch sử các milestone (v0.11.x / v0.15.x / v0.16.x) được giữ trong `CHANGELOG.md`.
 

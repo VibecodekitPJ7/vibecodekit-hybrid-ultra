@@ -1,6 +1,6 @@
 ---
 name: vibecodekit-hybrid-ultra
-version: 0.24.0
+version: 0.25.0
 description: >-
   Full Agentic-OS overlay for Claude Code / Devin / Cursor projects with
   the VIBECODE-MASTER methodology layer on top.  Verified by an internal
@@ -14,7 +14,7 @@ description: >-
   combining RRI-UX + RRI-T), VIBECODE-MASTER (3-actor, 8-step
   workflow SCAN → RRI → VISION → BLUEPRINT → TASK GRAPH → BUILD →
   VERIFY → REFINE), plus the BIG-UPDATE layer (xem `CHANGELOG.md` cho lineage chi tiết): F1 scaffold
-  engine (10 preset × 3 stacks: Next.js / FastAPI / Expo), F2 deploy
+  engine (11 preset × 3 stacks: Next.js / FastAPI / Expo), F2 deploy
   orchestrator (7 target: Vercel / Docker / VPS / Cloudflare / Railway
   / Fly / Render), F3 auto-commit hook + sensitive-file pre-write
   guard, F4 single-prompt /vibe router (14 tier-1 intents, VN+EN), F5

@@ -111,7 +111,7 @@ TIER_1: tuple[tuple[str, tuple[str, ...]], ...] = (
         "khoi tao", "ra code", "viết code", "viet code",
         "implement", "develop", "code app", "create",
         "new project", "dự án mới", "du an moi",
-        # Preset names — keep all 9 in sync with assets/scaffolds/.
+        # Preset names — keep all 11 in sync with assets/scaffolds/.
         "shop", "shop online", "landing", "landing page",
         "blog", "crm", "dashboard",
         "api", "api todo", "rest api", "todo api",
@@ -131,6 +131,12 @@ TIER_1: tuple[tuple[str, tuple[str, ...]], ...] = (
         "trang tài liệu", "trang tai lieu",
         "knowledge base", "guidebook", "handbook",
         "nextra", "docusaurus",
+        # Cycle 16 — osint-terminal scaffold (cyan-on-black command console).
+        "osint", "osint terminal", "intelligence dashboard",
+        "command console", "monitoring console",
+        "trang điều khiển", "trang dieu khien",
+        "giao diện kiểu console", "giao dien kieu console",
+        "make it look like a terminal", "terminal ui",
     )),
     ("VERIFY", (
         "verify", "audit", "kiểm tra", "kiem tra",
@@ -319,7 +325,7 @@ TIER_1: tuple[tuple[str, tuple[str, ...]], ...] = (
 _PIPELINE_TRIGGERS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("FULL_BUILD", (
         # High-level "build a whole product" cues — fan out to the full
-        # SCAN→VISION→RRI→BUILD→VERIFY pipeline.  Covers all 9 presets.
+        # SCAN→VISION→RRI→BUILD→VERIFY pipeline.  Covers all 11 presets.
         "shop online", "landing page", "ra mắt sản phẩm",
         "ra mat san pham", "build từ đầu", "build tu dau",
         "tạo dự án mới", "tao du an moi", "new project",
@@ -341,6 +347,12 @@ _PIPELINE_TRIGGERS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tai lieu san pham", "tạo docs", "tao docs",
         "build docs", "trang tài liệu", "trang tai lieu",
         "knowledge base", "developer documentation",
+        # Cycle 16 — osint-terminal scaffold.
+        "build osint", "build osint terminal", "tạo osint",
+        "tao osint", "build intelligence dashboard",
+        "tạo trang điều khiển", "tao trang dieu khien",
+        "build command console", "build monitoring console",
+        "build terminal ui",
     )),
 )
 _FULL_BUILD_PIPELINE = ("SCAN", "VISION", "RRI", "BUILD", "VERIFY")

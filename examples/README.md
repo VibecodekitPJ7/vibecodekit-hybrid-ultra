@@ -28,7 +28,7 @@ PYTHONPATH=./scripts python examples/08_worktree_executor.py
 | Script | Description |
 |--------|-------------|
 | `01_permission_engine.py` | Classify 20 shell commands through the 6-layer permission pipeline |
-| `02_scaffold_preview.py` | List and preview all 10 scaffold presets across available stacks |
+| `02_scaffold_preview.py` | List and preview all 11 scaffold presets across available stacks |
 | `03_mcp_selfcheck.py` | Call the bundled MCP selfcheck server via in-process transport |
 | `04_vn_faker.py` | Generate a Vietnamese user profile + 3-SKU shop catalog (deterministic, ``seed=42``) |
 | `05_vn_error_translator.py` | Translate 3 common Python errors to Vietnamese with fix suggestions |

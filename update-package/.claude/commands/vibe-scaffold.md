@@ -1,5 +1,5 @@
 ---
-description: Scaffold a runnable starter project from a preset (9 presets × 3 stacks)
+description: Scaffold a runnable starter project from a preset (11 presets × 3 stacks)
 version: 0.11.3
 allowed-tools: [Bash, Read, Write]
 wired_refs: [ref-34]
