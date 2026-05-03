@@ -1,0 +1,16 @@
+/* Generated from vibecodekit.methodology — DO NOT EDIT. */
+/* Regenerate via:                                       */
+/*   python3 -m vibecodekit.cli scaffold tokens-export    */
+/*       --scaffold <name> --pairing FP-XX                */
+:root {
+  --vck-trust: #2563EB;
+  --vck-energy: #F97316;
+  --vck-growth: #22C55E;
+  --vck-luxury: #7C3AED;
+  --vck-warning: #EF4444;
+  --vck-neutral: #6B7280;
+  --vck-font-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+  --vck-font-body: Inter, system-ui, sans-serif;
+  --vck-line-height-body: 1.6;
+  --vck-line-height-heading: 1.2;
+}

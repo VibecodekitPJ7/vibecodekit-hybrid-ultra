@@ -1,4 +1,4 @@
-"""Probes #71-93 — governance / license / case-study / design-token artefacts.
+"""Probes #71-94 — governance / license / case-study / design-token artefacts.
 
 Extracted from ``conformance_audit.py`` in cycle 14 PR β-5 (the final
 probe-relocation PR; β-6 will switch the manual ``PROBES`` list to
@@ -31,6 +31,7 @@ plugin/no-orphan-module audit, and the v0.21.0 / v0.22.0 case-study
   #91  font_pairing_appendix                 (v0.22.0 polish artefact)
   #92  intent_routing_llm_primary_doc        (cycle 14 issue 2/2 doc)
   #93  tailwind_prewire_design_tokens        (cycle 15 PR-D1 design-apply)
+  #94  design_tokens_files_shipped           (cycle 15 PR-D2 design-apply)
 
 The helper ``_candidate_repo_roots`` (used by probes #76-79 to walk
 likely repo roots for L1 source / L3 installed-project layouts)
@@ -957,4 +958,66 @@ def _probe_tailwind_prewire_design_tokens(tmp: Path) -> Tuple[bool, str]:
         True,
         f"6/6 Next.js scaffolds pre-wire vck-* tokens + heading/body "
         f"fontFamily ({len(_LOCKED_VCK_TOKENS)} CP-XX names locked)",
+    )
+
+
+@probe("94_design_tokens_files_shipped", group="governance")
+def _probe_design_tokens_files_shipped(tmp: Path) -> Tuple[bool, str]:
+    """#94 — cycle 15 PR-D2.
+
+    Verify each of the 6 Next.js scaffolds ships ``design/tokens.json``
+    + ``design/tokens.css`` and that the JSON has schema-v1 shape with
+    6 colour entries plus a typography section.  This catches both
+    "forgot to regenerate after methodology change" drift and "scaffold
+    copy-paste skipped the design/ dir" omissions.
+    """
+    roots = _candidate_repo_roots(tmp)
+    chosen: Path | None = None
+    for r in roots:
+        if (r / "assets" / "scaffolds").is_dir():
+            chosen = r
+            break
+    if chosen is None:
+        return False, "could not locate assets/scaffolds in any candidate root"
+    missing: list[str] = []
+    for s in _NEXTJS_SCAFFOLDS_WITH_TAILWIND:
+        base = chosen / "assets" / "scaffolds" / s / "nextjs" / "design"
+        json_p = base / "tokens.json"
+        css_p = base / "tokens.css"
+        if not json_p.exists():
+            missing.append(f"{s}: design/tokens.json missing")
+        else:
+            try:
+                data = json.loads(json_p.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                missing.append(f"{s}: tokens.json invalid JSON ({exc.msg})")
+                continue
+            if "design-tokens-v1" not in str(data.get("$schema", "")):
+                missing.append(f"{s}: tokens.json $schema not v1")
+            if not isinstance(data.get("version"), str) or not data["version"]:
+                missing.append(f"{s}: tokens.json missing version field")
+            colors = data.get("colors", {})
+            if not isinstance(colors, dict) or len(colors) != 6:
+                missing.append(
+                    f"{s}: tokens.json colors count {len(colors) if isinstance(colors, dict) else 'NA'} != 6"
+                )
+            if "typography" not in data or "vn_typography" not in data:
+                missing.append(f"{s}: tokens.json missing typography sections")
+        if not css_p.exists():
+            missing.append(f"{s}: design/tokens.css missing")
+        else:
+            css = css_p.read_text(encoding="utf-8")
+            if ":root" not in css:
+                missing.append(f"{s}: tokens.css missing :root selector")
+            css_token_hits = sum(1 for n in _LOCKED_VCK_TOKENS if f"--{n}" in css)
+            if css_token_hits != len(_LOCKED_VCK_TOKENS):
+                missing.append(
+                    f"{s}: tokens.css has only {css_token_hits}/6 vck-* CSS vars"
+                )
+    if missing:
+        return False, "; ".join(missing)
+    return (
+        True,
+        f"6/6 Next.js scaffolds ship design/tokens.{{json,css}} "
+        f"(schema v1, 6 colors, :root vars)",
     )
