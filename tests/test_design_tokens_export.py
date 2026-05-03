@@ -1,4 +1,4 @@
-"""Cycle 15 PR-D1 — unit tests for ``design_tokens_export`` Tailwind helpers.
+"""Cycle 15 PR-D1 + PR-D2 — unit tests for ``design_tokens_export``.
 
 The helper is the canonical adapter between
 :mod:`vibecodekit.methodology` (single source of truth) and the
@@ -108,3 +108,117 @@ def test_six_nextjs_scaffolds_wire_vck_tokens() -> None:
         assert "heading" in text and "body" in text, (
             f"{s}: missing fontFamily heading/body in {cfg}"
         )
+
+
+# ─── Cycle 15 PR-D2: tokens.json + tokens.css helpers ────────────────
+
+
+def test_to_json_dict_schema_v1_shape() -> None:
+    """``to_json_dict`` returns a schema-v1 envelope with all sections."""
+    from vibecodekit.design_tokens_export import to_json_dict
+
+    d = to_json_dict("0.24.0")
+    assert d["$schema"] == "https://vibecodekit.dev/schemas/design-tokens-v1.json"
+    assert d["version"] == "0.24.0"
+    assert d["source"] == "vibecodekit.methodology"
+    colors = d["colors"]
+    assert isinstance(colors, dict)
+    assert len(colors) == 6
+    # Each colour entry preserves its CP-XX provenance.
+    assert colors["vck-trust"]["cp_id"] == "CP-01"
+    assert colors["vck-trust"]["hex"] == "#2563EB"
+    typography = d["typography"]
+    assert isinstance(typography, dict)
+    assert typography["heading"]["fp_id"] == "FP-01"
+    assert typography["heading"]["stack"][0] == "Plus Jakarta Sans"
+    vn = d["vn_typography"]
+    assert isinstance(vn, dict)
+    assert vn["body_line_height"] == 1.6
+
+
+def test_to_json_dict_explicit_pairing_id() -> None:
+    """Caller can override pairing; helper validates it against methodology."""
+    from vibecodekit import methodology as m
+    from vibecodekit.design_tokens_export import to_json_dict
+
+    pairing = "FP-02" if "FP-02" in m.FONT_PAIRINGS else "FP-01"
+    d = to_json_dict("0.24.0", pairing_id=pairing)
+    typography = d["typography"]
+    assert isinstance(typography, dict)
+    assert typography["heading"]["fp_id"] == pairing
+
+
+def test_to_json_dict_invalid_pairing_raises() -> None:
+    """Unknown pairing id surfaces immediately, no silent FP-01 fallback."""
+    import pytest as _pytest
+
+    from vibecodekit.design_tokens_export import to_json_dict
+
+    with _pytest.raises(ValueError, match="FP-99"):
+        to_json_dict("0.24.0", pairing_id="FP-99")
+
+
+def test_to_css_variables_root_block_contract() -> None:
+    """``to_css_variables`` ships ``:root`` with all 6 colour CSS vars + fonts."""
+    from vibecodekit.design_tokens_export import to_css_variables
+
+    css = to_css_variables()
+    assert ":root {" in css
+    assert css.rstrip().endswith("}")
+    for token in (
+        "--vck-trust", "--vck-energy", "--vck-growth",
+        "--vck-luxury", "--vck-warning", "--vck-neutral",
+        "--vck-font-heading", "--vck-font-body",
+        "--vck-line-height-body", "--vck-line-height-heading",
+    ):
+        assert token in css, f"missing CSS var {token}"
+    # Multi-word font name must be quoted (CSS spec).
+    assert '"Plus Jakarta Sans"' in css
+
+
+def test_six_nextjs_scaffolds_ship_design_tokens_files() -> None:
+    """Every Next.js scaffold has ``design/tokens.json`` + ``design/tokens.css``."""
+    import json as _json
+
+    scaffolds = (
+        "saas", "dashboard", "landing-page",
+        "blog", "portfolio", "shop-online",
+    )
+    for s in scaffolds:
+        base = _REPO / "assets" / "scaffolds" / s / "nextjs" / "design"
+        json_p = base / "tokens.json"
+        css_p = base / "tokens.css"
+        assert json_p.exists(), f"{s}: tokens.json missing"
+        assert css_p.exists(), f"{s}: tokens.css missing"
+        data = _json.loads(json_p.read_text(encoding="utf-8"))
+        assert "design-tokens-v1" in data["$schema"]
+        assert len(data["colors"]) == 6
+        css = css_p.read_text(encoding="utf-8")
+        assert "--vck-trust" in css
+        assert ":root" in css
+
+
+def test_six_nextjs_manifests_register_design_tokens() -> None:
+    """Each manifest declares the new design tokens files in ``files[]``
+    and ``success_criteria[]`` so ``vibe scaffold apply`` actually copies
+    them and ``vibe scaffold verify`` actually checks them."""
+    import json as _json
+
+    scaffolds = (
+        "saas", "dashboard", "landing-page",
+        "blog", "portfolio", "shop-online",
+    )
+    expected_files = ("design/tokens.json", "design/tokens.css")
+    expected_crits = ("design/tokens.json exists", "design/tokens.css exists")
+    for s in scaffolds:
+        manifest = _json.loads(
+            (_REPO / "assets" / "scaffolds" / s / "manifest.json")
+            .read_text(encoding="utf-8")
+        )
+        spec = manifest["stacks"]["nextjs"]
+        for f in expected_files:
+            assert f in spec["files"], f"{s}: manifest.files missing {f}"
+        for c in expected_crits:
+            assert c in spec["success_criteria"], (
+                f"{s}: manifest.success_criteria missing {c!r}"
+            )

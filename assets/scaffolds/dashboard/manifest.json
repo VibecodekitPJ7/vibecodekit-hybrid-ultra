@@ -15,7 +15,9 @@
         "vercel.json",
         "tsconfig.json",
         ".gitignore",
-        ".env.example"
+        ".env.example",
+        "design/tokens.json",
+        "design/tokens.css"
       ],
       "post_install": [
         "npm install",
@@ -34,7 +36,9 @@
         "vercel.json exists",
         "tsconfig.json exists",
         ".gitignore exists",
-        ".env.example exists"
+        ".env.example exists",
+        "design/tokens.json exists",
+        "design/tokens.css exists"
       ]
     }
   }
