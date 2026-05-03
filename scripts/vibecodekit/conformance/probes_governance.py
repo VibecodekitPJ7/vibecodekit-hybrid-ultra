@@ -1,4 +1,4 @@
-"""Probes #71-94 — governance / license / case-study / design-token artefacts.
+"""Probes #71-95 — governance / license / case-study / design-token artefacts.
 
 Extracted from ``conformance_audit.py`` in cycle 14 PR β-5 (the final
 probe-relocation PR; β-6 will switch the manual ``PROBES`` list to
@@ -32,6 +32,7 @@ plugin/no-orphan-module audit, and the v0.21.0 / v0.22.0 case-study
   #92  intent_routing_llm_primary_doc        (cycle 14 issue 2/2 doc)
   #93  tailwind_prewire_design_tokens        (cycle 15 PR-D1 design-apply)
   #94  design_tokens_files_shipped           (cycle 15 PR-D2 design-apply)
+  #95  shadcn_samples_ship                   (cycle 15 PR-D3 design-apply)
 
 The helper ``_candidate_repo_roots`` (used by probes #76-79 to walk
 likely repo roots for L1 source / L3 installed-project layouts)
@@ -1020,4 +1021,52 @@ def _probe_design_tokens_files_shipped(tmp: Path) -> Tuple[bool, str]:
         True,
         f"6/6 Next.js scaffolds ship design/tokens.{{json,css}} "
         f"(schema v1, 6 colors, :root vars)",
+    )
+
+
+_SHADCN_SAMPLE_TARGETS = ("saas", "dashboard")
+_SHADCN_SAMPLE_COMPONENTS = ("button.tsx", "input.tsx", "card.tsx")
+
+
+@probe("95_shadcn_samples_ship", group="governance")
+def _probe_shadcn_samples_ship(tmp: Path) -> Tuple[bool, str]:
+    """#95 — cycle 15 PR-D3.
+
+    Verify the saas + dashboard scaffolds ship a hand-rolled shadcn-style
+    sample component library (Button, Input, Card) under
+    ``components/ui/`` and that each component references at least one
+    ``vck-*`` design token.  The latter check is the meaningful contract
+    — without token references, the sample drifts back into hard-coded
+    HEX and the cycle 15 design-apply guarantee dissolves.
+    """
+    roots = _candidate_repo_roots(tmp)
+    chosen: Path | None = None
+    for r in roots:
+        if (r / "assets" / "scaffolds").is_dir():
+            chosen = r
+            break
+    if chosen is None:
+        return False, "could not locate assets/scaffolds in any candidate root"
+    missing: list[str] = []
+    for t in _SHADCN_SAMPLE_TARGETS:
+        for c in _SHADCN_SAMPLE_COMPONENTS:
+            f = chosen / "assets" / "scaffolds" / t / "nextjs" / "components" / "ui" / c
+            if not f.exists():
+                missing.append(f"{t}/{c} missing")
+                continue
+            text = f.read_text(encoding="utf-8")
+            if "vck-" not in text:
+                missing.append(f"{t}/{c}: no vck-* token reference")
+            if 'from "@/lib/cn"' not in text:
+                missing.append(f"{t}/{c}: missing cn() helper import")
+        cn_path = chosen / "assets" / "scaffolds" / t / "nextjs" / "lib" / "cn.ts"
+        if not cn_path.exists():
+            missing.append(f"{t}/lib/cn.ts missing")
+    if missing:
+        return False, "; ".join(missing)
+    return (
+        True,
+        f"{len(_SHADCN_SAMPLE_TARGETS)}/2 scaffolds ship "
+        f"{len(_SHADCN_SAMPLE_COMPONENTS)} sample components + cn() helper, "
+        f"each consuming vck-* tokens",
     )

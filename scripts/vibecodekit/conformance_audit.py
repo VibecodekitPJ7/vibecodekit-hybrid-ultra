@@ -1,6 +1,6 @@
 """Behaviour-based conformance audit (replaces v0.6's tautological file-exists check).
 
-Each of the 94 patterns in the methodology maps to a *probe* — a small
+Each of the 95 patterns in the methodology maps to a *probe* — a small
 runtime experiment exercised against a temp directory.  A probe is
 ``pass`` iff it observes the documented behaviour.  File existence is
 never sufficient.
@@ -23,7 +23,7 @@ The audit machinery lives in the ``vibecodekit.conformance`` package
   ``conformance/probes_runtime.py``     – probes #01-30 (runtime / hooks / MCP)
   ``conformance/probes_methodology.py`` – probes #31-50 (RRI / scaffolds / assets)
   ``conformance/probes_assets.py``      – probes #51-70 (browser / vck / classifier)
-  ``conformance/probes_governance.py``  – probes #71-94 (security / case-studies / design-tokens)
+  ``conformance/probes_governance.py``  – probes #71-95 (security / case-studies / design-tokens)
 
 This module is a **back-compat shim**.  Existing callers that do
 ``from vibecodekit.conformance_audit import PROBES`` or
@@ -160,12 +160,13 @@ from .conformance.probes_governance import (  # noqa: E402, F401
     _probe_intent_routing_llm_primary_doc,
     _probe_tailwind_prewire_design_tokens,
     _probe_design_tokens_files_shipped,
+    _probe_shadcn_samples_ship,
 )
 
 # Build the canonical ``PROBES`` list lazily from the registry, sorted
 # by probe-id so the row-by-row output of ``python -m vibecodekit
 # .conformance_audit`` matches v0.22.x exactly (``"01_…"`` first,
-# ``"94_…"`` last).  Any future probe added with
+# ``"95_…"`` last).  Any future probe added with
 # ``@probe(id, group=...)`` automatically lands in this list — no manual
 # edit required.  This replaces the ~110-line manual ``PROBES`` block
 # that lived here through v0.22.x.
