@@ -12,6 +12,55 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.24.0] — 2026-05-03
+
+Cycle 15 design-apply polish release.  Closes the "scaffolds chưa apply
+design tokens" gap from cycle 14 by wiring methodology constants
+end-to-end into the JS / CSS layers consumers actually use.  Four
+sequential PRs (D1 → D4) — additive only, no public API removal, no core
+runtime touch.
+
+- **PR-D1 (#16):** Tailwind theme pre-wire.  6 Next.js scaffolds
+  (`saas`, `dashboard`, `landing-page`, `blog`, `portfolio`,
+  `shop-online`) ship populated `theme.extend` with 6 `vck-*` colour
+  tokens (CP-01..CP-06), FP-01 fontFamily heading/body, and VN-01/02
+  lineHeight.  New helper module
+  `scripts/vibecodekit/design_tokens_export.py` (functions
+  `tailwind_colors()` + `tailwind_font_family()`).  Conformance probe
+  **#93 (`tailwind_prewire_design_tokens`)**.
+- **PR-D2 (#17):** ship `design/tokens.json` (schema v1, with `$schema`
+  URL pinned) and `design/tokens.css` (`:root { --vck-* }` block) for
+  all 6 Next.js scaffolds.  `design_tokens_export` extended with
+  `to_json_dict()` + `to_css_variables()`.  Conformance probe
+  **#94 (`design_tokens_files_shipped`)**.
+- **PR-D3 (#18):** sample hand-rolled shadcn-style component library
+  shipped with `saas` + `dashboard` scaffolds: `lib/cn.ts`
+  (`clsx + tailwind-merge`) + `components/ui/{button,input,card}.tsx`,
+  3 variants per component, all consuming `vck-*` tokens.
+  `app/page.tsx` of both scaffolds refactored to demo the components.
+  New reference doc `references/41-component-library-pattern.md`.
+  Conformance probe **#95 (`shadcn_samples_ship`)**.
+- **PR-D4 (this release):** dark-mode CP twin + cross-link fix +
+  release.  `design_tokens_export.dark_mode_colors()` returns the 6
+  dark-mode HEX twins; `to_css_variables(..., dark_mode=True)` (default)
+  now appends a `@media (prefers-color-scheme: dark)` block re-using
+  the same `--vck-*` variable names.  All 6 `tokens.css` files
+  regenerated with the dark block; all 6 `tokens.json` `version` fields
+  bumped 0.23.0 → 0.24.0.  `references/anti-patterns-gallery.md`
+  cross-links repaired (3 broken targets after cycle 13 reorg).
+  `references/34-style-tokens.md` § 6 documents the dark mapping +
+  toggle-strategy guidance.  Folded fix from PR-D3 Devin Review:
+  newsletter signup `<section>` → `<form>` so `<Button type="submit">`
+  is no longer inert.
+
+Public API additions (immutable, no rename / removal):
+`design_tokens_export.tailwind_colors`,
+`design_tokens_export.tailwind_font_family`,
+`design_tokens_export.to_json_dict`,
+`design_tokens_export.to_css_variables`,
+`design_tokens_export.dark_mode_colors`.  `methodology.__all__`
+unchanged (29 symbols).  Conformance count 92 → 95.
+
 ## [0.23.0] — 2026-05-02
 
 Cycle 14 conformance modularization + intent-routing hybrid release.

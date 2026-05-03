@@ -14,3 +14,14 @@
   --vck-line-height-body: 1.6;
   --vck-line-height-heading: 1.2;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vck-trust: #3B82F6;
+    --vck-energy: #FB923C;
+    --vck-growth: #34D399;
+    --vck-luxury: #8B5CF6;
+    --vck-warning: #F87171;
+    --vck-neutral: #9CA3AF;
+  }
+}

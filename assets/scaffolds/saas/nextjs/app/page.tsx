@@ -35,19 +35,21 @@ export default function Page() {
         </Link>
       </nav>
 
-      <section className="space-y-3">
+      <form className="space-y-3" action="/api/newsletter" method="post">
         <label htmlFor="newsletter" className="font-heading text-vck-trust">
           Đăng ký nhận update
         </label>
         <Input
           id="newsletter"
+          name="email"
           type="email"
           placeholder="ban@example.vn"
+          required
         />
         <Button variant="primary" size="md" type="submit">
           Đăng ký
         </Button>
-      </section>
+      </form>
 
       <section className="grid gap-6 sm:grid-cols-2">
         <Card variant="elevated">
