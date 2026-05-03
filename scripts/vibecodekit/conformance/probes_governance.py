@@ -1,4 +1,4 @@
-"""Probes #71-92 — governance / license / case-study artefacts.
+"""Probes #71-93 — governance / license / case-study / design-token artefacts.
 
 Extracted from ``conformance_audit.py`` in cycle 14 PR β-5 (the final
 probe-relocation PR; β-6 will switch the manual ``PROBES`` list to
@@ -30,6 +30,7 @@ plugin/no-orphan-module audit, and the v0.21.0 / v0.22.0 case-study
   #90  color_psychology_appendix             (v0.22.0 polish artefact)
   #91  font_pairing_appendix                 (v0.22.0 polish artefact)
   #92  intent_routing_llm_primary_doc        (cycle 14 issue 2/2 doc)
+  #93  tailwind_prewire_design_tokens        (cycle 15 PR-D1 design-apply)
 
 The helper ``_candidate_repo_roots`` (used by probes #76-79 to walk
 likely repo roots for L1 source / L3 installed-project layouts)
@@ -894,3 +895,66 @@ def _probe_intent_routing_llm_primary_doc(tmp: Path) -> Tuple[bool, str]:
 
     return (True, "design log + vibe.md + router docstring all in sync "
             "(LLM-primary, keyword-fallback)")
+
+
+# ─── Cycle 15 design-apply probes ─────────────────────────────────────
+
+
+_NEXTJS_SCAFFOLDS_WITH_TAILWIND = (
+    "saas",
+    "dashboard",
+    "landing-page",
+    "blog",
+    "portfolio",
+    "shop-online",
+)
+
+_LOCKED_VCK_TOKENS = (
+    "vck-trust",
+    "vck-energy",
+    "vck-growth",
+    "vck-luxury",
+    "vck-warning",
+    "vck-neutral",
+)
+
+
+@probe("93_tailwind_prewire_design_tokens", group="governance")
+def _probe_tailwind_prewire_design_tokens(tmp: Path) -> Tuple[bool, str]:
+    """#93 — cycle 15 PR-D1.
+
+    Verify each of the 6 Next.js scaffolds (saas, dashboard, landing-page,
+    blog, portfolio, shop-online) pre-wires ``methodology.COLOR_PSYCHOLOGY``
+    + ``methodology.FONT_PAIRINGS`` into ``tailwind.config.ts`` so dev does
+    not have to wire token names manually.  Each config must reference at
+    least 3 of 6 ``vck-*`` token names and both ``heading`` + ``body``
+    fontFamily entries.
+    """
+    roots = _candidate_repo_roots(tmp)
+    chosen: Path | None = None
+    for r in roots:
+        probe_dir = r / "assets" / "scaffolds"
+        if probe_dir.is_dir():
+            chosen = r
+            break
+    if chosen is None:
+        return False, "could not locate assets/scaffolds in any candidate root"
+    missing: list[str] = []
+    for s in _NEXTJS_SCAFFOLDS_WITH_TAILWIND:
+        cfg = chosen / "assets" / "scaffolds" / s / "nextjs" / "tailwind.config.ts"
+        if not cfg.exists():
+            missing.append(f"{s}: missing tailwind.config.ts")
+            continue
+        text = cfg.read_text(encoding="utf-8")
+        token_hits = sum(1 for n in _LOCKED_VCK_TOKENS if n in text)
+        if token_hits < 3:
+            missing.append(f"{s}: only {token_hits}/6 vck-* tokens wired")
+        if "heading" not in text or "body" not in text:
+            missing.append(f"{s}: missing fontFamily heading/body")
+    if missing:
+        return False, "; ".join(missing)
+    return (
+        True,
+        f"6/6 Next.js scaffolds pre-wire vck-* tokens + heading/body "
+        f"fontFamily ({len(_LOCKED_VCK_TOKENS)} CP-XX names locked)",
+    )
