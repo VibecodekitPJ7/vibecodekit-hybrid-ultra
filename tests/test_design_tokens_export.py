@@ -222,3 +222,79 @@ def test_six_nextjs_manifests_register_design_tokens() -> None:
             assert c in spec["success_criteria"], (
                 f"{s}: manifest.success_criteria missing {c!r}"
             )
+
+
+# ─── Cycle 15 PR-D3: shadcn-style sample component library ───────────
+
+
+def test_two_scaffolds_ship_three_components_each() -> None:
+    """saas + dashboard each ship Button + Input + Card under components/ui/."""
+    components = ("button.tsx", "input.tsx", "card.tsx")
+    for s in ("saas", "dashboard"):
+        for c in components:
+            f = _REPO / "assets" / "scaffolds" / s / "nextjs" / "components" / "ui" / c
+            assert f.exists(), f"{s}/components/ui/{c} missing"
+            text = f.read_text(encoding="utf-8")
+            assert "vck-" in text, f"{s}/{c}: no vck-* token reference"
+            assert 'from "@/lib/cn"' in text, (
+                f"{s}/{c}: missing cn() helper import"
+            )
+
+
+def test_two_scaffolds_ship_cn_helper() -> None:
+    """saas + dashboard each ship lib/cn.ts pulling clsx + tailwind-merge."""
+    for s in ("saas", "dashboard"):
+        cn_path = _REPO / "assets" / "scaffolds" / s / "nextjs" / "lib" / "cn.ts"
+        assert cn_path.exists(), f"{s}/lib/cn.ts missing"
+        text = cn_path.read_text(encoding="utf-8")
+        assert 'from "clsx"' in text
+        assert 'from "tailwind-merge"' in text
+        assert "export function cn" in text
+
+
+def test_two_manifests_register_component_files() -> None:
+    """Manifest declares the 4 new component-library files + new criteria."""
+    import json as _json
+
+    expected_files = (
+        "lib/cn.ts",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/card.tsx",
+    )
+    for s in ("saas", "dashboard"):
+        manifest = _json.loads(
+            (_REPO / "assets" / "scaffolds" / s / "manifest.json")
+            .read_text(encoding="utf-8")
+        )
+        spec = manifest["stacks"]["nextjs"]
+        for f in expected_files:
+            assert f in spec["files"], f"{s}: manifest.files missing {f}"
+
+
+def test_two_scaffolds_pin_clsx_and_tailwind_merge_deps() -> None:
+    """package.json adds clsx + tailwind-merge so cn() helper resolves."""
+    import json as _json
+
+    for s in ("saas", "dashboard"):
+        pkg = _json.loads(
+            (_REPO / "assets" / "scaffolds" / s / "nextjs" / "package.json")
+            .read_text(encoding="utf-8")
+        )
+        deps = pkg.get("dependencies", {})
+        assert "clsx" in deps, f"{s}: missing clsx in dependencies"
+        assert "tailwind-merge" in deps, (
+            f"{s}: missing tailwind-merge in dependencies"
+        )
+
+
+def test_component_library_pattern_doc_exists() -> None:
+    """References include the component-library-pattern doc (cycle 15 PR-D3)."""
+    doc = _REPO / "references" / "41-component-library-pattern.md"
+    assert doc.exists(), "missing references/41-component-library-pattern.md"
+    text = doc.read_text(encoding="utf-8")
+    # Doc must cover the 3 base components + cn() + anti-patterns.
+    for needle in ("Button", "Input", "Card", "cn()", "vck-", "anti-pattern"):
+        assert needle.lower() in text.lower(), (
+            f"doc missing required topic: {needle!r}"
+        )
