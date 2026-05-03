@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+ * OSINT Terminal — design tokens
+ * Channels are stored as `R G B` (no `rgb()` wrapper) so that
+ * Tailwind utilities like `bg-panel/80` can compose them with
+ * an `<alpha-value>` placeholder. Always reference these tokens
+ * via `rgb(var(--token))` in raw CSS — naked `var(--token)`
+ * resolves to an invalid color.
+ * ============================================================ */
+:root {
+  /* surface */
+  --bg-canvas: 5 10 14;          /* #050a0e — page background */
+  --bg-panel: 12 18 24;          /* #0c1218 — panel + card */
+  --bg-panel-elev: 18 26 34;     /* #121a22 — hover / active */
+  --border: 28 40 52;            /* #1c2834 — divider */
+  --border-strong: 54 70 86;     /* #364656 — emphasis */
+
+  /* text */
+  --text-base: 226 232 240;      /* #e2e8f0 — body */
+  --text-mute: 148 163 184;      /* #94a3b8 — secondary */
+  --text-muted: 100 116 139;     /* #64748b — tertiary / brackets */
+
+  /* accents */
+  --accent-cyan: 54 230 216;     /* #36e6d8 — primary signal */
+  --accent-amber: 255 193 77;    /* #ffc14d — warn */
+  --accent-red: 255 77 109;      /* #ff4d6d — alert */
+  --accent-green: 110 231 183;   /* #6ee7b7 — ok */
+}
+
+html {
+  background-color: rgb(var(--bg-canvas));
+  color-scheme: dark;
+}
+
+body {
+  background-color: rgb(var(--bg-canvas));
+  color: rgb(var(--text-base));
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-feature-settings: "ss01", "cv11";
+  /* Subtle scan-line + grid texture — pure CSS, GPU-cheap. */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgb(var(--accent-cyan) / 0.025) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(
+      circle at 50% -10%,
+      rgb(var(--accent-cyan) / 0.06),
+      transparent 60%
+    );
+}
+
+::selection {
+  background: rgb(var(--accent-cyan) / 0.35);
+  color: rgb(var(--bg-canvas));
+}
+
+/* ============================================================
+ * Component classes — hand-rolled because they're used everywhere
+ * and we want deterministic output (no @apply rules pulling random
+ * Tailwind utilities into the build).
+ * ============================================================ */
+@layer components {
+  .panel {
+    @apply rounded-sm border border-border bg-panel;
+    box-shadow: inset 0 0 0 1px rgb(var(--border) / 0.4);
+  }
+  .panel-elev {
+    @apply rounded-sm border border-border-strong bg-panel-elev;
+  }
+  .panel-section {
+    @apply panel p-4;
+  }
+
+  /* Heading / label tags ------------------------------------- */
+  .label-tag {
+    @apply inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-widest;
+  }
+  .label-tag-cyan {
+    @apply label-tag border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan;
+  }
+  .label-tag-amber {
+    @apply label-tag border-accent-amber/40 bg-accent-amber/10 text-accent-amber;
+  }
+  .label-tag-red {
+    @apply label-tag border-accent-red/40 bg-accent-red/10 text-accent-red;
+  }
+  .label-tag-green {
+    @apply label-tag border-accent-green/40 bg-accent-green/10 text-accent-green;
+  }
+  .label-tag-mute {
+    @apply label-tag border-border bg-panel-elev text-text-mute;
+  }
+
+  /* Status dots ---------------------------------------------- */
+  .status-dot {
+    @apply inline-block h-2 w-2 rounded-full;
+  }
+  .status-dot-cyan { background-color: rgb(var(--accent-cyan)); box-shadow: 0 0 8px rgb(var(--accent-cyan) / 0.6); }
+  .status-dot-amber { background-color: rgb(var(--accent-amber)); box-shadow: 0 0 8px rgb(var(--accent-amber) / 0.6); }
+  .status-dot-red { background-color: rgb(var(--accent-red)); box-shadow: 0 0 8px rgb(var(--accent-red) / 0.6); }
+  .status-dot-green { background-color: rgb(var(--accent-green)); box-shadow: 0 0 8px rgb(var(--accent-green) / 0.6); }
+  .status-dot-mute { background-color: rgb(var(--text-muted)); }
+
+  /* Inline ASCII brackets used by .ascii-bracket ------------- */
+  .ascii-bracket::before {
+    content: "[ ";
+    color: rgb(var(--text-muted));
+  }
+  .ascii-bracket::after {
+    content: " ]";
+    color: rgb(var(--text-muted));
+  }
+
+  /* Terminal chip — used for stat values, table cells -------- */
+  .terminal-chip {
+    @apply inline-flex items-center gap-2 rounded-sm border border-border bg-panel-elev px-2 py-0.5 text-xs;
+  }
+
+  /* Section heading rule (uppercase + accent underline) ----- */
+  .section-heading {
+    @apply flex items-baseline justify-between gap-3 border-b border-border pb-2 text-xs uppercase tracking-widest text-text-mute;
+  }
+
+  /* Focus ring (visible across both pure-black and panel bg) - */
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 1px solid rgb(var(--accent-cyan));
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+ * Reduced-motion: kill the body radial gradient pulse if any
+ * downstream uses one, plus disable any future scan-line
+ * animation.
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  body {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgb(var(--accent-cyan) / 0.02) 0 1px,
+        transparent 1px 3px
+      );
+  }
+}

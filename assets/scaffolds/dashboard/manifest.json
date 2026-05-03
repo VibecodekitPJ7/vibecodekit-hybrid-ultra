@@ -15,7 +15,13 @@
         "vercel.json",
         "tsconfig.json",
         ".gitignore",
-        ".env.example"
+        ".env.example",
+        "design/tokens.json",
+        "design/tokens.css",
+        "lib/cn.ts",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/card.tsx"
       ],
       "post_install": [
         "npm install",
@@ -34,7 +40,15 @@
         "vercel.json exists",
         "tsconfig.json exists",
         ".gitignore exists",
-        ".env.example exists"
+        ".env.example exists",
+        "design/tokens.json exists",
+        "design/tokens.css exists",
+        "lib/cn.ts exists",
+        "components/ui/button.tsx exists",
+        "components/ui/input.tsx exists",
+        "components/ui/card.tsx exists",
+        "package.json has 'clsx' in dependencies",
+        "package.json has 'tailwind-merge' in dependencies"
       ]
     }
   }

@@ -107,3 +107,55 @@ When `/vibe-vision` proposes a stack the contractor **must** also pick:
 Conformance probe `46_style_tokens_canonical` (added in v0.11.1) verifies
 both the markdown list and the methodology constants stay in sync — drift
 between this file and `methodology.py` blocks the release gate.
+
+## 6. Dark mode CP twin (v0.24.0, cycle 15 PR-D4)
+
+Each CP-XX has a **dark-mode twin** HEX shipped via the
+`@media (prefers-color-scheme: dark)` block in
+`assets/scaffolds/<preset>/nextjs/design/tokens.css`.  The twin re-uses the
+same `--vck-*` variable name, so any Tailwind class (`bg-vck-trust`) or
+inline `var(--vck-trust)` automatically inherits the dark colour without
+component code changes.
+
+| ID | Light HEX | Dark HEX | Rationale |
+|:---|:---------:|:--------:|:----------|
+| CP-01 Trust    | `#2563EB` (blue-600)    | `#3B82F6` (blue-500)    | reduce tone on dark surface |
+| CP-02 Energy   | `#F97316` (orange-500)  | `#FB923C` (orange-400)  | brighter pop on dark |
+| CP-03 Growth   | `#22C55E` (green-500)   | `#34D399` (emerald-400) | warmer green on dark |
+| CP-04 Luxury   | `#7C3AED` (violet-600)  | `#8B5CF6` (violet-500)  | keep saturation on dark |
+| CP-05 Warning  | `#EF4444` (red-500)     | `#F87171` (red-400)     | quieter so it does not scream |
+| CP-06 Neutral  | `#6B7280` (gray-500)    | `#9CA3AF` (gray-400)    | lift contrast on dark surface |
+
+Programmatic access (cycle 15 PR-D4):
+
+```python
+from vibecodekit.design_tokens_export import dark_mode_colors
+
+dark_mode_colors()  # → {"vck-trust": "#3B82F6", ...}
+```
+
+The CSS is generated end-to-end by
+`vibecodekit.design_tokens_export.to_css_variables(pairing_id, dark_mode=True)`
+— pass `dark_mode=False` if you intentionally want light-only.
+
+### Choosing between `prefers-color-scheme` and a class-based toggle
+
+The shipped scaffolds use the **OS-level media query**
+(`prefers-color-scheme: dark`).  This is the right default for SaaS / dashboard /
+content presets where users expect the app to respect their system setting.
+
+If a project needs an in-app theme toggle (e.g. force-light mode for a brand
+moment), wrap the dark `:root` in a `.dark` class instead and toggle the class
+on `<html>`:
+
+```css
+:root.dark {
+  --vck-trust: #3B82F6;
+  /* … */
+}
+```
+
+This is a documented anti-pattern only when **both** are mixed without a clear
+override order — pick one and stick with it.  Probe `94_design_tokens_files_shipped`
+intentionally accepts either shape (it only checks the 6 light values exist) so
+project authors can swap strategies without re-bumping the schema.

@@ -4,6 +4,12 @@
 > CLI lập trình (ChatGPT, Claude Code / Claw Code, Codex, Cursor) giúp biến
 > một dự án "mơ hồ" thành một pipeline 8 bước đo được.  Bản này cho bạn
 > khởi động trong 5 phút, không cần đọc hết 960 dòng `USAGE_GUIDE.md`.
+>
+> 🇻🇳 **Hoàn toàn mới và không phải dev?** Đọc
+> [`docs/GUIDE_NONTECH_BEGINNER.md`](docs/GUIDE_NONTECH_BEGINNER.md)
+> trước — bản tiếng Việt step-by-step, có worked example A→Z cho user
+> chỉ cần mô tả dự án, tool tự sinh code.  Quay lại quickstart này khi
+> bạn cần tham chiếu nhanh.
 
 ---
 
@@ -54,7 +60,7 @@ export PYTHONPATH=~/.vibecode/vibecodekit-hybrid-ultra/scripts
 
 # 3. Test thử một lệnh
 python -m vibecodekit.cli audit
-# → kỳ vọng: 87/87 probes pass (internal self-test, not external benchmark)
+# → kỳ vọng: 92/96 probes pass (internal self-test, not external benchmark)
 ```
 
 Dùng `vibe rri-t reports/testing.jsonl` sau mỗi sprint để kiểm tra cổng
@@ -96,7 +102,7 @@ pytest tests/ -q        # → all actionable tests pass
 
 # 2. Conformance self-test (internal regression guard — see BENCHMARKS-METHODOLOGY.md)
 PYTHONPATH=scripts python -m vibecodekit.conformance_audit
-# → 87/87 probes pass (internal self-test)
+# → 92/96 probes pass (internal self-test)
 
 # 3. Permission engine (phải chặn lệnh nguy hiểm)
 PYTHONPATH=scripts python -m vibecodekit.cli permission "rm -rf /"

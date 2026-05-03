@@ -12,6 +12,319 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.25.0] — 2026-05-01
+
+Cycle 16 PR-E1 release — adds the **11th scaffold preset**
+`osint-terminal` (cyan-on-black command-console UI).  Distilled from
+field-tested production app `TestPJkit02/Build-ui-git` (https://www.crucix.live/),
+the preset gives the scaffold engine a distinct "data console /
+intelligence dashboard / monitoring terminal" look that none of the
+existing 10 presets covered.  Additive only; no public API removal,
+no core runtime touch.
+
+- **PR-E1 (cycle 16):** `osint-terminal` scaffold preset (Next.js 15 +
+  React 19 + Tailwind v3.4 + JetBrains Mono via `next/font`).  Ships
+  14 files under `assets/scaffolds/osint-terminal/nextjs/`:
+  `app/layout.tsx`, `app/page.tsx`, `app/globals.css`,
+  `app/components/Header.tsx`, `app/components/PagePrimitives.tsx`
+  (3 reusable layout primitives `<PageHeader>`, `<KpiList>`,
+  `<DegradedBanner>`), plus standard Next config + Tailwind +
+  PostCSS + tsconfig + package.json + .env.example + .gitignore +
+  vercel.json + README.md.  `engine.list_presets()` now returns 11
+  presets; `engine.apply("osint-terminal", target, "nextjs")` writes
+  14 files with 0 verify issues.
+
+- **Design contract — RGB-channel pattern.**  All colour tokens are
+  stored in `:root` as **space-separated R G B integer channels**
+  (e.g. `--bg-canvas: 5 10 14;`, `--accent-cyan: 54 230 216;`) — not
+  hex strings.  This is the precondition for Tailwind v3.4
+  `<alpha-value>` opacity utilities like `bg-panel/80` and
+  `bg-accent-cyan/10` to compose correctly.  `tailwind.config.ts`
+  consumes them via `rgb(var(--*) / <alpha-value>)`.  Documented in
+  the new reference `references/42-osint-terminal-template.md`
+  (~80 lines: design rules, when to reach for it, anti-patterns
+  checklist).
+
+- **Intent router — 10 new BUILD-lane keywords + 10 new
+  FULL_BUILD-lane phrases.**  `scripts/vibecodekit/intent_router.py`
+  now routes free-form prose like *"make me an osint terminal"*,
+  *"build intelligence dashboard"*, *"trang điều khiển"*,
+  *"command console"*, *"make it look like a terminal"* to the
+  `osint-terminal` scaffold via the existing classify→pipeline path.
+  `benchmarks/intent_router_0.25.0.json` regenerated:
+  `set_inclusion_accuracy=0.98`, `exact_match_accuracy=0.89`.
+
+- **Probe #96 `osint_terminal_scaffold_ship`** —
+  `scripts/vibecodekit/conformance/probes_governance.py`.  Verifies
+  the four critical contract pieces beyond mere file presence:
+  RGB-channel CSS variables (`--bg-canvas: 5 10 14;` regex matched),
+  `JetBrains_Mono` imported from `next/font/google` in `layout.tsx`,
+  the three named primitives (`PageHeader`, `KpiList`,
+  `DegradedBanner`) exported from `PagePrimitives.tsx`, and
+  `tailwind.config.ts` consuming RGB channels via
+  `rgb(var(--*) / <alpha-value>)`.  Audit total: 95 → 96 met=true.
+
+- **Banner / count synchronisation.**  README.md / USAGE_GUIDE.md /
+  update-package mirrors / SKILL.md / examples/README.md / tools.json
+  / scripts/vibecodekit/mcp_servers/core.py /
+  references/00-overview.md / docs/GUIDE_NONTECH_BEGINNER.md all
+  bumped from "10 preset × 3 stacks" → "11 preset × 3 stacks" and
+  "95/95 probes" → "96/96 probes" (forward-facing prose;
+  CHANGELOG.md / RELEASE_NOTES_v0.{22,23,24}.0.md remain
+  historical).
+
+- **Out of scope (intentional).**  No data layer: the `osint-terminal`
+  preset ships a UI shell with KPI/feed demo data only — no
+  GitHub/HN/RSS fetching, no auth, no analytics.  Consumers wire
+  their own data sources into the `<KpiList>` / feed slots.  No
+  fastapi or expo stack variant; nextjs only (other 8 nextjs presets
+  cover the modern-SaaS / docs / portfolio look — osint-terminal
+  fills the dark-OSINT niche).
+
+## [0.24.0] — 2026-05-03
+
+Cycle 15 design-apply polish release.  Closes the "scaffolds chưa apply
+design tokens" gap from cycle 14 by wiring methodology constants
+end-to-end into the JS / CSS layers consumers actually use.  Four
+sequential PRs (D1 → D4) — additive only, no public API removal, no core
+runtime touch.
+
+- **PR-D1 (#16):** Tailwind theme pre-wire.  6 Next.js scaffolds
+  (`saas`, `dashboard`, `landing-page`, `blog`, `portfolio`,
+  `shop-online`) ship populated `theme.extend` with 6 `vck-*` colour
+  tokens (CP-01..CP-06), FP-01 fontFamily heading/body, and VN-01/02
+  lineHeight.  New helper module
+  `scripts/vibecodekit/design_tokens_export.py` (functions
+  `tailwind_colors()` + `tailwind_font_family()`).  Conformance probe
+  **#93 (`tailwind_prewire_design_tokens`)**.
+- **PR-D2 (#17):** ship `design/tokens.json` (schema v1, with `$schema`
+  URL pinned) and `design/tokens.css` (`:root { --vck-* }` block) for
+  all 6 Next.js scaffolds.  `design_tokens_export` extended with
+  `to_json_dict()` + `to_css_variables()`.  Conformance probe
+  **#94 (`design_tokens_files_shipped`)**.
+- **PR-D3 (#18):** sample hand-rolled shadcn-style component library
+  shipped with `saas` + `dashboard` scaffolds: `lib/cn.ts`
+  (`clsx + tailwind-merge`) + `components/ui/{button,input,card}.tsx`,
+  3 variants per component, all consuming `vck-*` tokens.
+  `app/page.tsx` of both scaffolds refactored to demo the components.
+  New reference doc `references/41-component-library-pattern.md`.
+  Conformance probe **#95 (`shadcn_samples_ship`)**.
+- **PR-D4 (this release):** dark-mode CP twin + cross-link fix +
+  release.  `design_tokens_export.dark_mode_colors()` returns the 6
+  dark-mode HEX twins; `to_css_variables(..., dark_mode=True)` (default)
+  now appends a `@media (prefers-color-scheme: dark)` block re-using
+  the same `--vck-*` variable names.  All 6 `tokens.css` files
+  regenerated with the dark block; all 6 `tokens.json` `version` fields
+  bumped 0.23.0 → 0.24.0.  `references/anti-patterns-gallery.md`
+  cross-links repaired (3 broken targets after cycle 13 reorg).
+  `references/34-style-tokens.md` § 6 documents the dark mapping +
+  toggle-strategy guidance.  Folded fix from PR-D3 Devin Review:
+  newsletter signup `<section>` → `<form>` so `<Button type="submit">`
+  is no longer inert.
+
+Public API additions (immutable, no rename / removal):
+`design_tokens_export.tailwind_colors`,
+`design_tokens_export.tailwind_font_family`,
+`design_tokens_export.to_json_dict`,
+`design_tokens_export.to_css_variables`,
+`design_tokens_export.dark_mode_colors`.  `methodology.__all__`
+unchanged (29 symbols).  Conformance count 92 → 95.
+
+## [0.23.0] — 2026-05-02
+
+Cycle 14 conformance modularization + intent-routing hybrid release.
+Two-pronged refactor pass driven by the cycle-14 deep review:
+
+- **Issue 2 — Plan A (3 PRs, merged):** intent routing flips from
+  pure keyword-scoring to *LLM-primary + keyword-fallback* via the
+  rewritten `.claude/commands/vibe.md` Claude-Code dispatcher; the
+  Python `IntentRouter` continues to serve CLI / MCP / golden-test
+  consumers unchanged.  Docstring drift in `intent_router.py`
+  (the v0.18-era "cosine-similarity tie-breaker" claim) was corrected
+  and pinned by a contract test.  A new reference doc
+  (`references/39-intent-routing-llm-primary.md`) and
+  conformance probe **#92 (`intent_routing_llm_primary_doc`)** make
+  the design choice testable.
+
+- **Issue 1 — Plan B (6 PRs, merged):** `conformance_audit.py` was
+  broken into the `vibecodekit.conformance` package over PRs β-1..β-6
+  and probe registration was switched from a manual 92-row list to a
+  decorator-based registry (`@probe(id, group=...)`).  Probe ownership
+  is now distributed across four focused modules
+  (`probes_runtime.py`, `probes_methodology.py`, `probes_assets.py`,
+  `probes_governance.py`) — adding a new probe is a single decorator
+  edit instead of three coordinated edits across three files.
+
+### Headline numbers
+
+| Metric | v0.22.0 | v0.23.0 | Δ |
+|:-------|:--------|:--------|:--|
+| `conformance_audit.py` size | 2 246 lines | 186 lines | **-92 %** |
+| Probe registration | 1 manual list | `@probe` decorator | decentralised |
+| Probe modules | 1 monolith | 4 group-scoped | +3 |
+| Conformance probes | 91 / 91 | **92 / 92** | +1 (#92 doc-pin) |
+| `IntentRouter` strategy | keyword-only | LLM-primary (host) + keyword-fallback (CLI) | hybrid |
+| Tests | 1701 / 9 skip | **1535 / 9 skip** | -166 (consolidated/dedup'd registry contract tests) |
+| Public API surface | stable | stable | back-compat 100 % |
+
+### Plan A — intent routing (3 PRs merged)
+
+```
+PR α-1 #6   .claude/commands/vibe.md  — LLM-primary dispatcher,           merged
+                                          Python keyword fallback
+PR α-2 #7   intent_router.py docstring drift fix + contract test          merged
+PR α-3 #8   references/39-intent-routing-llm-primary.md +                 merged
+            conformance probe #92 (`intent_routing_llm_primary_doc`)
+```
+
+### Plan B — conformance modularization (6 PRs merged)
+
+```
+PR β-1 #9   conformance/ package skeleton (_runner / _registry /          merged
+            _helpers / __init__) — back-compat shim only
+PR β-2 #10  probes #1-30   → probes_runtime.py                            merged
+PR β-3 #11  probes #31-50  → probes_methodology.py                        merged
+PR β-4 #12  probes #51-70  → probes_assets.py                             merged
+PR β-5 #13  probes #71-92  → probes_governance.py                         merged
+PR β-6 #14  manual PROBES list → @probe decorator + sorted registry       merged
+            snapshot
+```
+
+### Verify gate (all green)
+
+| Check | Result |
+|:------|:-------|
+| `pytest -q` | **1535 pass / 9 skip** |
+| `PYTHONPATH=scripts python -m vibecodekit.conformance_audit` | parity 100.00 % (**92/92**, threshold 85 %) |
+| `ruff check scripts/vibecodekit/` | clean |
+| `mypy --strict` (9-module gate) | 0 errors |
+| `validate_release_matrix.py --fast` | release gate PASSED |
+| `twine check dist/*` | PASSED |
+| Wheel install + smoke test | OK (`vibecodekit demo`, `__version__ == 0.23.0`) |
+| 8 / 8 conformance package skeleton contract tests | green |
+
+### Back-compat (preserved across all 9 PRs)
+
+```python
+# All of these continue to work unchanged in v0.23.0:
+from vibecodekit.conformance_audit import PROBES                     # 92 entries
+from vibecodekit.conformance_audit import audit                      # ok
+from vibecodekit.conformance_audit import _probe_async_generator     # all 92
+                                                                     # available
+from vibecodekit.conformance_audit import _find_slash_command        # ok
+
+# Test code that monkey-patches PROBES still works:
+monkeypatch.setattr(ca, "PROBES", custom)
+audit()                                                              # uses custom
+```
+
+### Files added / changed at the release boundary
+
+```
++ RELEASE_NOTES_v0.23.0.md
++ scripts/vibecodekit/conformance/__init__.py
++ scripts/vibecodekit/conformance/_helpers.py
++ scripts/vibecodekit/conformance/_registry.py
++ scripts/vibecodekit/conformance/_runner.py
++ scripts/vibecodekit/conformance/probes_runtime.py
++ scripts/vibecodekit/conformance/probes_methodology.py
++ scripts/vibecodekit/conformance/probes_assets.py
++ scripts/vibecodekit/conformance/probes_governance.py
++ references/39-intent-routing-llm-primary.md
++ tests/test_conformance_package_skeleton.py
+M VERSION                                     (0.22.0 → 0.23.0)
+M pyproject.toml                              (version 0.22.0 → 0.23.0)
+M manifest.llm.json                           (version + 92 probes)
+M assets/plugin-manifest.json                 (version)
+M update-package/VERSION                      (0.22.0 → 0.23.0)
+M update-package/.claw.json                   (version)
+M update-package/CLAUDE.md                    (banner + probe count + test count)
+M update-package/README.md                    (banner + probe count)
+M update-package/USAGE_GUIDE.md               (banner + probe count)
+M USAGE_GUIDE.md                              (banner + probe count)
+M README.md                                   (banner + probe count)
+M QUICKSTART.md                               (probe count 87/91 → 88/92)
+M SKILL.md                                    (version + probe count 87 → 92)
+M docs/GUIDE_NONTECH_BEGINNER.md              (banner + cheatsheet + probe count)
+M scripts/vibecodekit/conformance_audit.py    (2 246 → 186 lines, shim)
+M scripts/vibecodekit/intent_router.py        (docstring drift fix only)
+M .claude/commands/vibe.md                    (LLM-primary dispatcher)
+M update-package/.claude/commands/vibe.md     (LLM-primary dispatcher mirror)
+M CHANGELOG.md                                (this entry)
+```
+
+### Why minor (0.22 → 0.23) instead of patch
+
+`@probe` decorator introduces a new public extension point in
+`vibecodekit.conformance` — third-party code can now register probes
+without forking the audit module.  Per Semver this is a
+backward-compatible feature addition, hence a minor bump.
+
+## [0.22.0] — 2026-05-01
+
+Cycle 13 documentation expansion release — 100 % docs-only, không
+touch core runtime, không bump major.  Đáp ứng 3 follow-up gap được
+ghi nhận sau cycle 12 release.
+
+### Added
+
+- `references/examples/01-otb-budget-module/` — pre-baked case study
+  end-to-end (11 file: README, scan, RRI requirements, vision,
+  blueprint, task graph, 3 TIPs, 3 completion reports, RRI-T jsonl,
+  RRI-UX jsonl, coverage matrix, verify report).  Domain: OTB Budget
+  Module — Vietnamese retail finance, multi-store RBAC, Tết freeze.
+  Probe #88 cross-checks file presence + RRI-T/UX gate PASS qua
+  `methodology.evaluate_rri_t/ux()`.  PR #1.
+- `references/anti-patterns-gallery.md` — 12 AP-01..AP-12 visual
+  catalog với BAD/GOOD ASCII visualization + Fix recipe + Detector
+  snippet (504 dòng).  Probe #89 cross-checks gallery 1:1 với
+  `methodology.anti_patterns_canonical()` để bắt drift.  PR #2.
+- `references/37-color-psychology.md` — 7 industry-tuned palettes
+  (Finance / Healthcare / E-commerce / Education / SaaS B2B /
+  Government / Logistics) với WCAG contrast pair, Vietnamese
+  cultural color associations, color-blind safety, dark-mode mapping.
+  Probe #90.  PR #3.
+- `references/38-font-pairing.md` — 5 use-case font stacks
+  (Modern SaaS / Corporate / Editorial / Tech-forward / Friendly
+  consumer) với Vietnamese subset support, type scale, loading
+  strategy, fallback chain, 5 anti-patterns AP-VNF-01..05.
+  Probe #91.  PR #3.
+- 4 test file mới (~80 test): `test_case_study_otb_budget.py` (16),
+  `test_anti_patterns_gallery.py` (40), `test_color_psychology_appendix.py`
+  (~12), `test_font_pairing_appendix.py` (~12).
+
+### Changed
+
+- Conformance probe count 87 → **91** (+4 doc probes — 1 per artifact).
+- `VERSION` 0.21.0 → 0.22.0 (minor bump, non-breaking).
+
+### Unchanged
+
+- Public API surface (`methodology.__all__`) — 100 % stable.
+- Tất cả runtime module trong `scripts/vibecodekit/` (chỉ
+  `conformance_audit.py` thêm 3 probe entry).
+- Coverage floor 90 % giữ nguyên (docs-only, không impact runtime).
+- Ruff F401/F841/F811 clean, mypy strict 9 module 0 errors.
+- Demo speed ≤ 1.5 s baseline.
+
+### Files
+
+```
++ references/37-color-psychology.md
++ references/38-font-pairing.md
++ references/anti-patterns-gallery.md
++ references/examples/01-otb-budget-module/   (11 file)
++ tests/test_case_study_otb_budget.py
++ tests/test_anti_patterns_gallery.py
++ tests/test_color_psychology_appendix.py
++ tests/test_font_pairing_appendix.py
++ RELEASE_NOTES_v0.22.0.md
+M scripts/vibecodekit/conformance_audit.py    (+4 probe entries)
+M VERSION                                     (0.21.0 → 0.22.0)
+M CHANGELOG.md                                (this entry)
+M BENCHMARKS-METHODOLOGY.md                    (+Phase 7 entry)
+```
+
 ## [0.21.0] — 2026-04-30
 
 Coverage Phase 6 release — đẩy global TOTAL từ 85% → **90%** (spec
