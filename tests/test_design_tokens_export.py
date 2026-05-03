@@ -298,3 +298,123 @@ def test_component_library_pattern_doc_exists() -> None:
         assert needle.lower() in text.lower(), (
             f"doc missing required topic: {needle!r}"
         )
+
+
+# ─── Cycle 15 PR-D4: dark-mode CP twin ────────────────────────────────
+
+
+def test_dark_mode_colors_returns_six_dark_twins() -> None:
+    """dark_mode_colors() returns 6 entries, same keys as tailwind_colors()."""
+    from vibecodekit.design_tokens_export import dark_mode_colors, tailwind_colors
+
+    dark = dark_mode_colors()
+    light = tailwind_colors()
+    assert set(dark) == set(light) == {
+        "vck-trust", "vck-energy", "vck-growth",
+        "vck-luxury", "vck-warning", "vck-neutral",
+    }
+    # Light and dark HEX must differ for every CP (otherwise the dark
+    # mode is a no-op for that token).
+    for token in dark:
+        assert dark[token] != light[token], (
+            f"{token}: dark == light HEX, no twin shipped"
+        )
+
+
+def test_dark_mode_colors_known_pinned_hex() -> None:
+    """The 6 dark-twin HEX values are pinned at cycle 15 PR-D4."""
+    from vibecodekit.design_tokens_export import dark_mode_colors
+
+    assert dark_mode_colors() == {
+        "vck-trust": "#3B82F6",
+        "vck-energy": "#FB923C",
+        "vck-growth": "#34D399",
+        "vck-luxury": "#8B5CF6",
+        "vck-warning": "#F87171",
+        "vck-neutral": "#9CA3AF",
+    }
+
+
+def test_to_css_variables_emits_prefers_color_scheme_dark_block() -> None:
+    """Default to_css_variables() includes the @media dark block."""
+    from vibecodekit.design_tokens_export import to_css_variables
+
+    css = to_css_variables()
+    assert "@media (prefers-color-scheme: dark)" in css
+    # Dark twin HEX must appear inside the @media block.
+    assert "#3B82F6" in css  # CP-01 dark
+    assert "#9CA3AF" in css  # CP-06 dark
+
+
+def test_to_css_variables_dark_mode_false_omits_block() -> None:
+    """Opt-out via dark_mode=False removes the @media block."""
+    from vibecodekit.design_tokens_export import to_css_variables
+
+    css = to_css_variables(dark_mode=False)
+    assert "@media" not in css
+    assert "#3B82F6" not in css
+
+
+def test_six_scaffolds_tokens_css_carry_dark_block() -> None:
+    """All 6 Next.js scaffolds ship tokens.css with the dark block."""
+    for s in (
+        "saas", "dashboard", "landing-page",
+        "blog", "portfolio", "shop-online",
+    ):
+        css = (
+            _REPO / "assets" / "scaffolds" / s / "nextjs"
+            / "design" / "tokens.css"
+        ).read_text(encoding="utf-8")
+        assert "@media (prefers-color-scheme: dark)" in css, (
+            f"{s}: tokens.css missing @media dark block"
+        )
+
+
+def test_six_scaffolds_tokens_json_match_repo_version() -> None:
+    """tokens.json version field tracks the repo VERSION file."""
+    import json as _json
+
+    repo_version = (_REPO / "VERSION").read_text(encoding="utf-8").strip()
+    for s in (
+        "saas", "dashboard", "landing-page",
+        "blog", "portfolio", "shop-online",
+    ):
+        data = _json.loads(
+            (_REPO / "assets" / "scaffolds" / s / "nextjs"
+             / "design" / "tokens.json").read_text(encoding="utf-8")
+        )
+        assert data["version"] == repo_version, (
+            f"{s}: tokens.json version {data['version']!r} ≠ "
+            f"repo VERSION {repo_version!r}"
+        )
+
+
+def test_anti_patterns_gallery_cross_links_repaired() -> None:
+    """Cycle 15 PR-D4: 13-/26-/24- legacy links removed, replacements added."""
+    text = (_REPO / "references" / "anti-patterns-gallery.md").read_text(
+        encoding="utf-8"
+    )
+    # Stale links must be gone.
+    for stale in (
+        "13-rri-ux-critique.md",
+        "26-ui-checklist.md",
+        "24-ux-vibecode-master.md",
+    ):
+        assert stale not in text, f"stale cross-link still present: {stale}"
+    # Repaired targets must be present.
+    for fresh in (
+        "32-rri-ux-critique.md",
+        "33-rri-ui-design.md",
+        "30-vibecode-master.md",
+    ):
+        assert fresh in text, f"replacement cross-link missing: {fresh}"
+
+
+def test_style_tokens_doc_has_section_six_dark_mode() -> None:
+    """references/34-style-tokens.md grew §6 covering the dark CP twin."""
+    text = (_REPO / "references" / "34-style-tokens.md").read_text(
+        encoding="utf-8"
+    )
+    assert "## 6. Dark mode CP twin" in text
+    assert "prefers-color-scheme: dark" in text
+    assert "dark_mode_colors" in text

@@ -11,8 +11,8 @@
 > 3. Lúc onboard team — đọc liền 12 AP để khỏi rơi vào bẫy quen thuộc.
 >
 > Cross-link:
-> - [`references/13-rri-ux-critique.md`](13-rri-ux-critique.md) §11 (12-axis trace)
-> - [`references/26-ui-checklist.md`](26-ui-checklist.md) §5 (mobile-first)
+> - [`references/32-rri-ux-critique.md`](32-rri-ux-critique.md) §11 (12-axis trace)
+> - [`references/33-rri-ui-design.md`](33-rri-ui-design.md) §3 (component design rules)
 > - [`references/29-rri-reverse-interview.md`](29-rri-reverse-interview.md) §4 (UX hostile testing)
 > - `methodology.evaluate_anti_patterns_checklist(items)` — runtime check
 
@@ -493,12 +493,12 @@ document.querySelectorAll('[data-currency=VND]').forEach((el) => {
 - Khi thêm AP mới (AP-13+), update **đồng thời** 4 nơi:
   1. `methodology.py::anti_patterns_canonical()` (source of truth)
   2. File này (visualization + fix recipe)
-  3. `references/13-rri-ux-critique.md` (12-axis trace)
+  3. `references/32-rri-ux-critique.md` (12-axis trace)
   4. Conformance probe count (`tests/test_anti_patterns_gallery.py`)
 
 ## See also
 
-- [`13-rri-ux-critique.md`](13-rri-ux-critique.md) — RRI-UX 7-dim critique methodology
-- [`24-ux-vibecode-master.md`](24-ux-vibecode-master.md) — comprehensive UX guide
-- [`26-ui-checklist.md`](26-ui-checklist.md) — go-live UI checklist
+- [`32-rri-ux-critique.md`](32-rri-ux-critique.md) — RRI-UX 7-dim critique methodology
+- [`30-vibecode-master.md`](30-vibecode-master.md) — vibecode master workflow & UX guide
+- [`33-rri-ui-design.md`](33-rri-ui-design.md) — component design rules / UI checklist
 - `methodology.evaluate_anti_patterns_checklist(items)` — runtime auto-check

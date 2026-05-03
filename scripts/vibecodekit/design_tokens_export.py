@@ -17,11 +17,11 @@ Public surface (cycle 15)
   ``tailwind_colors()``       — PR-D1, theme.extend.colors dict.
   ``tailwind_font_family()``  — PR-D1, theme.extend.fontFamily dict.
   ``to_json_dict()``          — PR-D2, design-tokens.json schema-v1 dict.
-  ``to_css_variables()``      — PR-D2, ``:root { --vck-* }`` CSS string.
-
-PR-D4 will additionally expose ``dark_mode_colors()`` for the
-``@media (prefers-color-scheme: dark)`` block; it is intentionally
-absent here so the v0.24.0 cycle can land it as a clean follow-up.
+  ``to_css_variables()``      — PR-D2 + PR-D4, ``:root { --vck-* }`` CSS
+                                string with optional ``@media
+                                (prefers-color-scheme: dark)`` twin block.
+  ``dark_mode_colors()``      — PR-D4, dark-mode CP-XX twin map
+                                (CP-XX → dark HEX value).
 """
 from __future__ import annotations
 
@@ -57,6 +57,26 @@ _CP_TOKEN_NAMES: Mapping[str, str] = {
     "CP-04": "vck-luxury",
     "CP-05": "vck-warning",
     "CP-06": "vck-neutral",
+}
+
+
+# Dark-mode CP twin (locked cycle 15 PR-D4).  Each entry is the HEX value
+# the ``--vck-*`` variable flips to inside
+# ``@media (prefers-color-scheme: dark)``.  Rationale per row:
+#
+#   CP-01 Trust    blue-600 → blue-500    — reduce tone on dark surface.
+#   CP-02 Energy   orange-500 → orange-400 — brighter pop on dark.
+#   CP-03 Growth   green-500 → emerald-400 — warmer green on dark.
+#   CP-04 Luxury   violet-600 → violet-500 — keep saturation on dark.
+#   CP-05 Warning  red-500 → red-400      — quieter so it does not scream.
+#   CP-06 Neutral  gray-500 → gray-400    — lift contrast on dark surface.
+_DARK_MODE_CP_TWIN: Mapping[str, str] = {
+    "CP-01": "#3B82F6",
+    "CP-02": "#FB923C",
+    "CP-03": "#34D399",
+    "CP-04": "#8B5CF6",
+    "CP-05": "#F87171",
+    "CP-06": "#9CA3AF",
 }
 
 
@@ -162,14 +182,43 @@ def to_json_dict(
     }
 
 
-def to_css_variables(pairing_id: str = "FP-01") -> str:
+def dark_mode_colors() -> dict[str, str]:
+    """Return the dark-mode twin of :func:`tailwind_colors`.
+
+    Same key shape (``vck-*``) and same ordering as the light map so a
+    pure key-zip is enough to compare the two; only the HEX values
+    differ.  Used by :func:`to_css_variables` to emit the
+    ``@media (prefers-color-scheme: dark)`` block, and by
+    :func:`to_json_dict` to populate the ``dark_colors`` section of
+    schema v1.
+    """
+    return {
+        _token_name(cp_id): _DARK_MODE_CP_TWIN[cp_id]
+        for cp_id in m.COLOR_PSYCHOLOGY
+    }
+
+
+def to_css_variables(
+    pairing_id: str = "FP-01",
+    *,
+    dark_mode: bool = True,
+) -> str:
     """Render a ``:root { --vck-* }`` CSS block as a string.
 
-    The output is deterministic given the methodology constants; the only
-    moving part is ``pairing_id`` which selects which FP pair to embed in
-    ``--vck-font-heading`` / ``--vck-font-body``.  Trailing newline is
-    included so concatenation with a following ``@media`` block (added in
-    PR-D4 for dark-mode) does not collapse the closing brace.
+    The output is deterministic given the methodology constants; the
+    moving parts are:
+
+    - ``pairing_id`` selects which FP pair to embed in
+      ``--vck-font-heading`` / ``--vck-font-body``;
+    - ``dark_mode`` (default ``True``) appends a
+      ``@media (prefers-color-scheme: dark)`` block that flips the six
+      ``--vck-*`` colour variables to their dark-mode twin.  Set to
+      ``False`` if you only want the light scheme.
+
+    The dark-mode block re-uses the very same variable names, so any
+    Tailwind class (``bg-vck-trust``) or inline ``var(--vck-trust)``
+    automatically inherits the dark twin without component code
+    changes.
     """
     colors = tailwind_colors()
     fonts = tailwind_font_family(pairing_id)
@@ -192,6 +241,15 @@ def to_css_variables(pairing_id: str = "FP-01") -> str:
         "}",
         "",
     ])
+    if dark_mode:
+        dark = dark_mode_colors()
+        lines.append("@media (prefers-color-scheme: dark) {")
+        lines.append("  :root {")
+        for token, hex_value in dark.items():
+            lines.append(f"    --{token}: {hex_value};")
+        lines.append("  }")
+        lines.append("}")
+        lines.append("")
     return "\n".join(lines)
 
 
@@ -207,4 +265,5 @@ __all__ = [
     "tailwind_font_family",
     "to_json_dict",
     "to_css_variables",
+    "dark_mode_colors",
 ]
