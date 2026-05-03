@@ -1,0 +1,45 @@
+{
+  "name": "osint-terminal",
+  "description": "OSINT-style intelligence terminal UI shell — pure-black canvas, JetBrains Mono, cyan accent + red/amber alerts, bordered panels, all-caps headers + status pills (Next.js 15 + Tailwind 3.4).",
+  "stacks": {
+    "nextjs": {
+      "files": [
+        "package.json",
+        "README.md",
+        "app/page.tsx",
+        "app/layout.tsx",
+        "app/globals.css",
+        "app/components/Header.tsx",
+        "app/components/PagePrimitives.tsx",
+        "tailwind.config.ts",
+        "postcss.config.js",
+        "next.config.ts",
+        "vercel.json",
+        "tsconfig.json",
+        ".gitignore",
+        ".env.example"
+      ],
+      "post_install": [
+        "npm install",
+        "npm run dev"
+      ],
+      "success_criteria": [
+        "package.json exists",
+        "app/page.tsx exists",
+        "app/layout.tsx exists",
+        "app/globals.css exists",
+        "app/components/Header.tsx exists",
+        "app/components/PagePrimitives.tsx exists",
+        "package.json has 'next' in dependencies",
+        "tailwind.config.ts exists",
+        "postcss.config.js exists",
+        "package.json has 'tailwindcss' in devDependencies",
+        "next.config.ts exists",
+        "vercel.json exists",
+        "tsconfig.json exists",
+        ".gitignore exists",
+        ".env.example exists"
+      ]
+    }
+  }
+}

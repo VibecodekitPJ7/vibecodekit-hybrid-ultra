@@ -1,10 +1,10 @@
-# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.24.0)
+# VibecodeKit Hybrid Ultra — Hướng dẫn sử dụng chi tiết (v0.25.0)
 
 Bộ kit đầy đủ để build dự án theo phương pháp **VIBECODE-MASTER** với **Full
-Agentic OS** runtime (95 internal conformance probes at v0.24.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
+Agentic OS** runtime (96 internal conformance probes at v0.25.0 — self-test, not external benchmark; see `BENCHMARKS-METHODOLOGY.md`; all
 actionable tests pass từ repo root; bundled `tests/` trong skill zip chứa
 một subset đại diện để user smoke-test sau khi extract — xem §15.10).
-Bản này ứng với **v0.24.0** (hiện hành — xem `CHANGELOG.md` cho
+Bản này ứng với **v0.25.0** (hiện hành — xem `CHANGELOG.md` cho
 lịch sử các bản trước, mỗi entry kèm link PR + finding khoá lại):
 
 - **v0.16.1** — doc coherence + recheck cleanup (PR #16, this release)
@@ -67,7 +67,7 @@ Tài liệu hướng dẫn cách sử dụng kit trong **ChatGPT**, **OpenAI Cod
 
 16. [v0.11.x → v0.16.x release history](#16-release-history)
     1. [`/vibe` — single-prompt router (F4)](#161-vibe--single-prompt-router-f4)
-    2. [`/vibe-scaffold` — 10 preset × 3 stacks (F1)](#162-vibe-scaffold--scaffold-engine-f1)
+    2. [`/vibe-scaffold` — 11 preset × 3 stacks (F1)](#162-vibe-scaffold--scaffold-engine-f1)
     3. [`/vibe-ship` — 7 deploy target (F2)](#163-vibe-ship--deploy-orchestrator-f2)
     4. [CLAUDE.md auto-maintain (F6)](#164-claudemd-auto-maintain-f6)
     5. [Auto-commit hook + sensitive-file guard (F3)](#165-auto-commit-hook--sensitive-file-guard-f3)
@@ -369,7 +369,7 @@ slash command trong `.claude/commands/` sẵn sàng.
 | `/vibe-rri-ui` | Bước 7 — pipeline 4-phase cho UI. |
 | `/vibe-verify` | Đóng báo cáo verify. |
 | `/vibe-complete` | Completion Report. |
-| `/vibe-audit` | Chạy 95 conformance probes (at v0.24.0). |
+| `/vibe-audit` | Chạy 96 conformance probes (at v0.25.0). |
 | `/vibe-doctor` | Chẩn đoán sức khỏe cài đặt. |
 | `/vibe-dashboard` | Dashboard runtime. |
 | `/vibe-permission <cmd>` | Hỏi permission engine có allow lệnh không. |
@@ -1411,7 +1411,7 @@ vibe dashboard
 
 #### 19.3 `vibe audit`
 
-Chạy 95 conformance probe.  Default threshold = 0.85; release gate
+Chạy 96 conformance probe.  Default threshold = 0.85; release gate
 ở 1.0 (xem §25).
 
 ```bash
@@ -1640,7 +1640,7 @@ vibe pipeline route "scan my codebase for security issues"
 
 #### 19.17 `vibe scaffold {list, preview, apply, history, rollback}`
 
-10 preset × 3 stack = 30 starter project (probe #43, #45).
+11 preset × 3 stack = 33 starter project (probe #43, #45).
 
 ```bash
 vibe scaffold list
@@ -2223,7 +2223,7 @@ PYTHONPATH=./scripts pytest tests
 
 ```bash
 PYTHONPATH=./scripts python -m vibecodekit.conformance_audit --threshold 1.0
-# → parity: 100.00%   (95/95, threshold 100%)
+# → parity: 100.00%   (96/96, threshold 100%)
 ```
 
 ### 25.3 Gate 3 — release matrix L1+L2+L3
@@ -2350,11 +2350,11 @@ triggers: `"shop online"`, `"landing page"`, `"ra mắt sản phẩm"`,
 
 ### 16.2 `/vibe-scaffold` — scaffold engine (F1)
 
-**TL;DR.** Tạo ngay project chạy được từ 10 preset × 3 stack
+**TL;DR.** Tạo ngay project chạy được từ 11 preset × 3 stack
 (Next.js / FastAPI / Expo).  Mỗi preset khai báo `success_criteria`
 nên engine tự verify được output sau khi ghi.
 
-**10 preset bundled**
+**11 preset bundled**
 
 | Preset | Stack | Build gì |
 |---|---|---|

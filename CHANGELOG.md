@@ -12,6 +12,75 @@ and [Semver](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.25.0] — 2026-05-01
+
+Cycle 16 PR-E1 release — adds the **11th scaffold preset**
+`osint-terminal` (cyan-on-black command-console UI).  Distilled from
+field-tested production app `TestPJkit02/Build-ui-git` (https://www.crucix.live/),
+the preset gives the scaffold engine a distinct "data console /
+intelligence dashboard / monitoring terminal" look that none of the
+existing 10 presets covered.  Additive only; no public API removal,
+no core runtime touch.
+
+- **PR-E1 (cycle 16):** `osint-terminal` scaffold preset (Next.js 15 +
+  React 19 + Tailwind v3.4 + JetBrains Mono via `next/font`).  Ships
+  14 files under `assets/scaffolds/osint-terminal/nextjs/`:
+  `app/layout.tsx`, `app/page.tsx`, `app/globals.css`,
+  `app/components/Header.tsx`, `app/components/PagePrimitives.tsx`
+  (3 reusable layout primitives `<PageHeader>`, `<KpiList>`,
+  `<DegradedBanner>`), plus standard Next config + Tailwind +
+  PostCSS + tsconfig + package.json + .env.example + .gitignore +
+  vercel.json + README.md.  `engine.list_presets()` now returns 11
+  presets; `engine.apply("osint-terminal", target, "nextjs")` writes
+  14 files with 0 verify issues.
+
+- **Design contract — RGB-channel pattern.**  All colour tokens are
+  stored in `:root` as **space-separated R G B integer channels**
+  (e.g. `--bg-canvas: 5 10 14;`, `--accent-cyan: 54 230 216;`) — not
+  hex strings.  This is the precondition for Tailwind v3.4
+  `<alpha-value>` opacity utilities like `bg-panel/80` and
+  `bg-accent-cyan/10` to compose correctly.  `tailwind.config.ts`
+  consumes them via `rgb(var(--*) / <alpha-value>)`.  Documented in
+  the new reference `references/42-osint-terminal-template.md`
+  (~80 lines: design rules, when to reach for it, anti-patterns
+  checklist).
+
+- **Intent router — 10 new BUILD-lane keywords + 10 new
+  FULL_BUILD-lane phrases.**  `scripts/vibecodekit/intent_router.py`
+  now routes free-form prose like *"make me an osint terminal"*,
+  *"build intelligence dashboard"*, *"trang điều khiển"*,
+  *"command console"*, *"make it look like a terminal"* to the
+  `osint-terminal` scaffold via the existing classify→pipeline path.
+  `benchmarks/intent_router_0.25.0.json` regenerated:
+  `set_inclusion_accuracy=0.98`, `exact_match_accuracy=0.89`.
+
+- **Probe #96 `osint_terminal_scaffold_ship`** —
+  `scripts/vibecodekit/conformance/probes_governance.py`.  Verifies
+  the four critical contract pieces beyond mere file presence:
+  RGB-channel CSS variables (`--bg-canvas: 5 10 14;` regex matched),
+  `JetBrains_Mono` imported from `next/font/google` in `layout.tsx`,
+  the three named primitives (`PageHeader`, `KpiList`,
+  `DegradedBanner`) exported from `PagePrimitives.tsx`, and
+  `tailwind.config.ts` consuming RGB channels via
+  `rgb(var(--*) / <alpha-value>)`.  Audit total: 95 → 96 met=true.
+
+- **Banner / count synchronisation.**  README.md / USAGE_GUIDE.md /
+  update-package mirrors / SKILL.md / examples/README.md / tools.json
+  / scripts/vibecodekit/mcp_servers/core.py /
+  references/00-overview.md / docs/GUIDE_NONTECH_BEGINNER.md all
+  bumped from "10 preset × 3 stacks" → "11 preset × 3 stacks" and
+  "95/95 probes" → "96/96 probes" (forward-facing prose;
+  CHANGELOG.md / RELEASE_NOTES_v0.{22,23,24}.0.md remain
+  historical).
+
+- **Out of scope (intentional).**  No data layer: the `osint-terminal`
+  preset ships a UI shell with KPI/feed demo data only — no
+  GitHub/HN/RSS fetching, no auth, no analytics.  Consumers wire
+  their own data sources into the `<KpiList>` / feed slots.  No
+  fastapi or expo stack variant; nextjs only (other 8 nextjs presets
+  cover the modern-SaaS / docs / portfolio look — osint-terminal
+  fills the dark-OSINT niche).
+
 ## [0.24.0] — 2026-05-03
 
 Cycle 15 design-apply polish release.  Closes the "scaffolds chưa apply

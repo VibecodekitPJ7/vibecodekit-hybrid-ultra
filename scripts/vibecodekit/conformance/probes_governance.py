@@ -33,6 +33,7 @@ plugin/no-orphan-module audit, and the v0.21.0 / v0.22.0 case-study
   #93  tailwind_prewire_design_tokens        (cycle 15 PR-D1 design-apply)
   #94  design_tokens_files_shipped           (cycle 15 PR-D2 design-apply)
   #95  shadcn_samples_ship                   (cycle 15 PR-D3 design-apply)
+  #96  osint_terminal_scaffold_ship          (cycle 16 PR-E1 osint preset)
 
 The helper ``_candidate_repo_roots`` (used by probes #76-79 to walk
 likely repo roots for L1 source / L3 installed-project layouts)
@@ -1069,4 +1070,92 @@ def _probe_shadcn_samples_ship(tmp: Path) -> Tuple[bool, str]:
         f"{len(_SHADCN_SAMPLE_TARGETS)}/2 scaffolds ship "
         f"{len(_SHADCN_SAMPLE_COMPONENTS)} sample components + cn() helper, "
         f"each consuming vck-* tokens",
+    )
+
+
+# Cycle 16 PR-E1 — files that ship the OSINT terminal scaffold.  Distilled
+# from ``TestPJkit02/Build-ui-git`` (PR #12 redesign, https://www.crucix.live/);
+# see ``references/42-osint-terminal-template.md``.  The probe checks the
+# critical contract pieces — RGB-channel CSS variables (so Tailwind v3.4
+# `<alpha-value>` opacity utilities compose correctly), JetBrains Mono via
+# ``next/font``, and the three layout primitives that make this preset
+# distinct from the other 10 (Header + PageHeader / KpiList / DegradedBanner).
+_OSINT_TERMINAL_FILES = (
+    "manifest.json",
+    "nextjs/package.json",
+    "nextjs/app/layout.tsx",
+    "nextjs/app/page.tsx",
+    "nextjs/app/globals.css",
+    "nextjs/app/components/Header.tsx",
+    "nextjs/app/components/PagePrimitives.tsx",
+    "nextjs/tailwind.config.ts",
+)
+
+
+@probe("96_osint_terminal_scaffold_ship", group="governance")
+def _probe_osint_terminal_scaffold_ship(tmp: Path) -> Tuple[bool, str]:
+    """#96 — cycle 16 PR-E1.
+
+    Verify the ``osint-terminal`` scaffold preset ships its 11th-preset
+    contract (cyan-on-black command-console look) so that the LLM
+    intent router's BUILD-lane keywords (``"osint terminal"``,
+    ``"trang điều khiển"``, ``"command console"`` …) have a real
+    target.  The four meaningful checks beyond mere file presence:
+
+    1. ``app/globals.css`` declares space-separated R G B channel
+       variables (e.g. ``--bg-canvas: 5 10 14;``) — this is the
+       precondition for Tailwind v3.4 ``<alpha-value>`` utilities like
+       ``bg-panel/80`` to compose correctly (see ref #42 anti-pattern
+       table).
+    2. ``app/layout.tsx`` imports ``JetBrains_Mono`` from
+       ``next/font/google`` — the typeface is part of the design
+       contract; a different mono font breaks the look.
+    3. ``app/components/PagePrimitives.tsx`` exports the three named
+       primitives ``PageHeader``, ``KpiList``, ``DegradedBanner`` —
+       these are the reusable layout pieces that make the preset
+       distinct from generic shadcn samples (probe #95).
+    4. ``tailwind.config.ts`` consumes the RGB channels via
+       ``rgb(var(--*) / <alpha-value>)`` (not bare ``var(--*)``).
+    """
+    roots = _candidate_repo_roots(tmp)
+    chosen: Path | None = None
+    for r in roots:
+        if (r / "assets" / "scaffolds" / "osint-terminal").is_dir():
+            chosen = r
+            break
+    if chosen is None:
+        return False, "could not locate assets/scaffolds/osint-terminal in any candidate root"
+    base = chosen / "assets" / "scaffolds" / "osint-terminal"
+    missing: list[str] = []
+    for rel in _OSINT_TERMINAL_FILES:
+        if not (base / rel).exists():
+            missing.append(f"{rel} missing")
+    if missing:
+        return False, "; ".join(missing)
+
+    globals_css = (base / "nextjs/app/globals.css").read_text(encoding="utf-8")
+    if "--bg-canvas:" not in globals_css or "--accent-cyan:" not in globals_css:
+        return False, "globals.css: missing core RGB-channel tokens (--bg-canvas / --accent-cyan)"
+    if not re.search(r"--bg-canvas:\s*\d+\s+\d+\s+\d+\s*;", globals_css):
+        return False, "globals.css: --bg-canvas must use space-separated R G B channels (Tailwind v3.4 <alpha-value> rule)"
+    if not re.search(r"--accent-cyan:\s*\d+\s+\d+\s+\d+\s*;", globals_css):
+        return False, "globals.css: --accent-cyan must use space-separated R G B channels"
+
+    layout_tsx = (base / "nextjs/app/layout.tsx").read_text(encoding="utf-8")
+    if "JetBrains_Mono" not in layout_tsx or "next/font/google" not in layout_tsx:
+        return False, "layout.tsx: must import JetBrains_Mono from next/font/google"
+
+    primitives = (base / "nextjs/app/components/PagePrimitives.tsx").read_text(encoding="utf-8")
+    for name in ("PageHeader", "KpiList", "DegradedBanner"):
+        if f"function {name}" not in primitives and f"export function {name}" not in primitives:
+            return False, f"PagePrimitives.tsx: missing exported primitive {name!r}"
+
+    tw_cfg = (base / "nextjs/tailwind.config.ts").read_text(encoding="utf-8")
+    if "rgb(var(--" not in tw_cfg or "<alpha-value>" not in tw_cfg:
+        return False, "tailwind.config.ts: must consume RGB channels via rgb(var(--*) / <alpha-value>)"
+
+    return (
+        True,
+        "osint-terminal scaffold ships 14 nextjs files + RGB-channel tokens "
+        "+ JetBrains Mono + 3 layout primitives + Tailwind <alpha-value> wiring",
     )

@@ -1,4 +1,4 @@
-# Hướng dẫn cho người mới — VibecodeKit Hybrid Ultra v0.24.0
+# Hướng dẫn cho người mới — VibecodeKit Hybrid Ultra v0.25.0
 
 > **Đối tượng:** Người không phải developer — chủ sản phẩm, founder,
 > nhà tư vấn, nhà phân tích, người đang dùng ChatGPT / Claude Code /
@@ -326,7 +326,7 @@ Sau khi tự (hoặc nhờ AI) viết code thật vào khung, gõ:
 ```
 
 Tool chạy:
-- 95 conformance probe (kiểm tra structure)
+- 96 conformance probe (kiểm tra structure)
 - RRI-T gate (functional testing 7 dimensions × 8 stress axes)
 - RRI-UX gate (UX testing 7 dimensions × 5 personas)
 - Anti-pattern check (12 AP — xem [§6.2](#62-anti-pattern-catalog-12-ap))
@@ -780,7 +780,7 @@ In ra dán bàn làm việc:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  VibecodeKit Hybrid Ultra v0.24.0 — 1-page cheatsheet        │
+│  VibecodeKit Hybrid Ultra v0.25.0 — 1-page cheatsheet        │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  CÀI:    pip3 install -e .                                   │
@@ -820,4 +820,4 @@ In ra dán bàn làm việc:
 **Phản hồi & câu hỏi:** Mở issue tại
 https://github.com/VibecodekitPJ7/vibecodekit-hybrid-ultra/issues
 
-**Phiên bản tài liệu:** v0.24.0 (2026-05-03) — Cycle 15 — Cycle 14/13 polish features vẫn áp dụng
+**Phiên bản tài liệu:** v0.25.0 (2026-05-03) — Cycle 15 — Cycle 14/13 polish features vẫn áp dụng

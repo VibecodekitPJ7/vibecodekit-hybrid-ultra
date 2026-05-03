@@ -10,36 +10,864 @@ and [Semver](https://semver.org/).
 > invariants.  They do **not** represent external quality benchmarks.
 > See [`BENCHMARKS-METHODOLOGY.md`](BENCHMARKS-METHODOLOGY.md) for details.
 
+## [Unreleased]
+
+## [0.25.0] — 2026-05-01
+
+Cycle 16 PR-E1 release — adds the **11th scaffold preset**
+`osint-terminal` (cyan-on-black command-console UI).  Distilled from
+field-tested production app `TestPJkit02/Build-ui-git` (https://www.crucix.live/),
+the preset gives the scaffold engine a distinct "data console /
+intelligence dashboard / monitoring terminal" look that none of the
+existing 10 presets covered.  Additive only; no public API removal,
+no core runtime touch.
+
+- **PR-E1 (cycle 16):** `osint-terminal` scaffold preset (Next.js 15 +
+  React 19 + Tailwind v3.4 + JetBrains Mono via `next/font`).  Ships
+  14 files under `assets/scaffolds/osint-terminal/nextjs/`:
+  `app/layout.tsx`, `app/page.tsx`, `app/globals.css`,
+  `app/components/Header.tsx`, `app/components/PagePrimitives.tsx`
+  (3 reusable layout primitives `<PageHeader>`, `<KpiList>`,
+  `<DegradedBanner>`), plus standard Next config + Tailwind +
+  PostCSS + tsconfig + package.json + .env.example + .gitignore +
+  vercel.json + README.md.  `engine.list_presets()` now returns 11
+  presets; `engine.apply("osint-terminal", target, "nextjs")` writes
+  14 files with 0 verify issues.
+
+- **Design contract — RGB-channel pattern.**  All colour tokens are
+  stored in `:root` as **space-separated R G B integer channels**
+  (e.g. `--bg-canvas: 5 10 14;`, `--accent-cyan: 54 230 216;`) — not
+  hex strings.  This is the precondition for Tailwind v3.4
+  `<alpha-value>` opacity utilities like `bg-panel/80` and
+  `bg-accent-cyan/10` to compose correctly.  `tailwind.config.ts`
+  consumes them via `rgb(var(--*) / <alpha-value>)`.  Documented in
+  the new reference `references/42-osint-terminal-template.md`
+  (~80 lines: design rules, when to reach for it, anti-patterns
+  checklist).
+
+- **Intent router — 10 new BUILD-lane keywords + 10 new
+  FULL_BUILD-lane phrases.**  `scripts/vibecodekit/intent_router.py`
+  now routes free-form prose like *"make me an osint terminal"*,
+  *"build intelligence dashboard"*, *"trang điều khiển"*,
+  *"command console"*, *"make it look like a terminal"* to the
+  `osint-terminal` scaffold via the existing classify→pipeline path.
+  `benchmarks/intent_router_0.25.0.json` regenerated:
+  `set_inclusion_accuracy=0.98`, `exact_match_accuracy=0.89`.
+
+- **Probe #96 `osint_terminal_scaffold_ship`** —
+  `scripts/vibecodekit/conformance/probes_governance.py`.  Verifies
+  the four critical contract pieces beyond mere file presence:
+  RGB-channel CSS variables (`--bg-canvas: 5 10 14;` regex matched),
+  `JetBrains_Mono` imported from `next/font/google` in `layout.tsx`,
+  the three named primitives (`PageHeader`, `KpiList`,
+  `DegradedBanner`) exported from `PagePrimitives.tsx`, and
+  `tailwind.config.ts` consuming RGB channels via
+  `rgb(var(--*) / <alpha-value>)`.  Audit total: 95 → 96 met=true.
+
+- **Banner / count synchronisation.**  README.md / USAGE_GUIDE.md /
+  update-package mirrors / SKILL.md / examples/README.md / tools.json
+  / scripts/vibecodekit/mcp_servers/core.py /
+  references/00-overview.md / docs/GUIDE_NONTECH_BEGINNER.md all
+  bumped from "10 preset × 3 stacks" → "11 preset × 3 stacks" and
+  "95/95 probes" → "96/96 probes" (forward-facing prose;
+  CHANGELOG.md / RELEASE_NOTES_v0.{22,23,24}.0.md remain
+  historical).
+
+- **Out of scope (intentional).**  No data layer: the `osint-terminal`
+  preset ships a UI shell with KPI/feed demo data only — no
+  GitHub/HN/RSS fetching, no auth, no analytics.  Consumers wire
+  their own data sources into the `<KpiList>` / feed slots.  No
+  fastapi or expo stack variant; nextjs only (other 8 nextjs presets
+  cover the modern-SaaS / docs / portfolio look — osint-terminal
+  fills the dark-OSINT niche).
+
+## [0.24.0] — 2026-05-03
+
+Cycle 15 design-apply polish release.  Closes the "scaffolds chưa apply
+design tokens" gap from cycle 14 by wiring methodology constants
+end-to-end into the JS / CSS layers consumers actually use.  Four
+sequential PRs (D1 → D4) — additive only, no public API removal, no core
+runtime touch.
+
+- **PR-D1 (#16):** Tailwind theme pre-wire.  6 Next.js scaffolds
+  (`saas`, `dashboard`, `landing-page`, `blog`, `portfolio`,
+  `shop-online`) ship populated `theme.extend` with 6 `vck-*` colour
+  tokens (CP-01..CP-06), FP-01 fontFamily heading/body, and VN-01/02
+  lineHeight.  New helper module
+  `scripts/vibecodekit/design_tokens_export.py` (functions
+  `tailwind_colors()` + `tailwind_font_family()`).  Conformance probe
+  **#93 (`tailwind_prewire_design_tokens`)**.
+- **PR-D2 (#17):** ship `design/tokens.json` (schema v1, with `$schema`
+  URL pinned) and `design/tokens.css` (`:root { --vck-* }` block) for
+  all 6 Next.js scaffolds.  `design_tokens_export` extended with
+  `to_json_dict()` + `to_css_variables()`.  Conformance probe
+  **#94 (`design_tokens_files_shipped`)**.
+- **PR-D3 (#18):** sample hand-rolled shadcn-style component library
+  shipped with `saas` + `dashboard` scaffolds: `lib/cn.ts`
+  (`clsx + tailwind-merge`) + `components/ui/{button,input,card}.tsx`,
+  3 variants per component, all consuming `vck-*` tokens.
+  `app/page.tsx` of both scaffolds refactored to demo the components.
+  New reference doc `references/41-component-library-pattern.md`.
+  Conformance probe **#95 (`shadcn_samples_ship`)**.
+- **PR-D4 (this release):** dark-mode CP twin + cross-link fix +
+  release.  `design_tokens_export.dark_mode_colors()` returns the 6
+  dark-mode HEX twins; `to_css_variables(..., dark_mode=True)` (default)
+  now appends a `@media (prefers-color-scheme: dark)` block re-using
+  the same `--vck-*` variable names.  All 6 `tokens.css` files
+  regenerated with the dark block; all 6 `tokens.json` `version` fields
+  bumped 0.23.0 → 0.24.0.  `references/anti-patterns-gallery.md`
+  cross-links repaired (3 broken targets after cycle 13 reorg).
+  `references/34-style-tokens.md` § 6 documents the dark mapping +
+  toggle-strategy guidance.  Folded fix from PR-D3 Devin Review:
+  newsletter signup `<section>` → `<form>` so `<Button type="submit">`
+  is no longer inert.
+
+Public API additions (immutable, no rename / removal):
+`design_tokens_export.tailwind_colors`,
+`design_tokens_export.tailwind_font_family`,
+`design_tokens_export.to_json_dict`,
+`design_tokens_export.to_css_variables`,
+`design_tokens_export.dark_mode_colors`.  `methodology.__all__`
+unchanged (29 symbols).  Conformance count 92 → 95.
+
+## [0.23.0] — 2026-05-02
+
+Cycle 14 conformance modularization + intent-routing hybrid release.
+Two-pronged refactor pass driven by the cycle-14 deep review:
+
+- **Issue 2 — Plan A (3 PRs, merged):** intent routing flips from
+  pure keyword-scoring to *LLM-primary + keyword-fallback* via the
+  rewritten `.claude/commands/vibe.md` Claude-Code dispatcher; the
+  Python `IntentRouter` continues to serve CLI / MCP / golden-test
+  consumers unchanged.  Docstring drift in `intent_router.py`
+  (the v0.18-era "cosine-similarity tie-breaker" claim) was corrected
+  and pinned by a contract test.  A new reference doc
+  (`references/39-intent-routing-llm-primary.md`) and
+  conformance probe **#92 (`intent_routing_llm_primary_doc`)** make
+  the design choice testable.
+
+- **Issue 1 — Plan B (6 PRs, merged):** `conformance_audit.py` was
+  broken into the `vibecodekit.conformance` package over PRs β-1..β-6
+  and probe registration was switched from a manual 92-row list to a
+  decorator-based registry (`@probe(id, group=...)`).  Probe ownership
+  is now distributed across four focused modules
+  (`probes_runtime.py`, `probes_methodology.py`, `probes_assets.py`,
+  `probes_governance.py`) — adding a new probe is a single decorator
+  edit instead of three coordinated edits across three files.
+
+### Headline numbers
+
+| Metric | v0.22.0 | v0.23.0 | Δ |
+|:-------|:--------|:--------|:--|
+| `conformance_audit.py` size | 2 246 lines | 186 lines | **-92 %** |
+| Probe registration | 1 manual list | `@probe` decorator | decentralised |
+| Probe modules | 1 monolith | 4 group-scoped | +3 |
+| Conformance probes | 91 / 91 | **92 / 92** | +1 (#92 doc-pin) |
+| `IntentRouter` strategy | keyword-only | LLM-primary (host) + keyword-fallback (CLI) | hybrid |
+| Tests | 1701 / 9 skip | **1535 / 9 skip** | -166 (consolidated/dedup'd registry contract tests) |
+| Public API surface | stable | stable | back-compat 100 % |
+
+### Plan A — intent routing (3 PRs merged)
+
+```
+PR α-1 #6   .claude/commands/vibe.md  — LLM-primary dispatcher,           merged
+                                          Python keyword fallback
+PR α-2 #7   intent_router.py docstring drift fix + contract test          merged
+PR α-3 #8   references/39-intent-routing-llm-primary.md +                 merged
+            conformance probe #92 (`intent_routing_llm_primary_doc`)
+```
+
+### Plan B — conformance modularization (6 PRs merged)
+
+```
+PR β-1 #9   conformance/ package skeleton (_runner / _registry /          merged
+            _helpers / __init__) — back-compat shim only
+PR β-2 #10  probes #1-30   → probes_runtime.py                            merged
+PR β-3 #11  probes #31-50  → probes_methodology.py                        merged
+PR β-4 #12  probes #51-70  → probes_assets.py                             merged
+PR β-5 #13  probes #71-92  → probes_governance.py                         merged
+PR β-6 #14  manual PROBES list → @probe decorator + sorted registry       merged
+            snapshot
+```
+
+### Verify gate (all green)
+
+| Check | Result |
+|:------|:-------|
+| `pytest -q` | **1535 pass / 9 skip** |
+| `PYTHONPATH=scripts python -m vibecodekit.conformance_audit` | parity 100.00 % (**92/92**, threshold 85 %) |
+| `ruff check scripts/vibecodekit/` | clean |
+| `mypy --strict` (9-module gate) | 0 errors |
+| `validate_release_matrix.py --fast` | release gate PASSED |
+| `twine check dist/*` | PASSED |
+| Wheel install + smoke test | OK (`vibecodekit demo`, `__version__ == 0.23.0`) |
+| 8 / 8 conformance package skeleton contract tests | green |
+
+### Back-compat (preserved across all 9 PRs)
+
+```python
+# All of these continue to work unchanged in v0.23.0:
+from vibecodekit.conformance_audit import PROBES                     # 92 entries
+from vibecodekit.conformance_audit import audit                      # ok
+from vibecodekit.conformance_audit import _probe_async_generator     # all 92
+                                                                     # available
+from vibecodekit.conformance_audit import _find_slash_command        # ok
+
+# Test code that monkey-patches PROBES still works:
+monkeypatch.setattr(ca, "PROBES", custom)
+audit()                                                              # uses custom
+```
+
+### Files added / changed at the release boundary
+
+```
++ RELEASE_NOTES_v0.23.0.md
++ scripts/vibecodekit/conformance/__init__.py
++ scripts/vibecodekit/conformance/_helpers.py
++ scripts/vibecodekit/conformance/_registry.py
++ scripts/vibecodekit/conformance/_runner.py
++ scripts/vibecodekit/conformance/probes_runtime.py
++ scripts/vibecodekit/conformance/probes_methodology.py
++ scripts/vibecodekit/conformance/probes_assets.py
++ scripts/vibecodekit/conformance/probes_governance.py
++ references/39-intent-routing-llm-primary.md
++ tests/test_conformance_package_skeleton.py
+M VERSION                                     (0.22.0 → 0.23.0)
+M pyproject.toml                              (version 0.22.0 → 0.23.0)
+M manifest.llm.json                           (version + 92 probes)
+M assets/plugin-manifest.json                 (version)
+M update-package/VERSION                      (0.22.0 → 0.23.0)
+M update-package/.claw.json                   (version)
+M update-package/CLAUDE.md                    (banner + probe count + test count)
+M update-package/README.md                    (banner + probe count)
+M update-package/USAGE_GUIDE.md               (banner + probe count)
+M USAGE_GUIDE.md                              (banner + probe count)
+M README.md                                   (banner + probe count)
+M QUICKSTART.md                               (probe count 87/91 → 88/92)
+M SKILL.md                                    (version + probe count 87 → 92)
+M docs/GUIDE_NONTECH_BEGINNER.md              (banner + cheatsheet + probe count)
+M scripts/vibecodekit/conformance_audit.py    (2 246 → 186 lines, shim)
+M scripts/vibecodekit/intent_router.py        (docstring drift fix only)
+M .claude/commands/vibe.md                    (LLM-primary dispatcher)
+M update-package/.claude/commands/vibe.md     (LLM-primary dispatcher mirror)
+M CHANGELOG.md                                (this entry)
+```
+
+### Why minor (0.22 → 0.23) instead of patch
+
+`@probe` decorator introduces a new public extension point in
+`vibecodekit.conformance` — third-party code can now register probes
+without forking the audit module.  Per Semver this is a
+backward-compatible feature addition, hence a minor bump.
+
+## [0.22.0] — 2026-05-01
+
+Cycle 13 documentation expansion release — 100 % docs-only, không
+touch core runtime, không bump major.  Đáp ứng 3 follow-up gap được
+ghi nhận sau cycle 12 release.
+
+### Added
+
+- `references/examples/01-otb-budget-module/` — pre-baked case study
+  end-to-end (11 file: README, scan, RRI requirements, vision,
+  blueprint, task graph, 3 TIPs, 3 completion reports, RRI-T jsonl,
+  RRI-UX jsonl, coverage matrix, verify report).  Domain: OTB Budget
+  Module — Vietnamese retail finance, multi-store RBAC, Tết freeze.
+  Probe #88 cross-checks file presence + RRI-T/UX gate PASS qua
+  `methodology.evaluate_rri_t/ux()`.  PR #1.
+- `references/anti-patterns-gallery.md` — 12 AP-01..AP-12 visual
+  catalog với BAD/GOOD ASCII visualization + Fix recipe + Detector
+  snippet (504 dòng).  Probe #89 cross-checks gallery 1:1 với
+  `methodology.anti_patterns_canonical()` để bắt drift.  PR #2.
+- `references/37-color-psychology.md` — 7 industry-tuned palettes
+  (Finance / Healthcare / E-commerce / Education / SaaS B2B /
+  Government / Logistics) với WCAG contrast pair, Vietnamese
+  cultural color associations, color-blind safety, dark-mode mapping.
+  Probe #90.  PR #3.
+- `references/38-font-pairing.md` — 5 use-case font stacks
+  (Modern SaaS / Corporate / Editorial / Tech-forward / Friendly
+  consumer) với Vietnamese subset support, type scale, loading
+  strategy, fallback chain, 5 anti-patterns AP-VNF-01..05.
+  Probe #91.  PR #3.
+- 4 test file mới (~80 test): `test_case_study_otb_budget.py` (16),
+  `test_anti_patterns_gallery.py` (40), `test_color_psychology_appendix.py`
+  (~12), `test_font_pairing_appendix.py` (~12).
+
+### Changed
+
+- Conformance probe count 87 → **91** (+4 doc probes — 1 per artifact).
+- `VERSION` 0.21.0 → 0.22.0 (minor bump, non-breaking).
+
+### Unchanged
+
+- Public API surface (`methodology.__all__`) — 100 % stable.
+- Tất cả runtime module trong `scripts/vibecodekit/` (chỉ
+  `conformance_audit.py` thêm 3 probe entry).
+- Coverage floor 90 % giữ nguyên (docs-only, không impact runtime).
+- Ruff F401/F841/F811 clean, mypy strict 9 module 0 errors.
+- Demo speed ≤ 1.5 s baseline.
+
+### Files
+
+```
++ references/37-color-psychology.md
++ references/38-font-pairing.md
++ references/anti-patterns-gallery.md
++ references/examples/01-otb-budget-module/   (11 file)
++ tests/test_case_study_otb_budget.py
++ tests/test_anti_patterns_gallery.py
++ tests/test_color_psychology_appendix.py
++ tests/test_font_pairing_appendix.py
++ RELEASE_NOTES_v0.22.0.md
+M scripts/vibecodekit/conformance_audit.py    (+4 probe entries)
+M VERSION                                     (0.21.0 → 0.22.0)
+M CHANGELOG.md                                (this entry)
+M BENCHMARKS-METHODOLOGY.md                    (+Phase 7 entry)
+```
+
+## [0.21.0] — 2026-04-30
+
+Coverage Phase 6 release — đẩy global TOTAL từ 85% → **90%** (spec
+Phase 6 target HIT — đúng spec, lần thứ hai liên tiếp kể từ Phase 5
+floor lock đúng spec target).  PR1 + PR2 cycle 12 phủ 12 module gap
+lớn nhất sau cycle 11:
+
+- `task_runtime.py` 76% → **97%** (+21pp, 47 test).
+- `module_workflow.py` 67% → **99%** (+32pp, 41 test).
+- `mcp_servers/core.py` 55% → **97%** (+42pp, 15 test).
+- `eval_select.py` 74% → **100%** (+26pp, 13 test).
+- `skill_discovery.py` 71% → **98%** (+27pp, 10 test).
+- `event_bus.py` 73% → **100%** (+27pp, 5 test).
+- `install_manifest.py` 74% → **99%** (+25pp, 3 test).
+- `compaction.py` 82% → **100%** (+18pp, 6 test).
+- `denial_store.py` 84% → **99%** (+15pp, 5 test).
+- `learnings.py` 83% → **97%** (+14pp, 4 test).
+- `intent_router.py` 86% → **98%** (+12pp, 4 test).
+- `browser/state.py` 87% → **97%** (+10pp, 11 test).
+- `cost_ledger.py` 89% → **100%** (+11pp, 4 test).
+- `conformance_audit.py` 82% → **83%** (+1pp, 4 test — `_main` +
+  exception branch trong `audit()`).
+
+Global TOTAL: 85% → **90%** (+5pp).  Floor `fail_under` 85 →
+**90** — Phase 6 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 12 PR1)
+- `tests/test_phase6_task_runtime_module_workflow.py` — 88 test phủ 2
+  module core-runtime:
+  - `task_runtime.py`: `_is_valid_task_id` valid/invalid regex ·
+    `create_task` unknown-kind · `_read_index` missing+malformed ·
+    `list_tasks` filter+sort · `get_task` invalid · `read_task_output`
+    invalid/unknown/missing/window/unicode · `start_local_bash`
+    success/fail/timeout/kill · `kill_task` invalid/unknown/terminal/no-
+    pid · `drain_notifications` invalid/atomic/malformed/no-file ·
+    `check_stalls` producing/quiet/prompt/missing · `start_local_workflow`
+    bash/sleep/write/unknown/path-escape/exception/failure (+on_error
+    continue) · `start_monitor_mcp` success+failure · `start_dream`
+    consolidation · `wait_for` terminal/timeout/unknown.
+  - `module_workflow.py`: 11 detector (`_detect_nextjs` / `_react` /
+    `_prisma` / `_nextauth` / `_tailwind` / `_express` / `_fastapi` /
+    `_django` / `_vite` / `_typescript`) với positive/negative/error
+    case · `probe` non-dir/empty/full-stack · `reuse_inventory`
+    ordering · `module_plan` 5 routing branch + error · `_slug`
+    normalisation · `main` CLI (probe/plan subcommand + exit code).
+
+### Added (cycle 12 PR2)
+- `tests/test_phase6_small_modules_polish.py` — 85 test phủ 10 module
+  medium-small:
+  - `eval_select.py` (13 test): SelectionResult shape, load_map 4 shape
+    variants + error, git_changed_files OK + fallback, _match 4 branch,
+    select_tests empty-changes-fallback / matched+unmapped, _main
+    human+JSON.
+  - `mcp_servers/core.py` (15 test): `_get_root` default+override,
+    `_respond`/`_error` JSON-RPC shape, `_handle` 10 method branch
+    (initialize / notifications-initialized-silent / tools-list /
+    tools-call-ok / unknown-tool / bad-arguments / tool-raises /
+    shutdown / unknown-method / unknown-method-no-id), `_main` stdin
+    4-line mix, direct tool calls.
+  - `install_manifest.py` (3 test): `_sha`, real-copy install +
+    idempotent re-run, `_main` human+JSON.
+  - `learnings.py` (4 test): bad-scope ValueError, properties, append
+    + load-skips-malformed, `_main` 5 subcommand.
+  - `event_bus.py` (5 test): emit+read_all, default session_id,
+    missing-file, malformed-JSONL skipped, fsync OSError swallowed.
+  - `denial_store.py` (5 test): record/denied_before/success/clear,
+    malformed JSON fallback, TTL expiry, `_write` exception cleanup,
+    should_fallback_to_user.
+  - `compaction.py` (6 test): `_collect_events` OSError, `_summarise_line`
+    bad+good JSON, `_load_keeps` OSError, `compact` 5-layer full,
+    `compact` load_keeps happy path.
+  - `intent_router.py` (4 test): empty-prose clarification, no-match
+    clarification, low-confidence-threshold, explain EN+VI.
+  - `browser/state.py` (11 test): from_dict merges extra, read_state
+    missing/bad-JSON/non-dict, clear_state missing, select_port
+    exhausted, is_pid_alive 0/live/ProcessLookupError/PermissionError,
+    is_idle_expired edge, touch_state no-daemon.
+  - `skill_discovery.py` (10 test): _parse_frontmatter no-match +
+    all-key-shapes, discover ignored-dirs, --touched filter, _main,
+    _self_skill_md env, _match_glob 4 variant, activate_for 3 branch.
+  - `cost_ledger.py` (4 test): _approx_tokens empty, summary missing,
+    summary ignores malformed + aggregates, reset wipes.
+  - `conformance_audit.py` (4 test): exception branch (forced-fail
+    probe) + `_main` human+JSON+failing-threshold (sys.exit(1)).
+
+### Changed (cycle 12 PR3, this)
+- `pyproject.toml [tool.coverage.report] fail_under` 85 → **90** —
+  Phase 6 spec target HIT.  Lock toàn bộ +5pp từ 2 PR đầu cycle 12.
+- `BENCHMARKS-METHODOLOGY.md § 4.5` — thêm cột Phase 6 cycle 12, ghi
+  nhận 12 module polish (86→90 TOTAL) + roadmap Phase 7 (cycle 13+)
+  mở scope `cli.py` / `deploy_orchestrator.py` / `conformance_audit`
+  polish 83% → ≥95% (còn 203 miss lớn nhất).
+- `RELEASE_NOTES_v0.21.0.md` — release notes cho v0.21.0.
+- `VERSION` 0.20.0 → **0.21.0**.
+- `benchmarks/intent_router_0.21.0.json` — regen cho version mới.
+- Sync version prose: các file user-facing (`README.md`, `SKILL.md`,
+  `assets/plugin-manifest.json`, `manifest.llm.json`,
+  `update-package/*`) replace `v0.20.0` → `v0.21.0` (qua
+  `tools/sync_version.py`).
+
+### Kết thúc cycle 12
+- 3/3 PR merged: PR1 (#15, task_runtime + module_workflow), PR2 (#16,
+  12 module polish), PR3 (this, release).
+- 1624 passed (was 1451 end of cycle 11; +173 qua 2 PR test).
+- TOTAL 85 → **90%** (+5pp).
+- Conformance 87/87 met=True, ruff F401/F841/F811 clean, mypy strict
+  9 module clean (không thay đổi từ v0.20.0).
+- Scorecard Enterprise readiness không thay đổi từ v0.20.0 (coverage
+  milestone, không đụng runtime/API):
+  - Solo dev: **A+** · Small team: **A+** · Enterprise: **A**
+    (RBAC multi-tenant pending v0.22.0+).
+
+## [0.20.0] — 2026-04-30
+
+Coverage Phase 5 release — đẩy global TOTAL từ 80% → **85%** (spec
+Phase 5 target HIT lần đầu kể từ Phase 1).  PR1 + PR2 cycle 11 phủ
+8 module gap lớn nhất sau cycle 10:
+
+- `mcp_client.py` 62% → **90%** (+28pp).
+- `browser/cli_adapter.py` 33% → **99%** (+66pp).
+- `approval_contract.py` 66% → **100%** (+34pp).
+- `memory_retriever.py` 33% → **98%** (+65pp).
+- `recovery_engine.py` 58% → **98%** (+40pp).
+- `dashboard.py` 50% → **95%** (+45pp).
+- `mcp_servers/selfcheck.py` 23% → **95%** (+72pp).
+- `doctor.py` 68% → **94%** (+26pp).
+
+Global TOTAL: 80% → **85%** (+5pp).  Floor `fail_under` 80 →
+**85** — Phase 5 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 11 PR1)
+- `tests/test_mcp_client_and_cli_adapter.py` — 73 test phủ 2 module:
+  - `mcp_client.py`: manifest helpers (`load_manifest` / `save_manifest`
+    / `register_server` / `disable_server`), `_call_inproc` (5 case),
+    `_call_stdio_oneshot` (7 case), `_call_stdio_handshake` + dispatcher
+    (5 case), `_resolve` / `list_tools` / `call_tool` (12 case),
+    `StdioSession` (12 case: open idempotent / send-recv request / log-
+    noise skip / timeout / server exit / send-after-close / BrokenPipe
+    / initialize success+error / list_tools success+error / call_tool /
+    public request+notify / context manager / stderr_tail).  Strategy
+    mới: real `os.pipe()` fd cho selectors register (BytesIO fake bị
+    EPERM trong CI sandbox); monkeypatch `DefaultSelector.select` luôn
+    return synthetic ready event.
+  - `browser/cli_adapter.py`: `DaemonClient` (12 case: DaemonNotRunning
+    state missing/dead PID / state alive / `is_daemon_alive` /
+    health+command+shutdown HTTP roundtrip / shutdown URL fallback to
+    `clear_state` / `_send` URLError + empty body + invalid JSON), `main`
+    CLI (7 case: no args usage / health+shutdown+verb dispatch / k=v
+    extras parsing / DaemonNotRunning rc=3 / DaemonHttpError rc=4 /
+    default argv).  Monkeypatch `urllib.request.urlopen` qua
+    `_FakeUrlopen` context manager — không bind real socket.
+
+### Added (cycle 11 PR2)
+- `tests/test_phase5_module_polish.py` — 68 test phủ 6 module:
+  - `approval_contract.py` 24 test: `_validate_appr_id` reject path
+    traversal / non-string / short / accept canonical; `create` unknown
+    kind / unknown risk / default options / custom options + preview +
+    deadline / suggested fallback; `list_pending` filter resolved + skip
+    malformed; `get` invalid id → None / missing → None / merges
+    response / skips malformed response; `respond` invalid id / unknown
+    id / invalid choice / persists; `wait` invalid id / existing
+    response / timeout auto-deny / malformed response retry /
+    deadline_exceeded; `clear_resolved`.
+  - `memory_retriever.py` 9 test: `_strip_diacritics` (Tiếng Việt →
+    Tieng Viet), `tokenize` NFC + casefold + empty, `load_memories`
+    skip missing / split by markdown header / OSError swallowed;
+    `retrieve` rank by overlap + zero overlap → empty + respect limit.
+  - `recovery_engine.py` 7 test: `permission_denied` jump to
+    `surface_user_decision` (idempotent) / `context_overflow` +
+    `prompt_too_large` jump to `compact_then_retry` / full ladder walk
+    (LEVELS) / terminal_error after exhausted / reset / to_dict /
+    `_main` CLI smoke.
+  - `dashboard.py` 7 test: `summarise` empty / with events / malformed
+    jsonl / `denials.json` read + corrupted swallowed; `_main` smoke +
+    `--json` mode.
+  - `mcp_servers/selfcheck.py` 13 test: `ping` / `echo` / `now`;
+    `_handle` initialize / initialized notification / tools.list /
+    tools.call ok+unknown+bad-args+runtime-error / shutdown / unknown
+    method / unknown notification silent; `_main` loop với parse-error
+    envelope rid=None.
+  - `doctor.py` 8 test: empty dir / installed-only fail nonzero /
+    skill_repo layout detected via `update-package/` / advisory present
+    trong root / runtime placeholder warns / runtime assets missing
+    warns / `_main` smoke + installed-only nonzero exit.
+
+### Changed (cycle 11 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 80 → **85** (Phase 5).  Lock spec Phase 5 target 85%.
+  Sau cycle 11 PR1 + PR2 phủ thêm 141 stmt mới (32 mcp_client + 62
+  cli_adapter + 42 approval_contract + 35 memory_retriever + 18
+  recovery_engine + 30 dashboard + 48 selfcheck + 16 doctor) → TOTAL
+  82 → **85%**.  Floor lock spec target — KHÔNG còn pragmatic gap.
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 cập nhật Coverage gate Phase 5:
+  Phase 1 (cycle 6 PR3): tool_executor ≥80% + floor 60.
+  Phase 2a (cycle 7 PR2): vn_faker / vn_error_translator / team_mode
+  ≥80% + floor 70.
+  Phase 2b (cycle 8 PR2): vn_error_translator polish 76 → 80% + floor
+  72 (pragmatic).
+  Phase 3 (cycle 9): memory_writeback / manifest_llm / auto_writeback
+  0% → 100% + floor 76 (pragmatic).
+  Phase 4 (cycle 10): hook_interceptor 33→98 + auto_commit_hook 40→99
+  + browser/manager 0→100 + floor 80 (spec HIT).
+  **Phase 5 (cycle 11)**: mcp_client 62→90 + cli_adapter 33→99 +
+  approval_contract 66→100 + 5 module polish + floor 85 (spec HIT).
+- `RELEASE_NOTES_v0.20.0.md` (file mới): tóm tắt Phase 5, upgrade
+  guide, deprecations (`permission_engine.decide()` dict-return shape
+  vẫn nguyên trạng), known limitations (TOTAL còn ~15% chưa cover —
+  chủ yếu `conformance_audit.py` 217 miss + `task_runtime.py` 114 miss
+  + `module_workflow.py` 80 miss + browser/server 0%; defer Phase 6).
+
+## [0.19.0] — 2026-04-30
+
+Coverage Phase 4 release — phủ test cho 3 module hook + browser còn
+gap lớn ở cycle 9: `hook_interceptor.py` (62 miss, was 33%),
+`auto_commit_hook.py` (59 miss, was 40%), `browser/manager.py` (178
+stmt, was 0%).  Sau cycle 10:
+- `hook_interceptor.py` 33% → **98%** (+65pp).
+- `auto_commit_hook.py` 40% → **99%** (+59pp).
+- `browser/manager.py` 0% → **100%** (+100pp).
+
+Global TOTAL coverage: 76% → **80%** (+4pp).  Floor `fail_under`
+76 → **80** — Phase 4 spec target HIT.  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 10 PR1)
+- `tests/test_hook_interceptor_and_auto_commit.py` — 68 test phủ 2
+  module hook (191 stmt total).
+  - `hook_interceptor.py`: `_filter_env` (drop secret-like env keys
+    + bypass `VIBECODE_HOOK_ALLOW_SECRETS=1`), `_scrub_str` (AWS /
+    OpenAI / GitHub PAT / Authorization Bearer prefix + bypass),
+    `_scrub_payload` recursive nested dict/list/str + non-string
+    scalar passthrough + bypass, `_hook_cmd` (.py → python3 / .sh
+    → bash), `run_hooks` 7 nhánh (no `.claw/hooks/` / missing event /
+    chmod implicit fallback / JSON decision parse / non-JSON stdout /
+    malformed JSON `{` start / non-zero rc / TimeoutExpired → 124 /
+    expose `$VIBECODE_HOOK_COMMAND`), `is_blocked` 5 case (empty /
+    deny / non-zero rc / allow override / zero rc no decision).
+  - `auto_commit_hook.py`: `is_sensitive` 21 parametrize case (13
+    sensitive + 8 whitelist), `SensitiveFileGuard.check` 6 case
+    (sensitive path / token-in-content AKIA / safe path / safe content
+    / OpenAI sk- / RSA private key block), `_opt_out` 3 case,
+    `_is_git_repo` / `_git_status_files` 5 case (real git init / non-
+    repo / FileNotFoundError / 2 dirty / clean tree), `AutoCommitHook
+    .decide` 7 case (opt-out / not-git / nothing / sensitive blocked /
+    debounced / malformed stamp fallback / ready), `AutoCommitHook
+    .commit` 3 case (refusal propagate / success bumps stamp + git
+    log shows `[vibecode-auto] checkpoint test` / git failure no-stamp).
+
+### Added (cycle 10 PR2)
+- `tests/test_browser_manager.py` — 48 test phủ `browser/manager.py`
+  (178 stmt, was 0%) → **100%**.  Stub `playwright.sync_api` vào
+  `sys.modules` *trước* khi import manager (idempotent — nếu real
+  playwright đã có thì giữ nguyên).  Mock minimal protocol surface
+  qua `_FakePage` / `_FakeContext` / `_FakeBrowser` / `_FakeChromium`
+  / `_FakePlaywright` / `_FakeSyncPlaywrightHandle`.  Phủ
+  `BrowserManager.start` (idempotent + headless flag), `stop` (close
+  contexts/browser/playwright + clear tabs + safe khi chưa start),
+  `_touch` + `last_activity_ts` property, `_open_tab` raises
+  RuntimeError khi browser=None, `_tab` default + auto-create,
+  `run_read_verb` 10 verb (text / html / links / forms / aria + None
+  fallback `{}` / console / network / snapshot / tabs / status /
+  unknown ValueError + tab extra switch), `run_write_verb` 10 verb
+  (goto default + explicit wait_until + assert URL, click selector vs
+  target fallback, fill, select, scroll default `(0, 600)` vs explicit,
+  wait_for, screenshot default `Path.cwd()/vck-screenshot.png` vs
+  explicit + `full_page=False`, set_cookie, new_tab explicit name vs
+  target fallback vs auto `tab-N`, close_tab existing vs missing
+  no-raise, unknown ValueError), `get_manager` / `stop_manager`
+  singleton lifecycle + `run_*_verb` module facades, `_safe` helper
+  `__enter__` returns self.
+
+### Changed (cycle 10 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 76 → **80** (Phase 4).  Lock spec target 80% (defer từ
+  Phase 3 vì cần mở scope `browser/*` 0% domain).  Sau cycle 10 PR1
+  + PR2 phủ thêm 369 stmt mới (191 hook + 178 browser/manager) →
+  TOTAL 76% → **80%** thực tế.
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 (coverage gate): thêm cột
+  **Phase 4 (cycle 10)** vào table phase progression + section
+  rationale cho lock 76 → 80 + roadmap Phase 5 (target ≥85%).
+- `RELEASE_NOTES_v0.19.0.md` — release notes mới highlight Phase 4
+  coverage achievements (3 module +65/+59/+100pp, floor +4pp lock spec
+  target HIT, +116 test).
+
+## [0.18.0] — 2026-04-30
+
+Coverage Phase 3 release — phủ test cho 3 module 0% còn lại (cycle 8
+defer): `memory_writeback.py` (229 stmt), `manifest_llm.py` (67 stmt),
+`auto_writeback.py` (66 stmt) → **100% mỗi**.  Global TOTAL coverage:
+72% → **76%** (+4pp).  Floor `fail_under` 72 → 76 (pragmatic lock —
+spec-target 80% defer Phase 4 vì cần mở scope sang `browser/*` 0% domain
+là code-path lớn nhất chưa được test).  KHÔNG đụng runtime logic:
+chỉ test code + floor bump + docs.  Backward-compatible.
+
+### Added (cycle 9 PR1)
+- `tests/test_memory_writeback.py` — 40 test phủ `memory_writeback.py`
+  (229 stmt, was 0%) → **100%**.  Phủ 5 section detector (stack /
+  scripts / conventions / gotchas / test-strategy), `MemoryWriteback`
+  class methods (init / update / check / nest, dry-run, drift,
+  path-traversal guard), helpers (`_read` / `_build_section` /
+  `_extract_sections` / `_replace_section`), `DiffReport` /
+  `DriftReport` dataclass shape.
+
+### Added (cycle 9 PR2)
+- `tests/test_manifest_llm_and_auto_writeback.py` — 32 test phủ 2
+  module (133 stmt total, was 0%) → **100% mỗi**.
+  - `manifest_llm.py` (12 test): frontmatter parser 5 nhánh (empty /
+    inline list / multi-line list / quoted / dash-orphan), `_ref_title`
+    H1 + fallback, `build_manifest` 4 case (full / missing plugin →
+    raise / SKILL.md optional / no refs dir), `emit` 2 case (default
+    + explicit output + indent), `_main` argparse round-trip.
+  - `auto_writeback.py` (20 test): `RefreshDecision` dataclass,
+    `_read_last_run` / `_write_last_run` round-trip + malformed JSON
+    fallback + atomic .tmp cleanup, `should_refresh` 5 nhánh (no state
+    / within / after / disable marker / default `now=None`),
+    `try_refresh` 7 nhánh (no_claude_md / opted_out / rate_limited /
+    ok happy / force overrides / exception swallow primary + secondary
+    state-write failure / default `now`).
+
+### Changed (cycle 9 PR3)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report]
+  fail_under` 72 → **76** (Phase 3).  Lock actual achievement (76%
+  TOTAL sau khi PR1+PR2 phủ 3 module 0% → 100% mỗi).  Mục tiêu spec
+  ban đầu 80% (Phase 3) defer Phase 4 (cycle 10) vì còn ~277 stmt gap
+  ở `browser/manager.py` (178 stmt 0%), `mcp_client.py` (124 miss),
+  `hook_interceptor.py` (62 miss), `auto_commit_hook.py` (59 miss) —
+  cần mở scope sang browser/* domain (code-path lớn nhất chưa test).
+- `BENCHMARKS-METHODOLOGY.md` § 4.5 (coverage gate): thêm cột
+  **Phase 3 (cycle 9)** vào table phase progression + section
+  rationale cho lock 72 → 76 + roadmap Phase 4 (target 80%).
+- `RELEASE_NOTES_v0.18.0.md` — release notes mới highlight Phase 3
+  coverage achievements (3/3 module 0%-target → 100%, floor +4pp,
+  +72 test).
+
+## [0.17.0] — 2026-04-30
+
+Enterprise hardening release — tổng hợp cycle 6 (SECURITY.md, structured
+logging, SBOM, permission engine strict-deny + audit log, typed
+`PermissionDecision` dataclass, mypy strict gate, coverage 80% gate
+phase 1) + cycle 7 (mypy strict expansion 5 → 9 modules, coverage Phase
+2a phủ `vn_faker` / `vn_error_translator` / `team_mode`) + cycle 8
+(canonical org lock `VibecodekitPJ7` final, coverage Phase 2b polish
++ floor 70 → 72, CodeQL SAST workflow).  Backward-compatible: zero
+breaking change runtime; deprecated dict-return shape của
+`permission_engine.decide()` vẫn hoạt động (emit `DeprecationWarning`,
+removal target v1.0.0).
+
+### Added (cycle 8 PR3)
+- `.github/workflows/codeql.yml` — CodeQL SAST scan (Python) chạy trên
+  mọi PR + weekly cron (Thứ 3 06:00 UTC).  Query set:
+  `security-extended` + `security-and-quality`.  Findings upload lên
+  GitHub Security tab qua `permissions.security-events: write`.  Pair
+  với `pip-audit` (SCA) + `actionlint` (workflow lint) cho 3-layer
+  security CI.
+- `tests/test_codeql_workflow_present.py` — 6 test guard:
+  - File tồn tại + non-empty.
+  - `codeql-action/init@v3` + `analyze@v3` (KHÔNG @v2 EOL).
+  - Trigger chứa `pull_request` + `schedule` (cron).
+  - Matrix language chứa `python`.
+  - Query set bao gồm `security-extended`.
+  - `permissions.security-events: write`.
+
+### Added (cycle 8 PR2)
+- **Coverage Phase 2b** — `tests/test_vn_error_translator.py` thêm 3 test:
+  - `test_graceful_degrade_when_pyyaml_absent`: monkeypatch
+    `vn_error_translator._yaml = None`, verify constructor không raise +
+    builtin dict vẫn dùng được + YAML files trong `dict_dir` bị skip.
+  - `test_multi_yaml_files_loaded_alphabetically_higher_confidence_wins`:
+    2 file YAML cùng pattern, confidence cao đứng đầu trong ranking
+    (validate "last-write-wins" theo nghĩa ranking, không phải replace).
+  - `test_nested_traceback_extracts_root_cause_with_higher_confidence`:
+    multi-line traceback chứa `ModuleNotFoundError` + `PermissionError`,
+    root-cause (confidence 0.95) đứng đầu trên wrapper.
+
+### Changed (cycle 8 PR2)
+- **Coverage floor**: `pyproject.toml [tool.coverage.report] fail_under`
+  70 → 72 (Phase 2b).  Khoá achievement actual sau cycle 7 (TOTAL 72%
+  với PyYAML installed trong CI).  Mục tiêu spec ban đầu (75) yêu cầu
+  mở scope sang `memory_writeback.py` 0% / `manifest_llm.py` 0% /
+  `auto_writeback.py` 0% — phù hợp Phase 3 hơn Phase 2b.  Xem
+  `BENCHMARKS-METHODOLOGY.md` § 4.5 cho table phase progression.
+- `BENCHMARKS-METHODOLOGY.md`: thêm cột **Phase 2b (cycle 8)** vào
+  coverage table + section rationale cho Phase 2b polish + lý do
+  defer 75% target sang Phase 3.
+
+### Changed (cycle 8 PR1)
+- **Canonical org**: `VibecodekitPJ6` → `VibecodekitPJ7` (rebrand #9, FINAL).
+  Fork contributor: sync `ALLOWED_ORGS` trong `tests/test_repo_urls_canonical.py`
+  hoặc `pytest -k 'not test_repo_urls_canonical'`.  Drift guard trong
+  `.github/workflows/ci.yml` cũng cập nhật từ literal `VibecodekitPJ6` →
+  `VibecodekitPJ7`; không thêm cơ chế env-gated bypass (anti-pattern đã loại
+  bỏ ở cycle 6 PR1).  Cam kết mạnh: PJ7 là canonical **FINAL** — dừng rebrand
+  ở đây; xem docstring `tests/test_repo_urls_canonical.py` cho rationale.
+
+### Changed (cycle 7 PR3)
+- **mypy --strict expansion 5 → 9 core module.**  4 module trước đây
+  `strict = False` trong `mypy.ini` đã được fix:
+  - `tool_executor.py` (28 errors → 0): generic `Dict` / `List[Dict]` /
+    `Optional[Dict]` / `os.PathLike` annotate đầy đủ.
+  - `team_mode.py` (7 errors → 0): `dict[str, Any]` / `tuple[str, ...]`;
+    rename CLI `cfg` → `init_cfg` / `show_cfg` / `check_cfg` để tránh
+    `Optional[TeamConfig]` narrow → `unreachable` warning.
+  - `task_runtime.py` (25 errors → 0): `Iterator[None]` cho
+    `@contextlib.contextmanager`, `Dict[str, Dict[str, Any]]` cho
+    index, `os.PathLike[str]` quoted.
+  - `subagent_runtime.py` (8 errors → 0): tương tự.
+- Block `strict = False` trong `mypy.ini` bị xoá hoàn toàn.  CI step
+  `mypy strict (5 core modules)` đổi tên `(9 core modules)` + thêm 4
+  file vào command line.
+- `tests/test_mypy_strict_clean.py` mở rộng `CORE_MODULES` 5 → 9.
+- **Zero runtime change.**  Chỉ thêm/đổi type annotation và variable
+  rename (`cfg` → `init_cfg/show_cfg/check_cfg` ở CLI `team_mode`).
+
+### Added (cycle 7)
+- **Coverage Phase 2a** (`pyproject.toml [tool.coverage]` + `.github/workflows/ci.yml`):
+  - `vn_faker.py` 0% → 100% (23 test cases).
+  - `vn_error_translator.py` 0% → 100% (20 test cases, 5 skip nếu PyYAML absent).
+  - `team_mode.py` 41% → 98% (24 test cases bao phủ CLI + atomic write +
+    malformed JSON fallback).
+  - **Global TOTAL floor: 60% → 70%** (đạt 72% sau khi `cli.py` +
+    `deploy_orchestrator.py` được đưa vào `omit` — xem
+    `BENCHMARKS-METHODOLOGY.md` § 4.5 Phase 2a rationale).
+  - Per-module CI gates: `tool_executor`, `team_mode`, `vn_faker`,
+    `vn_error_translator` đều `--fail-under=80`.
+- **PyYAML cài trong CI** (dev-only) để cover YAML loader path của
+  `vn_error_translator`.
+
+### Fixed (cycle 7)
+- **`tool_executor.execute_one` dispatch order**: `run_command` không
+  đăng ký trong `TOOL_IMPL` (cần `bus`/`mode`/`rules` extra params)
+  nên trước fix lookup `TOOL_IMPL.get('run_command')` → None → trả
+  `unknown tool` TRƯỚC special-case branch.  Giờ kiểm tra
+  `tool == 'run_command'` TRƯỚC `TOOL_IMPL.get`, route qua
+  `_tool_run_command` đúng.  2 regression test mới
+  (`test_run_command_allow_dispatch`,
+  `test_run_command_dispatch_via_execute_blocks`).
+
+### Changed (BREAKING for forks)
+- **Canonical org re-locked** từ `VibecodekitPJ4` (cycle 5) → `VibecodekitPJ6`
+  (cycle 6, PERMANENT).  Repo này đã rebrand 8 lần
+  (`ykjpalbubp` → ... → `PJ4` → `PJ5` → `PJ6`); cycle 6 commit: PJ6 là
+  canonical permanent — không còn rebrand thêm.
+- **Anti-pattern `CANONICAL_ORG_STRICT=false` env bypass đã bị loại bỏ**
+  khỏi `.github/workflows/ci.yml`.  Drift guard giờ là hard fail; quy tắc
+  tự tắt được không phải quy tắc.
+- **Migration cho fork CI**: nếu fork dưới org khác `VibecodekitPJ6`,
+  fork phải:
+  - Sync `ALLOWED_ORGS` trong `tests/test_repo_urls_canonical.py` để
+    thêm fork org, **hoặc**
+  - Skip suite riêng: `pytest -k 'not test_repo_urls_canonical'` cho
+    fork CI; **hoặc**
+  - Sửa `.github/workflows/ci.yml` block "Assert canonical org" để
+    nhận fork org.  Cảnh báo: nếu rebase upstream, conflict sẽ xuất
+    hiện trên file này — đó là cố ý, để fork phải re-confirm chính sách.
+
+### Added
+- **Typed public API** (`vibecodekit.permission_engine`, PR5):
+  - `PermissionDecision` frozen dataclass — fields `decision`,
+    `reason`, `severity`, `matched_rule_id`; hashable, usable as
+    dict key / set member.
+  - `decide_typed(cmd, mode, root, rules, allow_unsafe_yolo) ->
+    PermissionDecision` — preferred API, stable field contract.
+  - `PermissionDecision.as_legacy_dict()` — helper for downstream
+    still coupled to dict shape.
+  - Export qua `permission_engine.__all__`.
+
+### Deprecated
+- `vibecodekit.permission_engine.decide()` dict-return shape —
+  tiếp tục hoạt động nhưng emit `DeprecationWarning` 1 lần/process
+  (default filter ẩn; bật `-W default` hoặc
+  `PYTHONWARNINGS=default::DeprecationWarning` để quan sát).
+  **Removal target: v1.0.0** — migrate sang `decide_typed()`.
+
+### Notes
+- `scaffold_engine.ScaffoldPlan` / `ScaffoldResult` — đã là frozen
+  dataclass từ trước PR5; không thêm wrapper (smoke-check có trong
+  `tests/test_public_api_dataclass.py`).
+- Không breaking-change shape public hàm nào.  Dual-shape contract:
+  legacy caller tiếp tục chạy không chỉnh sửa; caller mới nhận lợi
+  ích kiểu từ dataclass.
+
 ## [0.16.2] — USAGE_GUIDE rewrite (full feature catalog)
 
 Doc-only release.  Rewrites `USAGE_GUIDE.md` (and the bundled
 `update-package/USAGE_GUIDE.md` mirror) to add a full reference catalog
 covering every shipped surface at v0.16.1:
 
-- §19 — **CLI reference (31 subcommand)** with examples for every
-  `python -m vibecodekit.cli <sub>` entry-point.
-- §20 — **Slash command reference (42 lệnh)**: 25 `/vibe-*` + 1 `/vibe`
-  + 16 `/vck-*`, each with agent binding and trigger bank.
-- §21 — **Sub-agent reference (7 vai)** with full ACL table
-  mirroring `subagent_runtime.PROFILES`.
-- §22 — **Hook event reference (33 event + 4 script)** including
-  opt-in `auto_commit_hook` (`VIBECODE_AUTOCOMMIT=1`) recipe.
-- §23 — **Conformance probe catalog (87 probe)** clustered by domain.
-- §24 — **Permission engine (6 layer)** diagram + per-mode semantics.
-- §25 — **Release-gate strategy** + N-PR rollout map for v0.16.x.
+- §19 — **CLI reference (31 subcommand)**: full table for every
+  `python -m vibecodekit.cli <sub>` entry-point including the v0.16+
+  additions (`intent`, `pipeline`, `manifest`, `refine`, `verify`,
+  `anti-patterns`, `module`, `context`, `activate`, `team`, `learn`)
+  with example invocations.
+- §20 — **Slash command reference (42 lệnh)**: 25 `/vibe-*` lifecycle
+  + 1 `/vibe` master + 16 `/vck-*` extension, each with agent binding
+  and short purpose; trigger phrase bank for `/vck-pipeline` listed
+  verbatim.
+- §21 — **Sub-agent reference (7 vai)**: ACL table mirroring
+  `subagent_runtime.PROFILES`, tool whitelists, when to use each role,
+  probe binding (#07, #52, #66).
+- §22 — **Hook event reference (33 event + 4 script)**: 9-group breakdown,
+  per-script effect, opt-in `auto_commit_hook` recipe via
+  `VIBECODE_AUTOCOMMIT=1`, custom-hook authoring template.
+- §23 — **Conformance probe catalog (87 probe)**: cluster table by
+  domain, spotlights for `85_no_orphan_module` (allowlist roster) and
+  `22_26_hook_events`.
+- §24 — **Permission engine (6 layer)**: pipeline diagram + per-mode
+  semantics (`default`/`auto_safe`/`accept_edits`/`yolo`/`plan`).
+- §25 — **Release-gate strategy**: 3-gate recipe + N-PR rollout map for
+  the v0.16.x series.
 
-Verification: pytest 588 passed · audit 87 / 87 @ 100 % ·
-release-matrix L1+L2+L3 PASS.
+The header now opens with the v0.11 → v0.16 release timeline; the
+existing §1–§15 narrative content (RRI methodology, ChatGPT/Codex/Claude
+walkthroughs, MCP, memory, troubleshooting) is preserved unchanged.
+The legacy `## 16. v0.11.x BIG-UPDATE history` section becomes
+**§16.7** under a new top-level `## 16. Release history` umbrella that
+also documents v0.15.5, v0.16.0a0, v0.16.0, and v0.16.1.
 
-Version bump 0.16.1 → 0.16.2 across 8 surfaces.
+### Verification
+
+- `PYTHONPATH=./scripts pytest tests` — **588 passed** (no count
+  change vs v0.16.1; doc-only release; full suite run from repo root
+  with no optional extras). Full suite stays green.
+- `PYTHONPATH=./scripts python -m vibecodekit.conformance_audit
+  --threshold 1.0` — **87 / 87 @ 100 %**.
+- `PYTHONPATH=./scripts python tools/validate_release_matrix.py
+  --skill . --update update-package` — **PASS** (L1 + L2 + L3).
+
+### Bumped
+
+`VERSION` 0.16.1 → 0.16.2 + 7 mirror surfaces (`update-package/VERSION`,
+`pyproject.toml`, `manifest.llm.json`, `assets/plugin-manifest.json`,
+`update-package/.claw.json`, `SKILL.md`,
+`update-package/.claude/commands/vck-pipeline.md`).
 
 ## [0.16.1] — Doc coherence + recheck cleanup
 
 Green-risk patch closing the five P3 findings discovered by the
-v0.16.0 auto-recheck.  All five findings are doc-coherence / lint-debt
-/ cosmetic items — no behavioural change.  Gates remain at 87 / 87
-audit @ 100 % parity and pytest 762 / 762 (4 new regression tests
-added).
+v0.16.0 auto-recheck (`/home/ubuntu/reports/v0.16.0-recheck.md`).
+All five findings are doc-coherence / lint-debt / cosmetic items —
+no behavioural change.  Gates remain at 87 / 87 audit @ 100 % parity
+and pytest 762 / 762 (6 new regression cases added).
 
 ### Fixed
 
@@ -56,22 +884,24 @@ added).
   `update-package/USAGE_GUIDE.md`, `update-package/QUICKSTART.md`,
   `update-package/CLAUDE.md`, and the repo-root `QUICKSTART.md` /
   `USAGE_GUIDE.md` mirrors — `v0.15.4 → v0.16.1` and `500 → 756`.
+  CHANGELOG entries for v0.15.x are unchanged (historical record).
 
 - **Finding C — Router phrase-bank drift (P2 #4 partial-fix gap).**
   `vck-pipeline.md` frontmatter declared `"build the whole thing"`
   and `"set everything up"` as triggers but
   `intent_router.VCK_PIPELINE` was missing them, so prose-mode
-  classification fell back to a low-confidence `BUILD` match.  Added
-  both phrases to the router bank and pinned them with two new
-  parametrize entries each in
-  `tests/test_v016_alpha_router_fixes.py`.
+  classification fell back to a low-confidence `BUILD` match.
+  Added both phrases to the router bank and pinned them with two new
+  parametrize entries each in `tests/test_v016_alpha_router_fixes.py`
+  (frontmatter test + intent-classifier test).
 
 - **Finding D — Pyflakes lint debt (genuinely-dead lines only).**
   Removed truly-unused symbols: `DenialStore` / `classify_cmd` /
   `TOOLS` from `tool_executor.py`, the assigned-but-unused `removed`
   local in `refine_boundary.py:224`, and four f-strings without
   placeholders in `conformance_audit.py:533` /
-  `module_workflow.py:411,413,415`.
+  `module_workflow.py:411,413,415`.  Left the typing-only imports
+  and the conformance-audit load-test imports alone.
 
 - **Finding E — `vibe doctor` mis-classifies the skill repo.**
   When run from inside the skill bundle's source tree, doctor used
@@ -80,8 +910,7 @@ added).
   the project root.  Added `_is_skill_repo()` detection and an
   `update-package/` fallback so doctor reports zero
   `advisory_missing` from the source tree, plus a new `skill_repo`
-  flag in the JSON envelope.  Pinned with
-  `tests/test_doctor_skill_repo.py`.
+  flag in the JSON envelope.  Pinned with `tests/test_doctor_skill_repo.py`.
 
 ### Changed
 
@@ -100,6 +929,10 @@ added).
   **87 / 87 @ 100 %**.
 - `python tools/validate_release_matrix.py --skill . --update update-package`
   → **PASS (L1 + L2 + L3)**.
+
+This closes the v0.16.0 auto-recheck (full report:
+`docs/audits/v0.15.4-recheck.md` plus the live recheck attached to
+the PR).
 
 ## [0.16.0] — Final: cleanup of v0.15.4 audit P3 findings
 
@@ -148,7 +981,6 @@ plus the doc + test cleanups below.
 
 This closes the audit tracked in #12; the audit doc (PR-2 was the
 last yellow-risk PR) can now be archived.
-
 
 ## [0.16.0a0] — Pre-release: router fixes + soft-orphan triage
 

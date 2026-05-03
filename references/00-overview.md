@@ -68,4 +68,4 @@ section that ties it back to a runtime probe in
 |----------------------------------------------------|----------------------------------------------------------|
 | `assets/rri-question-bank.json` (v1.1.0, 293 q)    | `methodology.load_rri_questions(project_type, persona=…, mode=…)` |
 | `assets/scaffolds/docs/manifest.json` + nextjs/    | `scaffold_engine.preview('docs', stack='nextjs', …)`     |
-| `assets/scaffolds/{landing-page,saas,portfolio,…}` | `scaffold_engine.list_presets()` (10 presets total)      |
+| `assets/scaffolds/{landing-page,saas,portfolio,…}` | `scaffold_engine.list_presets()` (11 presets total)      |
